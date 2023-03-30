@@ -1,0 +1,75 @@
+﻿<Window x:Class="simcityView.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:simcityView"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="730" Width="1280" ResizeMode="NoResize">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="550"/>
+            <RowDefinition Height="120"/>
+        </Grid.RowDefinitions>
+        <Menu Grid.Row="0" FontSize="15">
+            <Menu.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <DockPanel/>
+                </ItemsPanelTemplate>
+            </Menu.ItemsPanel>
+            <MenuItem Header="📁Fájl">
+                <MenuItem Header="💿Betöltés"/>
+                <MenuItem Header="💾Mentés"/>
+            </MenuItem>
+            <MenuItem Header="❔Sugó"/>
+            <MenuItem Header="XD" HorizontalAlignment="Right"/>
+        </Menu>
+        <Grid Grid.Row="1">
+            
+        </Grid>
+        <TabControl Grid.Row="2" FontSize="15" SelectedIndex="{Binding alma, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+            
+
+            <TabItem Header="Zónák">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Stretch" HorizontalAlignment="Center">
+                    <Border BorderThickness="1" BorderBrush="DeepPink">
+                        <StackPanel Orientation="Vertical">
+                            <RadioButton GroupName="zones" Width="140">Lakó</RadioButton>
+                            <Image Source="Textures/missing_texture.png" Width="64"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border BorderThickness="1" BorderBrush="DeepPink">
+                        <StackPanel Orientation="Vertical">
+                            <RadioButton GroupName="zones" Width="140">Ipari</RadioButton>
+                            <Image Source="Textures/missing_texture.png" Width="64"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border BorderThickness="1" BorderBrush="DeepPink">
+                        <StackPanel Orientation="Vertical">
+                            <RadioButton GroupName="zones" Width="140">Szolgáltatási</RadioButton>
+                            <Image Source="Textures/missing_texture.png" Width="64"/>
+                        </StackPanel>
+                    </Border>
+
+                </StackPanel>
+            </TabItem>
+            <TabItem Header="Kiszolgáló épületek">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Stretch" HorizontalAlignment="center">
+                    <Border BorderThickness="1" BorderBrush="DeepPink">
+                        <StackPanel Orientation="Vertical">
+                            <RadioButton GroupName="zones" Width="140">Lakó</RadioButton>
+                            <Image Source="Textures/missing_texture.png" Width="64"/>
+                        </StackPanel>
+                    </Border>
+                    
+                </StackPanel>
+            </TabItem>
+            <TabItem Header="Költségek" >
+                
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>

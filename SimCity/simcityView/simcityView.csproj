@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="View\Textures\missing_texture.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\simcityModel\simcityModel.csproj" />
+    <ProjectReference Include="..\simcityPersistance\simcityPersistance.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="View\Textures\missing_texture.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+</Project>
