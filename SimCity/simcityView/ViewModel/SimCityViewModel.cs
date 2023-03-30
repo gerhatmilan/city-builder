@@ -12,7 +12,7 @@ namespace simcityView.ViewModel
         public SimCityViewModel(SimCityModel model)
         {
 
-            
+
         }
     }
 }
