@@ -20,10 +20,24 @@ namespace simcityModel.Model
 
         /// <summary>
         /// Game advance event.
-        /// Gets invoked every AdvanceTime method is called.
+        /// Gets invoked every time AdvanceTime method is called.
         /// As a parameter, it passes GameEventArgs to the subscriber, which holds data of the game.
         /// </summary>
         public event EventHandler<GameEventArgs>? GameAdvanced;
+
+        /// <summary>
+        /// Income list change event.
+        /// Gets invoked when the income list changes.
+        /// As a parameter, it passes a list of BudgetRecord, which holds the data of every single income.
+        /// </summary>
+        public event EventHandler<List<BudgetRecord>>? IncomeListChanged;
+
+        /// <summary>
+        /// Expense list change event.
+        /// Gets invoked when the expense list changes.
+        /// As a parameter, it passes a list of BudgetRecord, which holds the data of every single expense.
+        /// </summary>
+        public event EventHandler<List<BudgetRecord>>? ExpenseListChanged;
 
         /// <summary>
         /// Game over event.
@@ -49,11 +63,27 @@ namespace simcityModel.Model
         }
 
         /// <summary>
-        /// 
+        /// Invoking GameAdvanced event.
         /// </summary>
         private void OnGameAdvanced()
         {
             GameAdvanced?.Invoke(this, new GameEventArgs(_gameTime, _money, _population));
+        }
+
+        /// <summary>
+        /// Invoking IncomeListChanged event.
+        /// </summary>
+        private void OnIncomeListChanged()
+        {
+            IncomeListChanged?.Invoke(this, _incomeList);
+        }
+
+        /// <summary>
+        /// Invoking ExpenseListChanged event.
+        /// </summary>
+        private void OnExpenseListChanged()
+        {
+            ExpenseListChanged?.Invoke(this, _expenseList);
         }
 
         /// <summary>
