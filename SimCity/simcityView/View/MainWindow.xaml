@@ -5,12 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:simcityView"
         mc:Ignorable="d"
-        Title="MainWindow" Height="730" Width="1280" ResizeMode="NoResize">
+        Title="MainWindow" Height="740" Width="1280" ResizeMode="NoResize">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="550"/>
-            <RowDefinition Height="120"/>
+            <RowDefinition Height="130"/>
         </Grid.RowDefinitions>
         <Menu Grid.Row="0" FontSize="15">
             <Menu.ItemsPanel>
@@ -23,7 +23,7 @@
                 <MenuItem Header="💾Mentés"/>
             </MenuItem>
             <MenuItem Header="❔Sugó"/>
-            <MenuItem Header="XD" HorizontalAlignment="Right"/>
+            <MenuItem Header="{Binding InfoText}" HorizontalAlignment="Right"/>
         </Menu>
         
         <ItemsControl HorizontalAlignment="left" VerticalAlignment="top" Margin="0,0" Grid.Row="1" ItemsSource="{Binding Cells}">
@@ -68,22 +68,22 @@
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Stretch" HorizontalAlignment="Center">
                     <Border BorderThickness="1" BorderBrush="DeepPink">
                         <StackPanel Orientation="Vertical">
-                            <RadioButton GroupName="zones" Width="140">Lakó</RadioButton>
-                            <Image Source="Textures/missing_texture.png" Width="64"/>
+                            <RadioButton GroupName="buildable1" Width="140" Name="Residental" Command="{Binding SelectedBuildable}" IsChecked="True">Lakó</RadioButton>
+                            <Image Source="Textures/house_small_yellow_a.png" Width="64"/>
                         </StackPanel>
                     </Border>
 
                     <Border BorderThickness="1" BorderBrush="DeepPink">
                         <StackPanel Orientation="Vertical">
-                            <RadioButton GroupName="zones" Width="140">Ipari</RadioButton>
-                            <Image Source="Textures/missing_texture.png" Width="64"/>
+                            <RadioButton GroupName="buildable1" Width="140" Name="Industrial" Command="{Binding SelectedBuildable}">Ipari</RadioButton>
+                            <Image Source="Textures/warehouse_orange_a.png" Width="64"/>
                         </StackPanel>
                     </Border>
 
                     <Border BorderThickness="1" BorderBrush="DeepPink">
                         <StackPanel Orientation="Vertical">
-                            <RadioButton GroupName="zones" Width="140">Szolgáltatási</RadioButton>
-                            <Image Source="Textures/missing_texture.png" Width="64"/>
+                            <RadioButton GroupName="buildable1" Width="140" Name="Office" Command="{Binding SelectedBuildable}">Szolgáltatási</RadioButton>
+                            <Image Source="Textures/building_tall_yellow_a.png" Width="64"/>
                         </StackPanel>
                     </Border>
 
@@ -93,15 +93,66 @@
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Stretch" HorizontalAlignment="center">
                     <Border BorderThickness="1" BorderBrush="DeepPink">
                         <StackPanel Orientation="Vertical">
-                            <RadioButton GroupName="zones" Width="140">Lakó</RadioButton>
+                            <RadioButton GroupName="buildable2" Width="140" Name="Road" Command="{Binding SelectedBuildable}" IsChecked="True">Út</RadioButton>
                             <Image Source="Textures/missing_texture.png" Width="64"/>
+                        </StackPanel>
+                    </Border>
+                    <Border BorderThickness="1" BorderBrush="DeepPink">
+                        <StackPanel Orientation="Vertical">
+                            <RadioButton GroupName="buildable2" Width="140" Name="Stadium" Command="{Binding SelectedBuildable}">Stadion</RadioButton>
+                            <Image Source="Textures/missing_texture.png" Width="64"/>
+                        </StackPanel>
+                    </Border>
+                    <Border BorderThickness="1" BorderBrush="DeepPink">
+                        <StackPanel Orientation="Vertical">
+                            <RadioButton GroupName="buildable2" Width="140" Name="FireStation" Command="{Binding SelectedBuildable}" >Tűzoltóság</RadioButton>
+                            <Image Source="Textures/fire_station_a.png" Width="64"/>
+                        </StackPanel>
+                    </Border>
+                    <Border BorderThickness="1" BorderBrush="DeepPink">
+                        <StackPanel Orientation="Vertical">
+                            <RadioButton GroupName="buildable2" Width="140" Name="PoliceStation" Command="{Binding SelectedBuildable}" >Rendőrség</RadioButton>
+                            <Image Source="Textures/police_station_a.png" Width="64"/>
                         </StackPanel>
                     </Border>
                     
                 </StackPanel>
             </TabItem>
             <TabItem Header="Költségek" >
-                
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="1*"/>
+                    </Grid.ColumnDefinitions>
+                    <ScrollViewer VerticalScrollBarVisibility="auto" Grid.Column="0">
+                        <ItemsControl ItemsSource="{Binding Income}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding MoneyText}"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </ScrollViewer>
+                    <ScrollViewer VerticalScrollBarVisibility="auto" Grid.Column="1">
+                        <ItemsControl ItemsSource="{Binding Expense}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding MoneyText}"/>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <StackPanel/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
             </TabItem>
         </TabControl>
     </Grid>

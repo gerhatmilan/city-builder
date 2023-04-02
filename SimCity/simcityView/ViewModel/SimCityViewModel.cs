@@ -14,13 +14,16 @@ namespace simcityView.ViewModel
 
 
         private SimCityModel _model;
-
+        private string _infoText = string.Empty;
         #endregion
 
         #region props
 
+        public ObservableCollection<BudgetItem> Income { get; set; }
+        public ObservableCollection<BudgetItem> Expense { get; set; }
         public ObservableCollection<Block> Cells { get; set; }
-
+        public string InfoText { get { return _infoText; } 
+                                 set { _infoText = value; OnPropertyChanged(nameof(InfoText)); } }
         #endregion
 
         #region constructor
@@ -28,7 +31,12 @@ namespace simcityView.ViewModel
         {
             _model= model;
             Cells = new ObservableCollection<Block>();
+            Income = new ObservableCollection<BudgetItem>();
+            Expense = new ObservableCollection<BudgetItem>();
+            
+            updateInfoText();
             fillCells(10);
+            fillBudgets();
         }
 
         #endregion
@@ -50,6 +58,25 @@ namespace simcityView.ViewModel
                     Cells.Add(b);
                 }
             }
+        }
+
+        private void fillBudgets()
+        {
+            Income.Clear();
+            Expense.Clear();
+            
+            BudgetItem incomeHeader = new BudgetItem();
+            incomeHeader.MoneyText = "Bevétel:";
+            Income.Add(incomeHeader);
+
+            BudgetItem expenseHeader = new BudgetItem();
+            expenseHeader.MoneyText = "Kiadások:";
+            Expense.Add(expenseHeader);
+        }
+
+        private void updateInfoText()
+        {
+            InfoText = "Dátum: 2023/04/02\t|\tPénz: 99999$\t|\tLakosság: 100 fő";
         }
 
         #endregion
