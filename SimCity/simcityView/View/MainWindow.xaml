@@ -31,10 +31,7 @@
             <ItemsControl.ItemTemplate>
                 <DataTemplate>
                     <Grid>
-                        <Button Width="30" Height="30" Command="{Binding ClickCom}">
-                            <Button.Background>
-                                <ImageBrush ImageSource="{Binding FloorTexture}"/>
-                            </Button.Background>
+                        <Button Width="30" Height="30" Command="{Binding ClickCom}" Background="{Binding FloorTexture}">
                         </Button>
                         <Image Width="30" Height="30" Source="{Binding BuildingTexture}" RenderTransformOrigin="0.5,0.5" IsHitTestVisible="False">
                             <Image.RenderTransform>

@@ -16,20 +16,20 @@ namespace simcityView.ViewModel
         
         public int X;
         public int Y;
-        private string _floorTexture;
-        private string _buildingTexture;
+        private ImageBrush _floorTexture;
+        private BitmapImage _buildingTexture;
 
 
 
         #endregion
 
         #region props
-        public string FloorTexture
+        public ImageBrush FloorTexture
         {
             get { return _floorTexture; }
             set { _floorTexture = value; OnPropertyChanged(nameof(FloorTexture)); }
         }
-        public string BuildingTexture
+        public BitmapImage BuildingTexture
         {
             get { return _buildingTexture; }
             set { _buildingTexture = value; OnPropertyChanged(nameof(BuildingTexture)); }
@@ -43,18 +43,22 @@ namespace simcityView.ViewModel
 
         #region contructor
 
-        public Block()
+        public Block(ImageBrush floor, BitmapImage building)
         {
-            FloorTexture = @"~\..\View\Textures\missing_texture.png";
-            BuildingTexture = @"~\..\Textures\missing_texture.png";
+            
+            _floorTexture = floor;
+            _buildingTexture = building;
+            //FloorTexture = @"~\..\View\Textures\missing_texture.png";
+            //FloorTexture = UriToImageBrush(@"~\..\View\Textures\missing_texture.png");
+            //BuildingTexture = UriToBitmapImage(@"~\..\Textures\missing_texture.png");
         }
 
         #endregion
 
         #region functions
 
-       
-        
+      
+
 
         #endregion
 
