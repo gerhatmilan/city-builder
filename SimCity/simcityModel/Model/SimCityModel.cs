@@ -49,8 +49,23 @@ namespace simcityModel.Model
 
         public SimCityModel(IDataAcces dataAccess)
         {
-
         }
+
+        private IDataAccess _dataAccess;
+        private DispatcherTimer _timer;
+        private DateTime _gameTime;
+        public GameSpeed gameSpeed;
+        public int population;
+        public int money;
+        public int happyness;
+        public Field[] fields;
+        public Person[] people;
+
+        public void AdvanceTime();
+        public void InitializeGame();
+        public void MakeAction(Field currentField, Action currentAction);
+        public EventHandler<GameEventArgs> GameAdvanced();
+
 
         #region Private event triggers
         /// <summary>

@@ -6,9 +6,8 @@ using System.Threading.Tasks;
 
 namespace simcityPersistance.Persistance
 {
-    public interface IDataAcces
+    internal class GameException
     {
-        public Task<SimCityPersistance> LoadAsync(string path);
-        public Task SaveAsync(string path, SimCityPersistance persistance);
+        public GameException() { }
     }
 }
