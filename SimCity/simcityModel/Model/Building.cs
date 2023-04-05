@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace simcityModel.Model
 {
-    public interface Building
+    public abstract class Building
     {
         public BuildingType type;
     }
@@ -16,7 +16,7 @@ namespace simcityModel.Model
         public Person[] people;
         public bool onFire;
         public float fireProb;
-        public void calculateFire();
+        public void calculateFire() { }
     }
 
     public class ServiceBuilding : Building

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace simcityPersistance.Persistance
 {
-    public class SimCityPersistance : IDataAcces
+    public class SimCityPersistance : IDataAccess
     {
         public (int, bool, float)[,] _fields;
         public ((int, int), (int, int))[] _people;

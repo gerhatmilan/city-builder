@@ -9,6 +9,6 @@ namespace simcityModel.Model
     public class Field
     {
         public FieldType type;
-        public Buildings? building;
+        public Building? building;
     }
 }

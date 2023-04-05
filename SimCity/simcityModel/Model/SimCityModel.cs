@@ -4,11 +4,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
+using System.Windows.Threading;
 
 namespace simcityModel.Model
 {
+    public enum GameSpeed { Paused, Normal, Fast, Fastest }
+    public enum Action { Build, Destroy, Mark }
+    public enum FieldType { IndustrialZone, OfficeZone, ResidentalZone, GeneralField }
+    public enum BuildingType { Industry, OfficeBuilding, Home, Stadium, PoliceStation, FireStation, Road }
+    public enum Vehicle { Car, Firecar }
+    
     public class SimCityModel
-    {  
+    {
+
         #region Events
 
         /// <summary>
@@ -47,7 +56,7 @@ namespace simcityModel.Model
 
         #endregion
 
-        public SimCityModel(IDataAcces dataAccess)
+        public SimCityModel(IDataAccess dataAccess)
         {
         }
 
@@ -61,10 +70,10 @@ namespace simcityModel.Model
         public Field[] fields;
         public Person[] people;
 
-        public void AdvanceTime();
-        public void InitializeGame();
-        public void MakeAction(Field currentField, Action currentAction);
-        public EventHandler<GameEventArgs> GameAdvanced();
+        public void AdvanceTime() { }
+        public void InitializeGame() { }
+        public void MakeAction(Field currentField, Action currentAction) { }
+        public EventHandler<GameEventArgs> GameAdvanced() { }
 
 
         #region Private event triggers

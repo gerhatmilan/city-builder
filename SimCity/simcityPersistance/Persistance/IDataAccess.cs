@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace simcityPersistance.Persistance
 {
-    public interface IDataAcces
+    public interface IDataAccess
     {
         public Task<SimCityPersistance> LoadAsync(string path);
         public Task SaveAsync(string path, SimCityPersistance persistance);
