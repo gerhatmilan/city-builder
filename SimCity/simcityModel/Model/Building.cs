@@ -30,7 +30,7 @@ namespace simcityModel.Model
         public List<Person> People { get => _people; }
         public bool OnFire { get => OnFire; }
 
-        public PeopleBuilding((int x, int y) coordinates, BuildingType type) : base( type)
+        public PeopleBuilding(BuildingType type) : base( type)
         {
             _people = new List<Person>();
         }
@@ -73,7 +73,7 @@ namespace simcityModel.Model
             }
         }
 
-        public ServiceBuilding((int x, int y) coordinates,  BuildingType type) : base(type)
+        public ServiceBuilding((int x, int y) coordinates, BuildingType type) : base(type)
         {
             _coordinates = coordinates;
         }
@@ -91,7 +91,7 @@ namespace simcityModel.Model
         public int Price { get => _price; }
         public int MaintenceCost { get => _maintenanceCost; }
 
-        public Road((int x, int y) coordinates) : base(BuildingType.Road)
+        public Road() : base(BuildingType.Road)
         {
             
         }
