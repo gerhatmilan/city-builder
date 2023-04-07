@@ -8,7 +8,25 @@ namespace simcityModel.Model
 {
     public class Field
     {
-        public FieldType type;
-        public Building? building;
+        private FieldType _type;
+        private Building? _building;
+
+        public FieldType Type
+        {
+            get { return _type; }
+            set { _type = value; }
+        }
+
+        public Building? Building
+        {
+            get { return _building; }
+            set { _building = value; }
+        }
+
+        public Field()
+        {
+            _type = FieldType.GeneralField;
+            _building = null;
+        }
     }
 }
