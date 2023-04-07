@@ -78,7 +78,7 @@ namespace simcityModel.Model
         /// <summary>
         /// Getter property for _fields 
         /// </summary>
-        public Field[][] Fields
+        public Field[,] Fields
         {
             get
             {
