@@ -31,6 +31,7 @@ namespace simcityView.ViewModel
         private string _currentBuildingType = "Ro";
         private int _selectedTab = 0;
         private bool _flipBuldozeMode = false;
+        private int _time = 0;
 
         #endregion
 
@@ -80,6 +81,7 @@ namespace simcityView.ViewModel
         public DelegateCommand MinimizePlayField { get; set; }
         public DelegateCommand SelectedBuildable { get; set; }
         public DelegateCommand FlipBuldozeMode { get; set; }
+        public DelegateCommand TimeSet { get; set; }
 
         #endregion
 
@@ -98,6 +100,7 @@ namespace simcityView.ViewModel
             
             ZoomPlayField = new DelegateCommand(param => PlayFieldZoom += _zoomSpeed);
             MinimizePlayField = new DelegateCommand(param => PlayFieldZoom -= _zoomSpeed);
+            
             SelectedBuildable = new DelegateCommand(param => SelectedBuildableSorter((string)param!));
             FlipBuldozeMode = new DelegateCommand(param =>
             {
@@ -113,8 +116,25 @@ namespace simcityView.ViewModel
                 }
                 UpdateMouseStateText();
 
-            }); ;
+            });
 
+            TimeSet = new DelegateCommand(param => {
+                int num = int.Parse((string)param!);
+                if (num != _time)
+                {
+                    switch (num)
+                    {
+                        case 0: 
+                        case 1:
+                        case 3:
+                        case 2: _time = num; UpdateMouseStateText(); break;
+                        default: break;
+                    }
+                }
+            
+            });
+            
+            
             fillFloorTextures();
             fillBuildingTextures();
 
@@ -212,9 +232,9 @@ namespace simcityView.ViewModel
         {
             switch (SelectedTab)
             {
-                case 0: MouseStateText = _currentAction + " " + SelectedTab.ToString() + " " + _currentFieldType;    break;
-                case 1: MouseStateText = _currentAction + " " + SelectedTab.ToString() + " " + _currentBuildingType; break;
-                case 2: MouseStateText = _currentAction + " " + SelectedTab.ToString();                              break;
+                case 0: MouseStateText = _currentAction + " t:" + _time.ToString() + " " + SelectedTab.ToString() + " " + _currentFieldType;    break;
+                case 1: MouseStateText = _currentAction + " t:" + _time.ToString() + " " + SelectedTab.ToString() + " " + _currentBuildingType; break;
+                case 2: MouseStateText = _currentAction + " t:" + _time.ToString() + " " + SelectedTab.ToString();                              break;
                 default: break;
             }
            

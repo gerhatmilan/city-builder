@@ -79,7 +79,47 @@
                 <ScaleTransform CenterX="100" CenterY="0" ScaleX="1.5" ScaleY="1.5"/>
             </CheckBox.RenderTransform>
         </CheckBox>
-            <TabControl Grid.Row="2" FontSize="15" SelectedIndex="{Binding SelectedTab, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+        <StackPanel Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="Bottom" FlowDirection="LeftToRight">
+            <StackPanel.Resources>
+                <Style x:Key="Time" TargetType="RadioButton">
+                    <Style.Triggers>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter Property="Background">
+                                <Setter.Value>
+                                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                        <GradientStop Color="#FF525D4B" Offset="0"/>
+                                        <GradientStop Color="#FF8CC169" Offset="1"/>
+                                    </LinearGradientBrush>
+                                </Setter.Value>
+                            </Setter>
+                        </Trigger>
+                    </Style.Triggers>
+                    <Setter Property="Width" Value="50"/>
+                    <Setter Property="Height" Value="30"/>
+                    <Setter Property="VerticalContentAlignment" Value="Center"/>
+                    <Setter Property="Command" Value="{Binding TimeSet}"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="RadioButton">
+                                <Border BorderThickness="2" BorderBrush="Gray" CornerRadius="2" Background="{TemplateBinding Background}">
+                                    <TextBlock TextAlignment="Center" FontWeight="Heavy" FontSize="17" Text="{Binding Path=Content, RelativeSource={RelativeSource TemplatedParent}}"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </StackPanel.Resources>
+            <ItemsControl>
+                <RadioButton Content="STOP" Style="{StaticResource Time}" CommandParameter="0"/>
+                <RadioButton Content="▶"    Style="{StaticResource Time}" CommandParameter="1"/>
+                <RadioButton Content="▶▶"   Style="{StaticResource Time}" CommandParameter="2"/>
+                <RadioButton Content="▶▶▶"  Style="{StaticResource Time}" CommandParameter="3"/>
+            </ItemsControl>
+            
+            
+            
+        </StackPanel>
+        <TabControl Grid.Row="2" FontSize="15" SelectedIndex="{Binding SelectedTab, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
             
 
             <TabItem Header="Zónák">
