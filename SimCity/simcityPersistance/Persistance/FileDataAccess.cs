@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace simcityPersistance.Persistance
 {
-    public class FileDataAccess : IDataAcces
+    public class FileDataAccess : IDataAccess
     {
-        public override Task<SimCityPersistance> LoadAsync(string path);
-        public override Task SaveAsync(string path, SimCityPersistance persistance);
+        public async Task<SimCityPersistance> LoadAsync(string path) { return new SimCityPersistance(); }
+        public async Task SaveAsync(string path, SimCityPersistance persistance) { }
     }
 }
