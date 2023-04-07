@@ -28,7 +28,7 @@ namespace simcityModel.Model
         private int _population;
         private int _money;
         private int _happiness;
-        private Field[][] _fields;
+        private Field[,] _fields;
         private List<Person> _people;
         private List<BudgetRecord> _incomeList;
         private List<BudgetRecord> _expenseList;
@@ -103,14 +103,30 @@ namespace simcityModel.Model
 
         public SimCityModel(IDataAccess dataAccess)
         {
+            _dataAccess = dataAccess;
+            _fields = new Field[GAMESIZE, GAMESIZE];
+            _people = new List<Person>();
+            _incomeList = new List<BudgetRecord>();
+            _expenseList = new List<BudgetRecord>();
+
+            InitializeGame();
         }
 
         #endregion
 
         #region Public methods
 
+        public void InitializeGame()
+        {
+            _gameTime = DateTime.Now;
+            _gameSpeed = GameSpeed.Normal;
+            _population = 0;
+            _money = 1000;
+            _happiness = 0;
+        }
+
         public void AdvanceTime() { }
-        public void InitializeGame() { }
+
         public void MakeAction(Field currentField, Action currentAction) { }
 
         #endregion
