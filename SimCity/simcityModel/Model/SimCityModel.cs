@@ -5,7 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
-using System.Windows.Threading;
+using System.Timers;
+using System.Security.Cryptography;
 
 namespace simcityModel.Model
 {
@@ -17,6 +18,22 @@ namespace simcityModel.Model
     
     public class SimCityModel
     {
+        #region Private fields
+
+        public const int GAMESIZE = 10;
+
+        private IDataAccess _dataAccess;
+        private DateTime _gameTime;
+        private GameSpeed _gameSpeed;
+        private int _population;
+        private int _money;
+        private int _happiness;
+        private Field[][] _fields;
+        private List<Person> _people;
+        private List<BudgetRecord> _incomeList;
+        private List<BudgetRecord> _expenseList;
+
+        #endregion
 
         #region Events
 
@@ -56,25 +73,36 @@ namespace simcityModel.Model
 
         #endregion
 
+        #region Properties
+
+        /// <summary>
+        /// Getter property for _fields 
+        /// </summary>
+        public Field[][] Fields
+        {
+            get
+            {
+                return _fields;
+            }
+        }
+
+        #endregion
+
+        #region Constructors
+
         public SimCityModel(IDataAccess dataAccess)
         {
         }
 
-        private IDataAccess _dataAccess;
-        private DispatcherTimer _timer;
-        private DateTime _gameTime;
-        public GameSpeed gameSpeed;
-        public int population;
-        public int money;
-        public int happyness;
-        public Field[] fields;
-        public Person[] people;
+        #endregion
+
+        #region Public methods
 
         public void AdvanceTime() { }
         public void InitializeGame() { }
         public void MakeAction(Field currentField, Action currentAction) { }
-        public EventHandler<GameEventArgs> GameAdvanced() { }
 
+        #endregion
 
         #region Private event triggers
         /// <summary>
