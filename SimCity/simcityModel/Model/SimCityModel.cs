@@ -20,7 +20,7 @@ namespace simcityModel.Model
     {
         #region Private fields
 
-        public const int GAMESIZE = 10;
+        private const int GAMESIZE = 10;
 
         private IDataAccess _dataAccess;
         private DateTime _gameTime;
@@ -83,6 +83,17 @@ namespace simcityModel.Model
             get
             {
                 return _fields;
+            }
+        }
+
+        /// <summary>
+        /// Getter property for GAMESIZE
+        /// </summary>
+        public int GameSize
+        {
+            get
+            {
+                return GAMESIZE;
             }
         }
 
