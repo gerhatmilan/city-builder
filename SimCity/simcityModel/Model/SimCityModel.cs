@@ -11,7 +11,6 @@ using System.Security.Cryptography;
 namespace simcityModel.Model
 {
     public enum GameSpeed { Paused, Normal, Fast, Fastest }
-    public enum Action { Build, Destroy, Mark }
     public enum FieldType { IndustrialZone, OfficeZone, ResidentalZone, GeneralField }
     public enum BuildingType { Industry, OfficeBuilding, Home, Stadium, PoliceStation, FireStation, Road }
     public enum Vehicle { Car, Firecar }
@@ -42,7 +41,7 @@ namespace simcityModel.Model
         /// Gets invoked when an element's type in the game matrix changes.
         /// As a parameter, it passes the changed element's coordinates to the subscriber.
         /// </summary>
-        public event EventHandler<Tuple<int, int>>? MatrixChanged;
+        public event EventHandler<(int, int)>? MatrixChanged;
 
         /// <summary>
         /// Game advance event.
@@ -127,7 +126,62 @@ namespace simcityModel.Model
 
         public void AdvanceTime() { }
 
-        public void MakeAction(Field currentField, Action currentAction) { }
+        public void MakeZone(int x, int y, FieldType newFieldType)
+        {
+            if (_fields[x, y].Type == FieldType.GeneralField && _fields[x, y].Building == null)
+            {
+                _fields[x, y].Type = newFieldType;
+                OnMatrixChanged((x, y));
+            }
+            else
+            {
+                throw new CannotBuildException("Ezt a mezőt nem jelölheted ki zóna mezőnek.");
+            }
+        }
+        public void MakeBuilding(int x, int y, BuildingType newBuildingType)
+        {
+            switch (newBuildingType)
+            {
+                case BuildingType.OfficeBuilding:
+                case BuildingType.Industry:
+                case BuildingType.Home:
+                    _fields[x, y].Building = new PeopleBuilding(newBuildingType);
+                    OnMatrixChanged((x, y));
+                    break;
+                case BuildingType.Road:
+                    if (_fields[x, y].Type == FieldType.GeneralField && _fields[x, y].Building == null)
+                    {
+                        _fields[x, y].Building = new Road();
+                        OnMatrixChanged((x, y));
+                    }
+                    else
+                    {
+                        throw new CannotBuildException("Erre a mezőre nem rakhatsz le utat.");
+                    }
+                    break;
+                default:
+                    ServiceBuilding building = new ServiceBuilding((x, y), newBuildingType);
+                    foreach ((int x, int y) coords in building.Coordinates)
+                    {
+                        if (_fields[coords.x, coords.y].Type != FieldType.GeneralField || _fields[coords.x, coords.y].Building != null)
+                        {
+                            throw new CannotBuildException("Ide nem építhetsz ilyen épületet.");
+                        }
+                    }
+
+                    foreach ((int x, int y) coords in building.Coordinates)
+                    {
+                        _fields[coords.x, coords.y].Building = building;
+                        OnMatrixChanged((coords.x, coords.y));
+                    }
+                    break;
+            }
+        }
+
+        public void Destroy(int x, int y)
+        {
+
+        }
 
         #endregion
 
@@ -136,7 +190,7 @@ namespace simcityModel.Model
         /// Invoking MatrixChanged event.
         /// </summary>
         /// <param name="coordinates">Changed element's coordinates.</param>
-        private void OnMatrixChanged(Tuple<int, int> coordinates)
+        private void OnMatrixChanged((int x, int y) coordinates)
         {
             MatrixChanged?.Invoke(this, coordinates);
         }
