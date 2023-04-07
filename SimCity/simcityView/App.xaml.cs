@@ -33,7 +33,7 @@ namespace simcityView
 
         public void AppStart(object? s, StartupEventArgs e)
         {
-            _model = new SimCityModel(new SimCityPersistance());
+            _model = new SimCityModel(new FileDataAccess());
 
             _vm = new SimCityViewModel(_model);
 
