@@ -14,11 +14,13 @@ namespace simcityModel.Model
         public FieldType Type
         {
             get { return _type; }
+            set { _type = value; }
         }
 
         public Building? Building
         {
             get { return _building; }
+            set { _building = value; }
         }
 
         public Field()
