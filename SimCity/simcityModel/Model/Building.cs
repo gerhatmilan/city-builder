@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Reflection.Metadata.Ecma335;
 using System.Runtime.CompilerServices;
@@ -10,23 +11,54 @@ namespace simcityModel.Model
 {
     public abstract class Building
     {
-        private BuildingType _type;
-        private (int x, int y) _coordinates;
+        protected BuildingType _type;
 
         public BuildingType Type { get => _type; }
-        public List<(int, int)> Coordinates { 
+
+        public Building(BuildingType type)
+        {
+            _type = type;     
+        }
+    }
+
+    public class PeopleBuilding : Building
+    {
+        private List<Person> _people;
+        private bool _onFire;
+        private float _fireProb;
+
+        public List<Person> People { get => _people; }
+        public bool OnFire { get => OnFire; }
+
+        public PeopleBuilding((int x, int y) coordinates, BuildingType type) : base( type)
+        {
+            _people = new List<Person>();
+        }
+
+        public void CalculateFire() { }
+    }
+
+    public class ServiceBuilding : Building
+    {
+        private int _price;
+        private int _maintenanceCost;
+        private bool _onFire;
+        private float _fireProb;
+        private (int x, int y) _coordinates;
+
+        public int Price { get => _price; }
+        public int MaintenceCost { get => _maintenanceCost; }
+        public bool Onfire { get => _onFire; }
+        public List<(int, int)> Coordinates
+        {
             get
             {
                 List<(int, int)> returnList = new List<(int, int)>();
 
                 switch (_type)
                 {
-                    case BuildingType.Industry:
-                    case BuildingType.OfficeBuilding:
-                    case BuildingType.Home:
                     case BuildingType.PoliceStation:
                     case BuildingType.FireStation:
-                    case BuildingType.Road:                     
                         returnList.Add((_coordinates.x, _coordinates.y));
                         break;
                     case BuildingType.Stadium:
@@ -41,44 +73,9 @@ namespace simcityModel.Model
             }
         }
 
-        public Building((int x, int y) coordinates, BuildingType type)
+        public ServiceBuilding((int x, int y) coordinates,  BuildingType type) : base(type)
         {
-            _type = type;
-            _coordinates = coordinates;        
-        }
-    }
-
-    public class PeopleBuilding : Building
-    {
-        private List<Person> _people;
-        private bool _onFire;
-        private float _fireProb;
-
-        public List<Person> People { get => _people; }
-        public bool OnFire { get => OnFire; }
-
-        public PeopleBuilding((int x, int y) coordinates, BuildingType type) : base(coordinates, type)
-        {
-            _people = new List<Person>();
-        }
-
-        public void CalculateFire() { }
-    }
-
-    public class ServiceBuilding : Building
-    {
-        private int _price;
-        private int _maintenanceCost;
-        private bool _onFire;
-        private float _fireProb;
-
-        public int Price { get => _price; }
-        public int MaintenceCost { get => _maintenanceCost; }
-        public bool Onfire { get => _onFire; }
-
-        public ServiceBuilding((int x, int y) coordinates,  BuildingType type) : base(coordinates, type)
-        {
-
+            _coordinates = coordinates;
         }
 
         public void CalculateFire() { }
@@ -94,7 +91,7 @@ namespace simcityModel.Model
         public int Price { get => _price; }
         public int MaintenceCost { get => _maintenanceCost; }
 
-        public Road((int x, int y) coordinates) : base(coordinates, BuildingType.Road)
+        public Road((int x, int y) coordinates) : base(BuildingType.Road)
         {
             
         }
