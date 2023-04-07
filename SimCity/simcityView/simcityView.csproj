@@ -11,9 +11,13 @@
     <None Remove="View\Textures\building_medium_blue_a.png" />
     <None Remove="View\Textures\building_tall_yellow_a.png" />
     <None Remove="View\Textures\fire_station_a.png" />
+    <None Remove="View\Textures\ground_grass.png" />
     <None Remove="View\Textures\house_small_yellow_a.png" />
     <None Remove="View\Textures\missing_texture.png" />
+    <None Remove="View\Textures\parking_asphalt.png" />
     <None Remove="View\Textures\police_station_a.png" />
+    <None Remove="View\Textures\street_straight.png" />
+    <None Remove="View\Textures\tree_pine_02.png" />
     <None Remove="View\Textures\warehouse_orange_a.png" />
   </ItemGroup>
 
@@ -32,13 +36,25 @@
     <Content Include="View\Textures\fire_station_a.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="View\Textures\ground_grass.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="View\Textures\house_small_yellow_a.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="View\Textures\missing_texture.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="View\Textures\parking_asphalt.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="View\Textures\police_station_a.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="View\Textures\street_straight.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="View\Textures\tree_pine_02.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="View\Textures\warehouse_orange_a.png">
