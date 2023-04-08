@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using System.Timers;
 using System.Security.Cryptography;
+using System.Xml.Linq;
 
 namespace simcityModel.Model
 {
@@ -104,6 +105,17 @@ namespace simcityModel.Model
         {
             _dataAccess = dataAccess;
             _fields = new Field[GAMESIZE, GAMESIZE];
+
+            for (int i = 0; i < GAMESIZE; i++)
+            {
+                for (int j = 0; j < GAMESIZE; j++)
+                {
+                    _fields[i, j] = new Field();
+                }
+            }
+
+            IDataAccess d = _dataAccess; 
+
             _people = new List<Person>();
             _incomeList = new List<BudgetRecord>();
             _expenseList = new List<BudgetRecord>();
