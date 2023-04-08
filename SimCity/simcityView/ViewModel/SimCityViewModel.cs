@@ -159,7 +159,6 @@ namespace simcityView.ViewModel
             fillBuildingTextures();
 
             UpdateMouseStateText();
-            InfoText = "Nincs játék betöltve!";
             fillCells();
             fillBudgets();
         }
