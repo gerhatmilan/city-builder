@@ -21,24 +21,25 @@ namespace simcityModel.Model
         #region Private fields
 
         private const int GAMESIZE = 10;
+        private const float PRICERETURN_MULTIPLIER = 2f / 3;
 
-        private Dictionary<FieldType, int> _zonePrices = new Dictionary<FieldType, int>()
+        private Dictionary<FieldType, (int price, int returnPrice)> _zonePrices = new Dictionary<FieldType, (int, int)>()
         {
-            { FieldType.IndustrialZone, 150 },
-            { FieldType.OfficeZone, 150 },
-            { FieldType.ResidentalZone, 150 },
-            { FieldType.GeneralField, 0 }
+            { FieldType.IndustrialZone, (150, CalculateReturnPrice(150)) },
+            { FieldType.OfficeZone, (150, CalculateReturnPrice(150)) },
+            { FieldType.ResidentalZone, (150, CalculateReturnPrice(150)) },
+            { FieldType.GeneralField, (0, CalculateReturnPrice(0)) }
         };
 
-        private Dictionary<BuildingType, (int price, int maintenceCost)> _buildingPrices = new Dictionary<BuildingType, (int, int)>()
+        private Dictionary<BuildingType, (int price, int returnPrice, int maintenceCost)> _buildingPrices = new Dictionary<BuildingType, (int, int, int)>()
         {
-            { BuildingType.Industry, (0, 0) },
-            { BuildingType.OfficeBuilding, (0, 0) },
-            { BuildingType.Home, (0, 0) },
-            { BuildingType.Stadium, (500, 1000) },
-            { BuildingType.PoliceStation, (300, 600) },
-            { BuildingType.FireStation, (400, 800) },
-            { BuildingType.Road, (100, 200) }
+            { BuildingType.Industry, (0, CalculateReturnPrice(0), 0) },
+            { BuildingType.OfficeBuilding, (0, CalculateReturnPrice(0), 0) },
+            { BuildingType.Home, (0, CalculateReturnPrice(0), 0) },
+            { BuildingType.Stadium, (500, CalculateReturnPrice(500), 1000) },
+            { BuildingType.PoliceStation, (300, CalculateReturnPrice(300), 600) },
+            { BuildingType.FireStation, (400, CalculateReturnPrice(400), 800) },
+            { BuildingType.Road, (100, CalculateReturnPrice(100), 200) }
         };
 
         private IDataAccess _dataAccess;
@@ -142,6 +143,15 @@ namespace simcityModel.Model
 
         #endregion
 
+        #region Private methods
+
+        private static int CalculateReturnPrice(int originalPrice)
+        {
+            return Convert.ToInt32(originalPrice * PRICERETURN_MULTIPLIER);
+        }
+
+        #endregion
+
         #region Public methods
 
         public void InitializeGame()
@@ -166,6 +176,8 @@ namespace simcityModel.Model
             {
                 _fields[x, y].Type = newFieldType;
                 OnMatrixChanged((x, y));
+
+                _money -= _zonePrices[newFieldType].price;
             }
             else
             {
@@ -181,12 +193,15 @@ namespace simcityModel.Model
                 case BuildingType.Home:
                     _fields[x, y].Building = new PeopleBuilding(newBuildingType);
                     OnMatrixChanged((x, y));
+                    _money -= _buildingPrices[newBuildingType].price;
                     break;
                 case BuildingType.Road:
                     if (_fields[x, y].Type == FieldType.GeneralField && _fields[x, y].Building == null)
                     {
                         _fields[x, y].Building = new Road();
                         OnMatrixChanged((x, y));
+
+                        _money -= _buildingPrices[newBuildingType].price;
                     }
                     else
                     {
@@ -208,6 +223,7 @@ namespace simcityModel.Model
                         _fields[coords.x, coords.y].Building = building;
                         OnMatrixChanged((coords.x, coords.y));
                     }
+                    _money -= _buildingPrices[newBuildingType].price;
                     break;
             }
         }
@@ -221,6 +237,7 @@ namespace simcityModel.Model
                 case FieldType.OfficeZone:
                     if (_fields[x, y].Building == null)
                     {
+                        _money += _zonePrices[_fields[x, y].Type].returnPrice;
                         _fields[x, y].Type = FieldType.GeneralField;
                         OnMatrixChanged((x, y));
                     }
@@ -235,13 +252,17 @@ namespace simcityModel.Model
                             /* maintence cost needs to be handled  */
                             /* certain percantage of the price must be returned */
 
-                           _fields[x, y].Building = null;
+                            _money += _buildingPrices[_fields[x, y].Building!.Type].returnPrice;
+                            _fields[x, y].Building = null;
                             OnMatrixChanged((x, y));
-                            break;
+
+                          break;
                         default:
                             /* maintence cost needs to be handled  */
                             /* certain percantage of the price must be returned */
                             /* additional effects needs to be handled (eg. happiness of nearby people) */
+
+                            _money += _buildingPrices[_fields[x, y].Building!.Type].returnPrice;
 
                             foreach ((int x, int y) coords in ((ServiceBuilding)_fields[x, y].Building!).Coordinates)
                             {
