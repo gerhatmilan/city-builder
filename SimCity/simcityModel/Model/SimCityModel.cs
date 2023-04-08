@@ -8,6 +8,7 @@ using System.Threading;
 using System.Timers;
 using System.Security.Cryptography;
 using System.Xml.Linq;
+using System.Diagnostics.CodeAnalysis;
 
 namespace simcityModel.Model
 {
@@ -22,6 +23,7 @@ namespace simcityModel.Model
 
         private const int GAMESIZE = 10;
         private const float PRICERETURN_MULTIPLIER = 2f / 3;
+        private const int TAX_PER_PERSON = 5;
 
         private Dictionary<FieldType, (int price, int returnPrice)> _zonePrices = new Dictionary<FieldType, (int, int)>()
         {
@@ -170,6 +172,26 @@ namespace simcityModel.Model
             OnGameAdvanced();
         }
 
+        public void GetTax()
+        {
+            int sum = 0;
+
+            for (int i = 0; i < GameSize; i++)
+            {
+                for (int j = 0; j < GameSize; j++)
+                {
+                    if (_fields[i, j].Type != FieldType.GeneralField)
+                    {
+                        sum += _fields[i, j].NumberOfPeople * 5;
+                    }
+                }
+            }
+
+            _money += sum;
+            _incomeList.Add(new BudgetRecord("Adóbevétel", sum));
+            OnIncomeListChanged();
+        }
+
         public void MakeZone(int x, int y, FieldType newFieldType)
         {
             if (_fields[x, y].Type == FieldType.GeneralField && _fields[x, y].Building == null)
@@ -178,6 +200,8 @@ namespace simcityModel.Model
                 OnMatrixChanged((x, y));
 
                 _money -= _zonePrices[newFieldType].price;
+                _expenseList.Add(new BudgetRecord("Zónalerakás", _zonePrices[newFieldType].price));
+                OnExpenseListChanged();
             }
             else
             {
@@ -193,7 +217,7 @@ namespace simcityModel.Model
                 case BuildingType.Home:
                     _fields[x, y].Building = new PeopleBuilding(newBuildingType);
                     OnMatrixChanged((x, y));
-                    _money -= _buildingPrices[newBuildingType].price;
+
                     break;
                 case BuildingType.Road:
                     if (_fields[x, y].Type == FieldType.GeneralField && _fields[x, y].Building == null)
@@ -202,11 +226,14 @@ namespace simcityModel.Model
                         OnMatrixChanged((x, y));
 
                         _money -= _buildingPrices[newBuildingType].price;
+                        _expenseList.Add(new BudgetRecord("Útlerakás", _buildingPrices[newBuildingType].price));
+                        OnExpenseListChanged();
                     }
                     else
                     {
                         throw new CannotBuildException("Erre a mezőre nem rakhatsz le utat.");
                     }
+
                     break;
                 default:
                     ServiceBuilding building = new ServiceBuilding((x, y), newBuildingType);
@@ -224,6 +251,10 @@ namespace simcityModel.Model
                         OnMatrixChanged((coords.x, coords.y));
                     }
                     _money -= _buildingPrices[newBuildingType].price;
+
+                    _expenseList.Add(new BudgetRecord("Épületlerakás", _buildingPrices[newBuildingType].price));
+                    OnExpenseListChanged();
+
                     break;
             }
         }
@@ -238,6 +269,9 @@ namespace simcityModel.Model
                     if (_fields[x, y].Building == null)
                     {
                         _money += _zonePrices[_fields[x, y].Type].returnPrice;
+                        _incomeList.Add(new BudgetRecord("Zónarombolás", _zonePrices[_fields[x, y].Type].returnPrice));
+                        OnIncomeListChanged();
+
                         _fields[x, y].Type = FieldType.GeneralField;
                         OnMatrixChanged((x, y));
                     }
@@ -253,6 +287,9 @@ namespace simcityModel.Model
                             /* certain percantage of the price must be returned */
 
                             _money += _buildingPrices[_fields[x, y].Building!.Type].returnPrice;
+                            _incomeList.Add(new BudgetRecord("Útrombolás", _buildingPrices[_fields[x, y].Building!.Type].returnPrice));
+                            OnIncomeListChanged();
+
                             _fields[x, y].Building = null;
                             OnMatrixChanged((x, y));
 
@@ -263,6 +300,8 @@ namespace simcityModel.Model
                             /* additional effects needs to be handled (eg. happiness of nearby people) */
 
                             _money += _buildingPrices[_fields[x, y].Building!.Type].returnPrice;
+                            _incomeList.Add(new BudgetRecord("Útrombolás", _buildingPrices[_fields[x, y].Building!.Type].returnPrice));
+                            OnIncomeListChanged();
 
                             foreach ((int x, int y) coords in ((ServiceBuilding)_fields[x, y].Building!).Coordinates)
                             {
