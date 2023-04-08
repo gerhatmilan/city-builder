@@ -41,12 +41,12 @@ namespace simcityView
             _timer.Start();
 
             _model = new SimCityModel(new FileDataAccess());
-
             _vm = new SimCityViewModel(_model);
-
             _view = new MainWindow();
             _view.DataContext = _vm;
             _view.Show();
+
+            _model.InitializeGame();
 
             void Timer_Tick(object? s, EventArgs e)
             {

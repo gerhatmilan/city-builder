@@ -67,11 +67,11 @@ namespace simcityModel.Model
         public event EventHandler<(int, int)>? MatrixChanged;
 
         /// <summary>
-        /// Game advance event.
-        /// Gets invoked every time AdvanceTime method is called.
+        /// Game info changed event.
+        /// Gets invoked every time date, money or population count changes in the model.
         /// As a parameter, it passes GameEventArgs to the subscriber, which holds data of the game.
         /// </summary>
-        public event EventHandler<GameEventArgs>? GameAdvanced;
+        public event EventHandler<GameEventArgs>? GameInfoChanged;
 
         /// <summary>
         /// Income list change event.
@@ -139,8 +139,6 @@ namespace simcityModel.Model
             _people = new List<Person>();
             _incomeList = new List<BudgetRecord>();
             _expenseList = new List<BudgetRecord>();
-
-            InitializeGame();
         }
 
         #endregion
@@ -163,13 +161,13 @@ namespace simcityModel.Model
             _population = 0;
             _money = 3000;
             _happiness = 0;
+
+            OnGameInfoChanged();
         }
 
         public void AdvanceTime()
         {
             /* ... */
-
-            OnGameAdvanced();
         }
 
         public void GetTax()
@@ -190,6 +188,7 @@ namespace simcityModel.Model
             _money += sum;
             _incomeList.Add(new BudgetRecord("Adóbevétel", sum));
             OnIncomeListChanged();
+            OnGameInfoChanged();
         }
 
         public void MakeZone(int x, int y, FieldType newFieldType)
@@ -202,6 +201,7 @@ namespace simcityModel.Model
                 _money -= _zonePrices[newFieldType].price;
                 _expenseList.Add(new BudgetRecord("Zónalerakás", _zonePrices[newFieldType].price));
                 OnExpenseListChanged();
+                OnGameInfoChanged();
             }
             else
             {
@@ -228,6 +228,7 @@ namespace simcityModel.Model
                         _money -= _buildingPrices[newBuildingType].price;
                         _expenseList.Add(new BudgetRecord("Útlerakás", _buildingPrices[newBuildingType].price));
                         OnExpenseListChanged();
+                        OnGameInfoChanged();
                     }
                     else
                     {
@@ -254,6 +255,7 @@ namespace simcityModel.Model
 
                     _expenseList.Add(new BudgetRecord("Épületlerakás", _buildingPrices[newBuildingType].price));
                     OnExpenseListChanged();
+                    OnGameInfoChanged();
 
                     break;
             }
@@ -271,6 +273,7 @@ namespace simcityModel.Model
                         _money += _zonePrices[_fields[x, y].Type].returnPrice;
                         _incomeList.Add(new BudgetRecord("Zónarombolás", _zonePrices[_fields[x, y].Type].returnPrice));
                         OnIncomeListChanged();
+                        OnGameInfoChanged();
 
                         _fields[x, y].Type = FieldType.GeneralField;
                         OnMatrixChanged((x, y));
@@ -289,6 +292,7 @@ namespace simcityModel.Model
                             _money += _buildingPrices[_fields[x, y].Building!.Type].returnPrice;
                             _incomeList.Add(new BudgetRecord("Útrombolás", _buildingPrices[_fields[x, y].Building!.Type].returnPrice));
                             OnIncomeListChanged();
+                            OnGameInfoChanged();
 
                             _fields[x, y].Building = null;
                             OnMatrixChanged((x, y));
@@ -302,6 +306,7 @@ namespace simcityModel.Model
                             _money += _buildingPrices[_fields[x, y].Building!.Type].returnPrice;
                             _incomeList.Add(new BudgetRecord("Útrombolás", _buildingPrices[_fields[x, y].Building!.Type].returnPrice));
                             OnIncomeListChanged();
+                            OnGameInfoChanged();
 
                             foreach ((int x, int y) coords in ((ServiceBuilding)_fields[x, y].Building!).Coordinates)
                             {
@@ -327,11 +332,11 @@ namespace simcityModel.Model
         }
 
         /// <summary>
-        /// Invoking GameAdvanced event.
+        /// Invoking GameInfoChanged event.
         /// </summary>
-        private void OnGameAdvanced()
+        private void OnGameInfoChanged()
         {
-            GameAdvanced?.Invoke(this, new GameEventArgs(_gameTime, _money, _population));
+            GameInfoChanged?.Invoke(this, new GameEventArgs(_gameTime, _money, _population));
         }
 
         /// <summary>

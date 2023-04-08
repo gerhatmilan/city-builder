@@ -105,7 +105,7 @@ namespace simcityView.ViewModel
             _model= model;
             _model.IncomeListChanged += new EventHandler<List<BudgetRecord>>(model_UpdateIncomeList);
             _model.ExpenseListChanged += new EventHandler<List<BudgetRecord>>(model_UpdateExpenseList);
-            _model.GameAdvanced += new EventHandler<GameEventArgs>(model_UpdateInfoText);
+            _model.GameInfoChanged += new EventHandler<GameEventArgs>(model_UpdateInfoText);
             _model.MatrixChanged += new EventHandler<(int, int)>(model_MatrixChanged);
 
 
