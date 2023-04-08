@@ -22,6 +22,25 @@ namespace simcityModel.Model
 
         private const int GAMESIZE = 10;
 
+        private Dictionary<FieldType, int> _zonePrices = new Dictionary<FieldType, int>()
+        {
+            { FieldType.IndustrialZone, 150 },
+            { FieldType.OfficeZone, 150 },
+            { FieldType.ResidentalZone, 150 },
+            { FieldType.GeneralField, 0 }
+        };
+
+        private Dictionary<BuildingType, (int price, int maintenceCost)> _buildingPrices = new Dictionary<BuildingType, (int, int)>()
+        {
+            { BuildingType.Industry, (0, 0) },
+            { BuildingType.OfficeBuilding, (0, 0) },
+            { BuildingType.Home, (0, 0) },
+            { BuildingType.Stadium, (500, 1000) },
+            { BuildingType.PoliceStation, (300, 600) },
+            { BuildingType.FireStation, (400, 800) },
+            { BuildingType.Road, (100, 200) }
+        };
+
         private IDataAccess _dataAccess;
         private DateTime _gameTime;
         private GameSpeed _gameSpeed;
@@ -130,11 +149,16 @@ namespace simcityModel.Model
             _gameTime = DateTime.Now;
             _gameSpeed = GameSpeed.Normal;
             _population = 0;
-            _money = 1000;
+            _money = 3000;
             _happiness = 0;
         }
 
-        public void AdvanceTime() { }
+        public void AdvanceTime()
+        {
+            /* ... */
+
+            OnGameAdvanced();
+        }
 
         public void MakeZone(int x, int y, FieldType newFieldType)
         {
