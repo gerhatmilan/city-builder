@@ -304,7 +304,7 @@ namespace simcityModel.Model
                             /* additional effects needs to be handled (eg. happiness of nearby people) */
 
                             _money += _buildingPrices[_fields[x, y].Building!.Type].returnPrice;
-                            _incomeList.Add(new BudgetRecord("Útrombolás", _buildingPrices[_fields[x, y].Building!.Type].returnPrice));
+                            _incomeList.Add(new BudgetRecord("Épületrombolás", _buildingPrices[_fields[x, y].Building!.Type].returnPrice));
                             OnIncomeListChanged();
                             OnGameInfoChanged();
 
