@@ -177,49 +177,59 @@ namespace simcityView.ViewModel
         private void fillCells()
         {
             Cells.Clear();
-            for(int x = 0; x< _model.GameSize; x++)
+            for(int y = 0; y< _model.GameSize; y++)
             {
                 
-                for(int y = 0; y< _model.GameSize; y++)
+                for(int x = 0; x< _model.GameSize; x++)
                 {
                     Block b = new Block(_floorTextures[1], _buildingTextures[1]);
                     b.X = x;
                     b.Y= y;
                     b.UpdateToolTipText = new DelegateCommand(param => b.ToolTipText = _playFieldX.ToString());
                     b.ClickCom = new DelegateCommand(param => {
-                        if (_flipBuldozeMode)
+                        try
                         {
-                            _model.Destroy(b.X, b.Y);
-                        }
-                        else
-                        {
-                            
-                            switch (SelectedTab)
+                            if (_flipBuldozeMode)
                             {
-                                case 0:
-                                    
-                                    switch (_currentFieldType)
-                                    {
-                                        case "Re": _model.MakeZone(b.X, b.Y, FieldType.ResidentalZone); break;
-                                        case "I": _model.MakeZone(b.X, b.Y, FieldType.IndustrialZone); break;
-                                        case "O": _model.MakeZone(b.X, b.Y, FieldType.OfficeZone); break;
-                                    }
-                                    break;
-
-                                case 1:
-                                    
-                                    switch (_currentBuildingType)
-                                    {
-                                        case "Ro": _model.MakeBuilding(b.X,b.Y,BuildingType.Road); break;
-                                        case "S": _model.MakeBuilding(b.X, b.Y, BuildingType.Stadium); break;
-                                        case "F": _model.MakeBuilding(b.X, b.Y, BuildingType.FireStation); break;
-                                        case "P": _model.MakeBuilding(b.X, b.Y, BuildingType.PoliceStation); break;
-                                    }
-                                    break;
-                                case 2: break;
-                                default: break;
+                                _model.Destroy(b.X, b.Y);
                             }
+                            else
+                            {
+
+                                switch (SelectedTab)
+                                {
+                                    case 0:
+
+                                        switch (_currentFieldType)
+                                        {
+                                            case "Re": _model.MakeZone(b.X, b.Y, FieldType.ResidentalZone); break;
+                                            case "I": _model.MakeZone(b.X, b.Y, FieldType.IndustrialZone); break;
+                                            case "O": _model.MakeZone(b.X, b.Y, FieldType.OfficeZone); break;
+                                        }
+                                        break;
+
+                                    case 1:
+
+                                        switch (_currentBuildingType)
+                                        {
+                                            case "Ro": _model.MakeBuilding(b.X, b.Y, BuildingType.Road); break;
+                                            case "S": _model.MakeBuilding(b.X, b.Y, BuildingType.Stadium); break;
+                                            case "F": _model.MakeBuilding(b.X, b.Y, BuildingType.FireStation); break;
+                                            case "P": _model.MakeBuilding(b.X, b.Y, BuildingType.PoliceStation); break;
+                                        }
+                                        break;
+                                    case 2: break;
+                                    default: break;
+                                }
+                            }
+
+
                         }
+                        catch(Exception e)
+                        {
+
+                        }
+                        
                     
                     
                     
@@ -265,8 +275,8 @@ namespace simcityView.ViewModel
             _floorTextures[0] = UriToImageBrush(@"~\..\View\Textures\missing_texture.png");
             _floorTextures[1] = UriToImageBrush(@"~\..\View\Textures\ground_grass.png");
             _floorTextures[2] = UriToImageBrush(@"~\..\View\Textures\ground_dirt.png");
-            _floorTextures[3] = UriToImageBrush(@"~\..\View\Textures\asphalt.png");
-            _floorTextures[4] = UriToImageBrush(@"~\..\View\Textures\street_straight");
+            _floorTextures[3] = UriToImageBrush(@"~\..\View\Textures\ground_asphalt.png");
+            _floorTextures[4] = UriToImageBrush(@"~\..\View\Textures\parking_asphalt.png");
 
 
         }
@@ -280,10 +290,16 @@ namespace simcityView.ViewModel
             _buildingTextures[3] = UriToBitmapImage(@"~\..\Textures\building_tall_yellow_a.png");
             _buildingTextures[4] = UriToBitmapImage(@"~\..\Textures\fire_station_a.png");
             _buildingTextures[5] = UriToBitmapImage(@"~\..\Textures\light_pole_b.png");
-            _buildingTextures[6] = UriToBitmapImage(@"~\..\Textures\building_tall_blue_a");
-            _buildingTextures[7] = UriToBitmapImage(@"~\..\Textures\house_small_purple.png");
+            _buildingTextures[6] = UriToBitmapImage(@"~\..\Textures\building_tall_blue_a.png");
+            _buildingTextures[7] = UriToBitmapImage(@"~\..\Textures\house_small_yellow_a.png");
             _buildingTextures[8] = UriToBitmapImage(@"~\..\Textures\police_station_a.png");
             _buildingTextures[9] = UriToBitmapImage(@"~\..\Textures\warehouse_orange_a.png");
+            _buildingTextures[10] = UriToBitmapImage(@"~\..\Textures\weed_medium.png");
+            _buildingTextures[11] = UriToBitmapImage(@"~\..\Textures\road_sign_b.png");
+            _buildingTextures[12] = UriToBitmapImage(@"~\..\Textures\rocks.png");
+
+            _buildingTextures[19] = UriToBitmapImage(@"~\..\Textures\nothing.png");
+
 
 
         }
@@ -409,6 +425,10 @@ namespace simcityView.ViewModel
                 PeopleBuilding pb = (PeopleBuilding)inField.Building; //needed for further operations, DON'T DELETE
                 Cells[CoordsToListIndex(X, Y)].BuildingTexture = _buildingTextures[7];
             }
+            else
+            {
+                Cells[CoordsToListIndex(X, Y)].BuildingTexture = _buildingTextures[10];
+            }
             
 
         }
@@ -419,6 +439,10 @@ namespace simcityView.ViewModel
                 PeopleBuilding pb = (PeopleBuilding)inField.Building; //needed for further operations, DON'T DELETE
                 Cells[CoordsToListIndex(X, Y)].BuildingTexture = _buildingTextures[3];
             }
+            else
+            {
+                Cells[CoordsToListIndex(X, Y)].BuildingTexture = _buildingTextures[11];
+            }
 
 
         }
@@ -428,6 +452,10 @@ namespace simcityView.ViewModel
             {
                 PeopleBuilding pb = (PeopleBuilding)inField.Building; //needed for further operations, DON'T DELETE
                 Cells[CoordsToListIndex(X, Y)].BuildingTexture = _buildingTextures[9];
+            }
+            else
+            {
+                Cells[CoordsToListIndex(X, Y)].BuildingTexture = _buildingTextures[12];
             }
 
 
@@ -443,7 +471,7 @@ namespace simcityView.ViewModel
             {
                 case BuildingType.Road: 
                     Cells[CoordsToListIndex(X, Y)].FloorTexture = _floorTextures[4];
-                    Cells[CoordsToListIndex(X, Y)].BuildingTexture = _buildingTextures[5]; break;
+                    Cells[CoordsToListIndex(X, Y)].BuildingTexture = _buildingTextures[19]; break;
                 case BuildingType.PoliceStation: 
                     Cells[CoordsToListIndex(X, Y)].FloorTexture = _floorTextures[3];
                     Cells[CoordsToListIndex(X, Y)].BuildingTexture = _buildingTextures[8];  break;
