@@ -192,7 +192,44 @@ namespace simcityModel.Model
 
         public void Destroy(int x, int y)
         {
+            switch (_fields[x, y].Type)
+            {
+                case FieldType.IndustrialZone:
+                case FieldType.ResidentalZone:
+                case FieldType.OfficeZone:
+                    if (_fields[x, y].Building == null)
+                    {
+                        _fields[x, y].Type = FieldType.GeneralField;
+                        OnMatrixChanged((x, y));
+                    }
+                    break;
+                case FieldType.GeneralField:
+                    switch (_fields[x, y].Building)
+                    {
+                        case null:
+                            break;
+                        case Road:
+                            /* need to check if every building is still accessible after destroyation */
+                            /* maintence cost needs to be handled  */
+                            /* certain percantage of the price must be returned */
 
+                           _fields[x, y].Building = null;
+                            OnMatrixChanged((x, y));
+                            break;
+                        default:
+                            /* maintence cost needs to be handled  */
+                            /* certain percantage of the price must be returned */
+                            /* additional effects needs to be handled (eg. happiness of nearby people) */
+
+                            foreach ((int x, int y) coords in ((ServiceBuilding)_fields[x, y].Building!).Coordinates)
+                            {
+                                _fields[coords.x, coords.y].Building = null;
+                                OnMatrixChanged((coords.x, coords.y));
+                            }
+                            break;
+                    }
+                    break;
+            }
         }
 
         #endregion
