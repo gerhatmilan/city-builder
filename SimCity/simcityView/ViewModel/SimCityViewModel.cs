@@ -19,7 +19,6 @@ namespace simcityView.ViewModel
         private string _infoText = string.Empty;
         private ImageBrush[] _floorTextures = new ImageBrush[20];
         private BitmapImage[] _buildingTextures = new BitmapImage[20];
-        private int _playFieldSize = 10;
         private float _playFieldX = 250f;
         private float _playFieldY = 250f;
         private float _playFieldZoom = 1f;
@@ -32,19 +31,22 @@ namespace simcityView.ViewModel
         private int _selectedTab = 0;
         private bool _flipBuldozeMode = false;
         private int _time = 0;
+        private int _moneySize = 25;
 
         #endregion
 
         #region props
 
+        #region observableProps
+
         public ObservableCollection<BudgetItem> Income { get; set; }
         public ObservableCollection<BudgetItem> Expense { get; set; }
         public ObservableCollection<Block> Cells { get; set; }
-        public string InfoText
-        {
-            get { return _infoText; }
-            set { _infoText = value; OnPropertyChanged(nameof(InfoText)); }
-        }
+
+        #endregion
+
+        #region camProps
+
         public float PlayFieldX
         {
             get { return _playFieldX; }
@@ -60,17 +62,29 @@ namespace simcityView.ViewModel
             get { return _playFieldZoom; }
             set { _playFieldZoom = value; OnPropertyChanged(nameof(PlayFieldZoom)); }
         }
+
+        #endregion
+
+        #region debugProps
+
         public string MouseStateText
         {
             get { return _mouseStateText; }
             set { _mouseStateText = value; OnPropertyChanged(nameof(MouseStateText)); }
+        }
+        public string InfoText
+        {
+            get { return _infoText; }
+            set { _infoText = value; OnPropertyChanged(nameof(InfoText)); }
         }
         public int SelectedTab
         {
             get { return _selectedTab; }
             set { _selectedTab = value; OnPropertyChanged(nameof(SelectedTab)); UpdateMouseStateText(); }
         }
-        
+
+        #endregion
+
 
 
         public DelegateCommand MovePlayFieldUp { get; set; }
@@ -89,6 +103,12 @@ namespace simcityView.ViewModel
         public SimCityViewModel(SimCityModel model)
         {
             _model= model;
+            _model.IncomeListChanged += new EventHandler<List<BudgetRecord>>(model_UpdateIncomeList);
+            _model.ExpenseListChanged += new EventHandler<List<BudgetRecord>>(model_UpdateExpenseList);
+            _model.GameAdvanced += new EventHandler<GameEventArgs>(model_UpdateInfoText);
+            _model.MatrixChanged += new EventHandler<(int, int)>(model_MatrixChanged);
+
+
             Cells = new ObservableCollection<Block>();
             Income = new ObservableCollection<BudgetItem>();
             Expense = new ObservableCollection<BudgetItem>();
@@ -125,9 +145,9 @@ namespace simcityView.ViewModel
                     switch (num)
                     {
                         case 0: 
-                        case 1:
-                        case 3:
-                        case 2: _time = num; UpdateMouseStateText(); break;
+                        case 1: 
+                        case 2:
+                        case 3: _time = num; UpdateMouseStateText(); break;
                         default: break;
                     }
                 }
@@ -139,7 +159,7 @@ namespace simcityView.ViewModel
             fillBuildingTextures();
 
             UpdateMouseStateText();
-            updateInfoText();
+            InfoText = "Nincs játék betöltve!";
             fillCells();
             fillBudgets();
         }
@@ -148,25 +168,58 @@ namespace simcityView.ViewModel
 
         #region functions
 
+        #region Cell functions
         private int CoordsToListIndex(int x, int y)
         {
-            return (x + y * _playFieldSize);
+            return (x + y * _model.GameSize);
         }
 
         private void fillCells()
         {
             Cells.Clear();
-            for(int x = 0; x<_playFieldSize; x++)
+            for(int x = 0; x< _model.GameSize; x++)
             {
                 
-                for(int y = 0; y< _playFieldSize; y++)
+                for(int y = 0; y< _model.GameSize; y++)
                 {
                     Block b = new Block(_floorTextures[1], _buildingTextures[1]);
                     b.X = x;
                     b.Y= y;
                     b.UpdateToolTipText = new DelegateCommand(param => b.ToolTipText = _playFieldX.ToString());
-                    b.ClickCom = new DelegateCommand(param => { 
-                        
+                    b.ClickCom = new DelegateCommand(param => {
+                        if (_flipBuldozeMode)
+                        {
+                            _model.Destroy(b.X, b.Y);
+                        }
+                        else
+                        {
+                            
+                            switch (SelectedTab)
+                            {
+                                case 0:
+                                    
+                                    switch (_currentFieldType)
+                                    {
+                                        case "Re": _model.MakeZone(b.X, b.Y, FieldType.ResidentalZone); break;
+                                        case "I": _model.MakeZone(b.X, b.Y, FieldType.IndustrialZone); break;
+                                        case "O": _model.MakeZone(b.X, b.Y, FieldType.OfficeZone); break;
+                                    }
+                                    break;
+
+                                case 1:
+                                    
+                                    switch (_currentBuildingType)
+                                    {
+                                        case "Ro": _model.MakeBuilding(b.X,b.Y,BuildingType.Road); break;
+                                        case "S": _model.MakeBuilding(b.X, b.Y, BuildingType.Stadium); break;
+                                        case "F": _model.MakeBuilding(b.X, b.Y, BuildingType.FireStation); break;
+                                        case "P": _model.MakeBuilding(b.X, b.Y, BuildingType.PoliceStation); break;
+                                    }
+                                    break;
+                                case 2: break;
+                                default: break;
+                            }
+                        }
                     
                     
                     
@@ -176,37 +229,44 @@ namespace simcityView.ViewModel
                 
             }
            
-            Cells[CoordsToListIndex(2,2)].BuildingTexture = _buildingTextures[2];
-            Cells[CoordsToListIndex(3, 2)].BuildingTexture = _buildingTextures[2];
-            Cells[CoordsToListIndex(4, 2)].BuildingTexture = _buildingTextures[2];
 
         }
+
+        #endregion
 
         private void fillBudgets()
         {
             Income.Clear();
-            Expense.Clear();
-            
             BudgetItem incomeHeader = new BudgetItem();
             incomeHeader.MoneyText = "Bevétel:";
             Income.Add(incomeHeader);
 
+            Expense.Clear();
             BudgetItem expenseHeader = new BudgetItem();
             expenseHeader.MoneyText = "Kiadások:";
             Expense.Add(expenseHeader);
+
+            for(int i = 1; i <=_moneySize; i++)
+            {
+                Income.Add(new BudgetItem());
+                Expense.Add(new BudgetItem());
+            }
+
+
         }
 
-        private void updateInfoText()
-        {
-            InfoText = "Dátum: 2023/04/02\t|\tPénz: 99999💸\t|\tLakosság: 100 fő";
-        }
+
+
+        #region Texture functions
 
         private void fillFloorTextures()
         {
             
             _floorTextures[0] = UriToImageBrush(@"~\..\View\Textures\missing_texture.png");
             _floorTextures[1] = UriToImageBrush(@"~\..\View\Textures\ground_grass.png");
-            _floorTextures[2] = UriToImageBrush(@"~\..\View\Textures\street_straight");
+            _floorTextures[2] = UriToImageBrush(@"~\..\View\Textures\ground_dirt.png");
+            _floorTextures[3] = UriToImageBrush(@"~\..\View\Textures\asphalt.png");
+            _floorTextures[4] = UriToImageBrush(@"~\..\View\Textures\street_straight");
 
 
         }
@@ -218,6 +278,14 @@ namespace simcityView.ViewModel
             _buildingTextures[1] = UriToBitmapImage(@"~\..\Textures\tree_pine_02.png");
             _buildingTextures[2] = UriToBitmapImage(@"~\..\Textures\building_medium_blue_a.png");
             _buildingTextures[3] = UriToBitmapImage(@"~\..\Textures\building_tall_yellow_a.png");
+            _buildingTextures[4] = UriToBitmapImage(@"~\..\Textures\fire_station_a.png");
+            _buildingTextures[5] = UriToBitmapImage(@"~\..\Textures\light_pole_b.png");
+            _buildingTextures[6] = UriToBitmapImage(@"~\..\Textures\building_tall_blue_a");
+            _buildingTextures[7] = UriToBitmapImage(@"~\..\Textures\house_small_purple.png");
+            _buildingTextures[8] = UriToBitmapImage(@"~\..\Textures\police_station_a.png");
+            _buildingTextures[9] = UriToBitmapImage(@"~\..\Textures\warehouse_orange_a.png");
+
+
         }
 
         private ImageBrush UriToImageBrush(string s)
@@ -228,6 +296,9 @@ namespace simcityView.ViewModel
         {
             return new BitmapImage(new Uri(s, UriKind.Relative));
         }
+
+        #endregion
+
         private void UpdateMouseStateText()
         {
             switch (SelectedTab)
@@ -239,6 +310,7 @@ namespace simcityView.ViewModel
             }
            
         }
+
         
         private void SelectedBuildableSorter(string s)
         {
@@ -252,6 +324,135 @@ namespace simcityView.ViewModel
                 case "F":
                 case "P": _currentBuildingType= s; UpdateMouseStateText(); break;
                 default: break;
+            }
+        }
+
+
+
+        #endregion
+
+        #region model functions
+            
+        private void model_UpdateIncomeList(object? s, List<BudgetRecord> e)
+        {
+            if (e.Count >= _moneySize)
+            {
+                for(int i = 1; i<= _moneySize; i++)
+                {
+                    Income[i].MoneyText = e[i - 1].Text + " " + e[i - 1].Amount.ToString() + "💸";
+                }
+            }
+            else
+            {
+                int i;
+                for (i=0; i < e.Count; i++)
+                {
+                    Income[i+1].MoneyText =  e[i].Text + " " + e[i].Amount.ToString() + "💸";
+                }
+                for(i=i+1; i<= _moneySize; i++)
+                {
+                    Income[i].MoneyText = "";
+                }
+                
+            }
+            
+            
+            
+            
+        }
+
+        private void model_UpdateExpenseList(object? s, List<BudgetRecord> e)
+        {
+            if (e.Count >= _moneySize)
+            {
+                for (int i = 1; i <= _moneySize; i++)
+                {
+                    Expense[i].MoneyText = e[i - 1].Text + " " + e[i - 1].Amount.ToString() + "💸";
+                }
+            }
+            else
+            {
+                int i;
+                for (i = 0; i < e.Count; i++)
+                {
+                    Expense[i + 1].MoneyText = e[i].Text + " " + e[i].Amount.ToString() + "💸";
+                }
+                for (i = i + 1; i <= _moneySize; i++)
+                {
+                    Expense[i].MoneyText = "";
+                }
+
+            }
+        }
+
+        private void model_UpdateInfoText(object? s, GameEventArgs e )
+        {
+            InfoText = "Dátum: " + e.GameTime.ToString() + "\t|\tPénz: " + e.Money + "💸\t|\tLakosság: " + e.Population + " fő";
+        }
+
+        private void model_MatrixChanged(object? s, (int X, int Y) e)
+        {
+            Field inField = _model.Fields[e.X, e.Y];
+            switch (inField.Type)
+            {
+                case FieldType.ResidentalZone: Cells[CoordsToListIndex(e.X, e.Y)].FloorTexture = _floorTextures[1]; modelHelper_MatrixChangedResidentalZone(inField,e.X, e.Y); break;
+                case FieldType.OfficeZone: Cells[CoordsToListIndex(e.X, e.Y)].FloorTexture = _floorTextures[3]; modelHelper_MatrixChangedOfficeZone(inField, e.X, e.Y); break;
+                case FieldType.IndustrialZone: Cells[CoordsToListIndex(e.X, e.Y)].FloorTexture = _floorTextures[2]; modelHelper_MatrixChangedIndustrialZone(inField, e.X, e.Y); break;
+                case FieldType.GeneralField: modelHelper_MatrixChangedGeneralField(inField,e.X,e.Y); break;
+            }
+        }
+
+        private void modelHelper_MatrixChangedResidentalZone(Field inField, int X, int Y)
+        {
+            if (inField.Building != null)
+            {
+                PeopleBuilding pb = (PeopleBuilding)inField.Building; //needed for further operations, DON'T DELETE
+                Cells[CoordsToListIndex(X, Y)].BuildingTexture = _buildingTextures[7];
+            }
+            
+
+        }
+        private void modelHelper_MatrixChangedOfficeZone(Field inField, int X, int Y)
+        {
+            if (inField.Building != null)
+            {
+                PeopleBuilding pb = (PeopleBuilding)inField.Building; //needed for further operations, DON'T DELETE
+                Cells[CoordsToListIndex(X, Y)].BuildingTexture = _buildingTextures[3];
+            }
+
+
+        }
+        private void modelHelper_MatrixChangedIndustrialZone(Field inField, int X, int Y)
+        {
+            if (inField.Building != null)
+            {
+                PeopleBuilding pb = (PeopleBuilding)inField.Building; //needed for further operations, DON'T DELETE
+                Cells[CoordsToListIndex(X, Y)].BuildingTexture = _buildingTextures[9];
+            }
+
+
+        }
+
+        private void modelHelper_MatrixChangedGeneralField(Field inField, int X, int Y)
+        {
+            if (inField.Building == null)
+            {
+                return;
+            }
+            switch(inField.Building.Type)
+            {
+                case BuildingType.Road: 
+                    Cells[CoordsToListIndex(X, Y)].FloorTexture = _floorTextures[4];
+                    Cells[CoordsToListIndex(X, Y)].BuildingTexture = _buildingTextures[5]; break;
+                case BuildingType.PoliceStation: 
+                    Cells[CoordsToListIndex(X, Y)].FloorTexture = _floorTextures[3];
+                    Cells[CoordsToListIndex(X, Y)].BuildingTexture = _buildingTextures[8];  break;
+                case BuildingType.FireStation:
+                    Cells[CoordsToListIndex(X, Y)].FloorTexture = _floorTextures[3];
+                    Cells[CoordsToListIndex(X, Y)].BuildingTexture = _buildingTextures[4]; break;
+                case BuildingType.Stadium:
+                    Cells[CoordsToListIndex(X, Y)].FloorTexture = _floorTextures[3];
+                    Cells[CoordsToListIndex(X, Y)].BuildingTexture = _buildingTextures[6]; break;
             }
         }
 
