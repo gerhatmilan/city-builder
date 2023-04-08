@@ -1,4 +1,4 @@
-﻿using simcityPersistance.Persistance;
+using simcityPersistance.Persistance;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -113,8 +113,6 @@ namespace simcityModel.Model
                     _fields[i, j] = new Field();
                 }
             }
-
-            IDataAccess d = _dataAccess; 
 
             _people = new List<Person>();
             _incomeList = new List<BudgetRecord>();
