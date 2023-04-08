@@ -464,6 +464,8 @@ namespace simcityView.ViewModel
         {
             if (inField.Building == null)
             {
+                Cells[CoordsToListIndex(X, Y)].FloorTexture = _floorTextures[1];
+                Cells[CoordsToListIndex(X, Y)].BuildingTexture = _buildingTextures[19];
                 return;
             }
             switch(inField.Building.Type)
