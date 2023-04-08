@@ -175,7 +175,7 @@ namespace simcityModel.Model
                     ServiceBuilding building = new ServiceBuilding((x, y), newBuildingType);
                     foreach ((int x, int y) coords in building.Coordinates)
                     {
-                        if (_fields[coords.x, coords.y].Type != FieldType.GeneralField || _fields[coords.x, coords.y].Building != null)
+                        if (coords.x >= GameSize || coords.y >= GameSize || _fields[coords.x, coords.y].Type != FieldType.GeneralField || _fields[coords.x, coords.y].Building != null)
                         {
                             throw new CannotBuildException("Ide nem építhetsz ilyen épületet.");
                         }
