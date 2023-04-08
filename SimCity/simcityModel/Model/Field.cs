@@ -10,6 +10,8 @@ namespace simcityModel.Model
     {
         private FieldType _type;
         private Building? _building;
+        private int _capacity;
+        private int _numberOfPeople;
 
         public FieldType Type
         {
@@ -22,6 +24,22 @@ namespace simcityModel.Model
             get { return _building; }
             set { _building = value; }
         }
+
+        public int Capacity
+        {
+            get
+            {
+                switch (_type)
+                {
+                    case FieldType.ResidentalZone: return 20;
+                    case FieldType.IndustrialZone: return 30;
+                    case FieldType.OfficeZone: return 40;
+                    default: return 0;
+                }
+            }
+        }
+
+        public int NumberOfPeople { get => _numberOfPeople; set => _numberOfPeople = value; }
 
         public Field()
         {
