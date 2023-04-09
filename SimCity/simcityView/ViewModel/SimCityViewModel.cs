@@ -14,7 +14,6 @@ namespace simcityView.ViewModel
     {
         #region variables
 
-
         private SimCityModel _model;
         private string _infoText = string.Empty;
         private ImageBrush[] _floorTextures = new ImageBrush[20];
@@ -31,21 +30,18 @@ namespace simcityView.ViewModel
         private int _selectedTab = 0;
         private bool _flipBuldozeMode = false;
         private int _time = 0;
-        private int _moneySize = 25;
 
         #endregion
 
-        #region props
-
-        #region observableProps
+        #region Props
+        #region ObservableProps
 
         public ObservableCollection<BudgetItem> Income { get; set; }
         public ObservableCollection<BudgetItem> Expense { get; set; }
         public ObservableCollection<Block> Cells { get; set; }
 
         #endregion
-
-        #region camProps
+        #region CamProps
 
         public float PlayFieldX
         {
@@ -64,8 +60,7 @@ namespace simcityView.ViewModel
         }
 
         #endregion
-
-        #region debugProps
+        #region DebugProps
 
         public string MouseStateText
         {
@@ -84,9 +79,7 @@ namespace simcityView.ViewModel
         }
 
         #endregion
-
-
-
+        #region DelegateCommands
         public DelegateCommand MovePlayFieldUp { get; set; }
         public DelegateCommand MovePlayFieldDown { get; set; }
         public DelegateCommand MovePlayFieldLeft { get; set; }
@@ -96,10 +89,11 @@ namespace simcityView.ViewModel
         public DelegateCommand SelectedBuildable { get; set; }
         public DelegateCommand FlipBuldozeMode { get; set; }
         public DelegateCommand TimeSet { get; set; }
-
+        
+        #endregion
         #endregion
 
-        #region constructor
+        #region Constructor
         public SimCityViewModel(SimCityModel model)
         {
             _model= model;
@@ -160,14 +154,16 @@ namespace simcityView.ViewModel
 
             UpdateMouseStateText();
             fillCells();
-            fillBudgets();
+            fillIncome();
+            fillExpense();
+                
         }
 
         #endregion
 
-        #region functions
-
+        #region ViewModel functions
         #region Cell functions
+        
         private int CoordsToListIndex(int x, int y)
         {
             return (x + y * _model.GameSize);
@@ -242,30 +238,25 @@ namespace simcityView.ViewModel
         }
 
         #endregion
+        #region Budget functions
 
-        private void fillBudgets()
+        private void fillIncome()
         {
             Income.Clear();
             BudgetItem incomeHeader = new BudgetItem();
             incomeHeader.MoneyText = "Bevétel:";
             Income.Add(incomeHeader);
+        }
 
+        private void fillExpense()
+        {
             Expense.Clear();
             BudgetItem expenseHeader = new BudgetItem();
             expenseHeader.MoneyText = "Kiadások:";
             Expense.Add(expenseHeader);
-
-            for(int i = 1; i <=_moneySize; i++)
-            {
-                Income.Add(new BudgetItem());
-                Expense.Add(new BudgetItem());
-            }
-
-
         }
 
-
-
+        #endregion
         #region Texture functions
 
         private void fillFloorTextures()
@@ -313,7 +304,8 @@ namespace simcityView.ViewModel
         }
 
         #endregion
-
+        #region MouseState functions
+        
         private void UpdateMouseStateText()
         {
             switch (SelectedTab)
@@ -342,61 +334,30 @@ namespace simcityView.ViewModel
             }
         }
 
-
-
+        #endregion
         #endregion
 
-        #region model functions
-            
+        #region Model functions
+
         private void model_UpdateIncomeList(object? s, List<BudgetRecord> e)
         {
-            if (e.Count >= _moneySize)
+            fillIncome();
+            foreach(BudgetRecord item in e)
             {
-                for(int i = 1; i<= _moneySize; i++)
-                {
-                    Income[i].MoneyText = e[i - 1].Text + " " + e[i - 1].Amount.ToString() + "💸";
-                }
+                BudgetItem toAdd = new BudgetItem();
+                toAdd.MoneyText = item.Text + " " + item.Amount.ToString() + "💸";
+                Income.Add(toAdd);
             }
-            else
-            {
-                int i;
-                for (i=0; i < e.Count; i++)
-                {
-                    Income[i+1].MoneyText =  e[i].Text + " " + e[i].Amount.ToString() + "💸";
-                }
-                for(i=i+1; i<= _moneySize; i++)
-                {
-                    Income[i].MoneyText = "";
-                }
-                
-            }
-            
-            
-            
-            
         }
 
         private void model_UpdateExpenseList(object? s, List<BudgetRecord> e)
         {
-            if (e.Count >= _moneySize)
+            fillExpense();
+            foreach (BudgetRecord item in e)
             {
-                for (int i = 1; i <= _moneySize; i++)
-                {
-                    Expense[i].MoneyText = e[i - 1].Text + " " + e[i - 1].Amount.ToString() + "💸";
-                }
-            }
-            else
-            {
-                int i;
-                for (i = 0; i < e.Count; i++)
-                {
-                    Expense[i + 1].MoneyText = e[i].Text + " " + e[i].Amount.ToString() + "💸";
-                }
-                for (i = i + 1; i <= _moneySize; i++)
-                {
-                    Expense[i].MoneyText = "";
-                }
-
+                BudgetItem toAdd = new BudgetItem();
+                toAdd.MoneyText = item.Text + " " + item.Amount.ToString() + "💸";
+                Expense.Add(toAdd);
             }
         }
 
