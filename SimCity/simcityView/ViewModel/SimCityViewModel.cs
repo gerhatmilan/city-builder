@@ -349,26 +349,28 @@ namespace simcityView.ViewModel
 
         private void model_UpdateIncomeList(object? s, List<BudgetRecord> e)
         {
+
+
             fillIncome();
-            e.Reverse();
-            foreach(BudgetRecord item in e)
+            for (int i = e.Count()-1; i>-1; i-- )
             {
                 BudgetItem toAdd = new BudgetItem();
-                toAdd.MoneyText = item.Text + " " + item.Amount.ToString() + "💸";
+                toAdd.MoneyText = e[i].Text + " " + e[i].Amount.ToString() + "💸";
                 Income.Add(toAdd);
             }
+            OnPropertyChanged(nameof(Income));
         }
 
         private void model_UpdateExpenseList(object? s, List<BudgetRecord> e)
         {
             fillExpense();
-            e.Reverse();
-            foreach (BudgetRecord item in e)
+            for (int i = e.Count() - 1; i > -1; i--)
             {
                 BudgetItem toAdd = new BudgetItem();
-                toAdd.MoneyText = item.Text + " " + item.Amount.ToString() + "💸";
+                toAdd.MoneyText = e[i].Text + " " + e[i].Amount.ToString() + "💸";
                 Expense.Add(toAdd);
             }
+            OnPropertyChanged(nameof(Expense));
         }
 
         private void model_UpdateInfoText(object? s, GameEventArgs e )
