@@ -103,6 +103,7 @@ namespace simcityView.ViewModel
             _model.MatrixChanged += new EventHandler<(int, int)>(model_MatrixChanged);
 
 
+
             Cells = new ObservableCollection<Block>();
             Income = new ObservableCollection<BudgetItem>();
             Expense = new ObservableCollection<BudgetItem>();
@@ -177,10 +178,17 @@ namespace simcityView.ViewModel
                 
                 for(int x = 0; x< _model.GameSize; x++)
                 {
+                    
                     Block b = new Block(_floorTextures[1], _buildingTextures[1]);
                     b.X = x;
                     b.Y= y;
-                    b.UpdateToolTipText = new DelegateCommand(param => b.ToolTipText = _playFieldX.ToString());
+                    b.UpdateToolTipText = new DelegateCommand(param =>
+                    {
+                        b.ToolTipText = "X: " + b.X + " " +
+                                        "Y: " + b.Y + "\n" +
+                                        "Kapacitás: " + _model.Fields[b.X,b.Y].NumberOfPeople + "/" + _model.Fields[b.X, b.Y].Capacity;
+                    });
+                    b.UpdateToolTipText.Execute(this);
                     b.ClickCom = new DelegateCommand(param => {
                         try
                         {
@@ -342,6 +350,7 @@ namespace simcityView.ViewModel
         private void model_UpdateIncomeList(object? s, List<BudgetRecord> e)
         {
             fillIncome();
+            e.Reverse();
             foreach(BudgetRecord item in e)
             {
                 BudgetItem toAdd = new BudgetItem();
@@ -353,6 +362,7 @@ namespace simcityView.ViewModel
         private void model_UpdateExpenseList(object? s, List<BudgetRecord> e)
         {
             fillExpense();
+            e.Reverse();
             foreach (BudgetRecord item in e)
             {
                 BudgetItem toAdd = new BudgetItem();
