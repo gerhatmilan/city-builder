@@ -14,7 +14,7 @@ namespace simcityModel.Model
 {
     public enum GameSpeed { Paused, Normal, Fast, Fastest }
     public enum FieldType { IndustrialZone, OfficeZone, ResidentalZone, GeneralField }
-    public enum BuildingType { Industry, OfficeBuilding, Home, Stadium, PoliceStation, FireStation, Road }
+    public enum BuildingType { Industry, OfficeBuilding, Home, Stadium, PoliceStation, FireStation, Road, None }
     public enum Vehicle { Car, Firecar }
     
     public class SimCityModel
@@ -88,6 +88,13 @@ namespace simcityModel.Model
         public event EventHandler<List<BudgetRecord>>? ExpenseListChanged;
 
         /// <summary>
+        /// Game speed change event.
+        /// Gets invoked when the game speed changes.
+        /// As a parameter, it passes the new GameSpeed.
+        /// </summary>
+        public event EventHandler<GameSpeed>? GameSpeedChanged;
+
+        /// <summary>
         /// Game over event.
         /// Gets invoked when the game is over.
         /// </summary>
@@ -152,6 +159,78 @@ namespace simcityModel.Model
             return Convert.ToInt32(originalPrice * PRICERETURN_MULTIPLIER);
         }
 
+        private bool ValidCoordinates((int x, int y) coordinates)
+        {
+            bool valid = true;
+            if (coordinates.x >= GAMESIZE || coordinates.y >= GAMESIZE || coordinates.x < 0 || coordinates.y < 0)
+                valid = false;
+            
+            return valid;
+        }
+
+        private List<(int,int)> GetAdjacentCoordinates((int x, int y) origin)
+        {
+            var adjacentCoordinates = new List<(int, int)>();
+            if (!ValidCoordinates(origin)) return adjacentCoordinates;
+            
+            if (ValidCoordinates((origin.x + 1, origin.y)))
+                adjacentCoordinates.Add((origin.x + 1, origin.y));
+            if (ValidCoordinates((origin.x - 1, origin.y)))
+                adjacentCoordinates.Add((origin.x - 1, origin.y));
+            if (ValidCoordinates((origin.x, origin.y + 1)))
+                adjacentCoordinates.Add((origin.x, origin.y +1));
+            if (ValidCoordinates((origin.x, origin.y - 1)))
+                adjacentCoordinates.Add((origin.x, origin.y - 1));
+
+            return adjacentCoordinates;
+        }
+
+        private (bool[,] routeExists, (int, int)[,] parents, int[,] distance) BreadthFirst((int x, int y) source)
+        {
+            Queue<(int, int)> q = new Queue<(int, int)>();
+            bool[,] used = new bool[GAMESIZE,GAMESIZE];
+            int[,] distance = new int[GAMESIZE, GAMESIZE];
+            (int x, int y)[,] parents = new (int,int)[GAMESIZE, GAMESIZE];
+            if (!ValidCoordinates(source)) return (used, parents, distance);
+
+            q.Enqueue(source);
+            used[source.x, source.y] = true;
+            parents[source.x, source.y] = (-1, -1);
+            while (q.Count != 0)
+            {
+                (int x, int y) v = q.Dequeue();
+                foreach ((int x, int y) u in GetAdjacentCoordinates((v.x, v.y)))
+                    if (!used[u.x, u.y] && Fields[u.x,u.y].Building.Type != BuildingType.None)
+                    {
+                        used[u.x,u.y] = true;
+                        if (Fields[u.x,u.y].Building.Type == BuildingType.Road)
+                            q.Enqueue(u);
+                        distance[u.x, u.y] = distance[v.x, v.y] + 1;
+                        parents[u.x, u.y] = v;
+                    }
+            }   
+            
+            return (used, parents, distance);
+        }
+
+        private Queue<(int x, int y)> CalculateRoute((int x, int y) start, (int x, int y) end)
+        {
+            Queue<(int x, int y)> route = new Queue<(int x, int y)>();
+            if (!ValidCoordinates(start) || !ValidCoordinates(end))
+                return route;
+            var (used, parents, distance) = BreadthFirst((start.x, start.y));
+            if (used[start.x, start.y])
+            {
+                (int x, int y) v = start;
+                while (v != (-1, -1))
+                {
+                    route.Enqueue(v);
+                    v = parents[v.x, v.y];
+                }
+            }
+            return route;
+        }
+
         #endregion
 
         #region Public methods
@@ -170,6 +249,11 @@ namespace simcityModel.Model
             /* ... */
 
             OnGameAdvanced();
+        }
+        public void ChangeGameSpeed(GameSpeed newSpeed)
+        {
+            _gameSpeed = newSpeed;
+            OnGameSpeedChanged();
         }
 
         public void GetTax()
@@ -348,6 +432,14 @@ namespace simcityModel.Model
         private void OnExpenseListChanged()
         {
             ExpenseListChanged?.Invoke(this, _expenseList);
+        }
+
+        /// <summary>
+        /// Invoking ExpenseListChanged event.
+        /// </summary>
+        private void OnGameSpeedChanged()
+        {
+            GameSpeedChanged?.Invoke(this, _gameSpeed);
         }
 
         /// <summary>
