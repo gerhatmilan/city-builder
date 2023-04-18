@@ -15,7 +15,6 @@
         <KeyBinding Key="Q" Command="{Binding ZoomPlayField}"/>
         <KeyBinding Key="E" Command="{Binding MinimizePlayField}"/>
     </Window.InputBindings>
-    
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
@@ -61,6 +60,7 @@
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
+        <RepeatButton Grid.Row="1" Width="50" Height="50" ClickMode="Hover" Command="{Binding MovePlayFieldRight}" Interval="10" Delay="0"/>
         <Menu Grid.Row="0" FontSize="15">
             <Menu.ItemsPanel>
                 <ItemsPanelTemplate>
