@@ -26,7 +26,7 @@
         <ItemsControl HorizontalAlignment="left" VerticalAlignment="top" Margin="0,0" Grid.Row="1" ItemsSource="{Binding Cells}">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <UniformGrid Rows="10" Columns="10" FlowDirection="RightToLeft"/>
+                    <UniformGrid Rows="15" Columns="15" FlowDirection="RightToLeft"/>
                 </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
             <ItemsControl.RenderTransform>
@@ -110,7 +110,7 @@
                 </Style>
             </StackPanel.Resources>
             <ItemsControl>
-                <RadioButton Content="STOP" Style="{StaticResource Time}" CommandParameter="0"/>
+                <RadioButton Content="STOP" Style="{StaticResource Time}" CommandParameter="0" IsChecked="True"/>
                 <RadioButton Content="▶"    Style="{StaticResource Time}" CommandParameter="1"/>
                 <RadioButton Content="▶▶"   Style="{StaticResource Time}" CommandParameter="2"/>
                 <RadioButton Content="▶▶▶"  Style="{StaticResource Time}" CommandParameter="3"/>

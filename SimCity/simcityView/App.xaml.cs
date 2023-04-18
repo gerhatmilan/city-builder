@@ -8,6 +8,7 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 
 namespace simcityView
 {
@@ -33,15 +34,24 @@ namespace simcityView
 
         public void AppStart(object? s, StartupEventArgs e)
         {
-            _model = new SimCityModel(new SimCityPersistance());
+            /* only for testing purposes for now */
+            DispatcherTimer _timer = new DispatcherTimer();
+            _timer.Interval = TimeSpan.FromSeconds(1);
+            _timer.Tick += Timer_Tick;
+            _timer.Start();
 
+            _model = new SimCityModel(new FileDataAccess());
             _vm = new SimCityViewModel(_model);
-
             _view = new MainWindow();
             _view.DataContext = _vm;
             _view.Show();
 
+            _model.InitializeGame();
 
+            void Timer_Tick(object? s, EventArgs e)
+            {
+                _model.AdvanceTime();
+            }
 
         }
         #endregion
