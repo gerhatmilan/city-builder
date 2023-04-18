@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:local="clr-namespace:simcityView"
         mc:Ignorable="d"
         Title="MainWindow" Height="740" Width="1280" ResizeMode="NoResize">
@@ -21,7 +22,7 @@
             <RowDefinition Height="550"/>
             <RowDefinition Height="130"/>
         </Grid.RowDefinitions>
-       
+
         
         <ItemsControl HorizontalAlignment="left" VerticalAlignment="top" Margin="0,0" Grid.Row="1" ItemsSource="{Binding Cells}">
             <ItemsControl.ItemsPanel>
@@ -76,10 +77,14 @@
         <TextBlock Grid.Row="1" Width="300" Height="30" HorizontalAlignment="Right" VerticalAlignment="Top" Text="{Binding MouseStateText}"/>
         <CheckBox Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="100" Height="20" Content="Buldózer" Command="{Binding FlipBuldozeMode}">
             <CheckBox.RenderTransform>
-                <ScaleTransform CenterX="100" CenterY="0" ScaleX="1.5" ScaleY="1.5"/>
+                <TransformGroup>
+                    <ScaleTransform CenterX="100" CenterY="0" ScaleX="1.5" ScaleY="1.5"/>
+                    <TranslateTransform Y="20"/>
+                </TransformGroup>
+                
             </CheckBox.RenderTransform>
         </CheckBox>
-        <StackPanel Grid.Row="1" HorizontalAlignment="Left" VerticalAlignment="Bottom" FlowDirection="LeftToRight">
+        <StackPanel Grid.Row="1" Margin="20,20" HorizontalAlignment="Left" VerticalAlignment="Bottom" FlowDirection="LeftToRight">
             <StackPanel.Resources>
                 <Style x:Key="Time" TargetType="RadioButton">
                     <Style.Triggers>
@@ -119,6 +124,20 @@
             
             
         </StackPanel>
+        <ScrollBar x:Name="UpDown" Orientation="Vertical" Grid.Row="1" Width="20" HorizontalAlignment="Left" Minimum="0" Maximum="50" Value="0">
+            <i:Interaction.Triggers>
+                <i:EventTrigger EventName="ValueChanged">
+                    <i:InvokeCommandAction Command="{Binding MovePlayFieldY}" CommandParameter="{Binding Value,ElementName=UpDown}"/>
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
+        </ScrollBar>
+        <ScrollBar x:Name="LeftRight" Orientation="Horizontal" Grid.Row="1" Height="20" VerticalAlignment="Bottom" Minimum="0" Maximum="50" Value="0">
+            <i:Interaction.Triggers>
+                <i:EventTrigger EventName="ValueChanged">
+                    <i:InvokeCommandAction Command="{Binding MovePlayFieldX}" CommandParameter="{Binding Value,ElementName=LeftRight}"/>
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
+        </ScrollBar>
         <TabControl Grid.Row="2" FontSize="15" SelectedIndex="{Binding SelectedTab, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
             
 

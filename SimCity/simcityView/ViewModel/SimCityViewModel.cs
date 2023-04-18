@@ -84,6 +84,9 @@ namespace simcityView.ViewModel
         public DelegateCommand MovePlayFieldDown { get; set; }
         public DelegateCommand MovePlayFieldLeft { get; set; }
         public DelegateCommand MovePlayFieldRight { get; set; }
+        public DelegateCommand MovePlayFieldX { get; set; }
+        public DelegateCommand MovePlayFieldY { get; set; }
+
         public DelegateCommand ZoomPlayField { get; set; }
         public DelegateCommand MinimizePlayField { get; set; }
         public DelegateCommand SelectedBuildable { get; set; }
@@ -108,11 +111,14 @@ namespace simcityView.ViewModel
             Income = new ObservableCollection<BudgetItem>();
             Expense = new ObservableCollection<BudgetItem>();
 
-            MovePlayFieldUp = new DelegateCommand(param => PlayFieldY+= _camSpeed * (1/PlayFieldZoom));
-            MovePlayFieldDown = new DelegateCommand(param => PlayFieldY -= _camSpeed * (1 / PlayFieldZoom));
-            MovePlayFieldLeft = new DelegateCommand(param => PlayFieldX += _camSpeed * (1 / PlayFieldZoom));
-            MovePlayFieldRight = new DelegateCommand(param => PlayFieldX -= _camSpeed * (1 / PlayFieldZoom));
-            
+            MovePlayFieldUp = new DelegateCommand(param => PlayFieldY-= _camSpeed * (1/PlayFieldZoom));
+            MovePlayFieldDown = new DelegateCommand(param => PlayFieldY += _camSpeed * (1 / PlayFieldZoom));
+            MovePlayFieldLeft = new DelegateCommand(param => PlayFieldX -= _camSpeed * (1 / PlayFieldZoom));
+            MovePlayFieldRight = new DelegateCommand(param => PlayFieldX += _camSpeed * (1 / PlayFieldZoom));
+            MovePlayFieldY = new DelegateCommand(param => PlayFieldY = (float)(_camSpeed * (1 / PlayFieldZoom) * (double)param!));
+            MovePlayFieldX = new DelegateCommand(param => PlayFieldX = (float)(_camSpeed * (1 / PlayFieldZoom) * (double)param!)+(-365)* (1 / PlayFieldZoom));
+
+
             ZoomPlayField = new DelegateCommand(param => PlayFieldZoom += _zoomSpeed);
             MinimizePlayField = new DelegateCommand(param => PlayFieldZoom -= _zoomSpeed);
             
