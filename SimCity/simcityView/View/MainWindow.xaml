@@ -7,14 +7,7 @@
         xmlns:local="clr-namespace:simcityView"
         mc:Ignorable="d"
         Title="MainWindow" Height="740" Width="1280" ResizeMode="NoResize">
-    <Window.InputBindings>
-        <KeyBinding Key="W" Command="{Binding MovePlayFieldUp}"/>
-        <KeyBinding Key="S" Command="{Binding MovePlayFieldDown}"/>
-        <KeyBinding Key="A" Command="{Binding MovePlayFieldLeft}"/>
-        <KeyBinding Key="D" Command="{Binding MovePlayFieldRight}"/>
-        <KeyBinding Key="Q" Command="{Binding ZoomPlayField}"/>
-        <KeyBinding Key="E" Command="{Binding MinimizePlayField}"/>
-    </Window.InputBindings>
+   
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
@@ -26,7 +19,7 @@
         <ItemsControl HorizontalAlignment="left" VerticalAlignment="top" Margin="0,0" Grid.Row="1" ItemsSource="{Binding Cells}">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
-                    <UniformGrid Rows="15" Columns="15" FlowDirection="RightToLeft"/>
+                    <UniformGrid Rows="18" Columns="18" FlowDirection="RightToLeft"/>
                 </ItemsPanelTemplate>
             </ItemsControl.ItemsPanel>
             <ItemsControl.RenderTransform>
@@ -60,7 +53,6 @@
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
-        <RepeatButton Grid.Row="1" Width="50" Height="50" ClickMode="Hover" Command="{Binding MovePlayFieldRight}" Interval="10" Delay="0"/>
         <Menu Grid.Row="0" FontSize="15">
             <Menu.ItemsPanel>
                 <ItemsPanelTemplate>
@@ -124,20 +116,8 @@
             
             
         </StackPanel>
-        <ScrollBar x:Name="UpDown" Orientation="Vertical" Grid.Row="1" Width="20" HorizontalAlignment="Left" Minimum="0" Maximum="50" Value="0">
-            <i:Interaction.Triggers>
-                <i:EventTrigger EventName="ValueChanged">
-                    <i:InvokeCommandAction Command="{Binding MovePlayFieldY}" CommandParameter="{Binding Value,ElementName=UpDown}"/>
-                </i:EventTrigger>
-            </i:Interaction.Triggers>
-        </ScrollBar>
-        <ScrollBar x:Name="LeftRight" Orientation="Horizontal" Grid.Row="1" Height="20" VerticalAlignment="Bottom" Minimum="0" Maximum="50" Value="0">
-            <i:Interaction.Triggers>
-                <i:EventTrigger EventName="ValueChanged">
-                    <i:InvokeCommandAction Command="{Binding MovePlayFieldX}" CommandParameter="{Binding Value,ElementName=LeftRight}"/>
-                </i:EventTrigger>
-            </i:Interaction.Triggers>
-        </ScrollBar>
+       
+        
         <TabControl Grid.Row="2" FontSize="15" SelectedIndex="{Binding SelectedTab, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
             
 

@@ -21,8 +21,6 @@ namespace simcityView.ViewModel
         private float _playFieldX = 250f;
         private float _playFieldY = 250f;
         private float _playFieldZoom = 1f;
-        private float _zoomSpeed = 0.1f;
-        private float _camSpeed = 25f;
         private string _mouseStateText = "";
         private string _currentAction = "Build";
         private string _currentFieldType = "Re";
@@ -56,7 +54,7 @@ namespace simcityView.ViewModel
         public float PlayFieldZoom
         {
             get { return _playFieldZoom; }
-            set { _playFieldZoom = value; OnPropertyChanged(nameof(PlayFieldZoom)); }
+            set { _playFieldZoom = Math.Clamp(value,0.1f,10.0f); OnPropertyChanged(nameof(PlayFieldZoom)); }
         }
 
         #endregion
@@ -80,15 +78,9 @@ namespace simcityView.ViewModel
 
         #endregion
         #region DelegateCommands
-        public DelegateCommand MovePlayFieldUp { get; set; }
-        public DelegateCommand MovePlayFieldDown { get; set; }
-        public DelegateCommand MovePlayFieldLeft { get; set; }
-        public DelegateCommand MovePlayFieldRight { get; set; }
-        public DelegateCommand MovePlayFieldX { get; set; }
-        public DelegateCommand MovePlayFieldY { get; set; }
-
+        public DelegateCommand MovePlayFieldUpDown { get; set; }
+        public DelegateCommand MovePlayFieldLeftRight { get; set; }
         public DelegateCommand ZoomPlayField { get; set; }
-        public DelegateCommand MinimizePlayField { get; set; }
         public DelegateCommand SelectedBuildable { get; set; }
         public DelegateCommand FlipBuldozeMode { get; set; }
         public DelegateCommand TimeSet { get; set; }
@@ -111,17 +103,11 @@ namespace simcityView.ViewModel
             Income = new ObservableCollection<BudgetItem>();
             Expense = new ObservableCollection<BudgetItem>();
 
-            MovePlayFieldUp = new DelegateCommand(param => PlayFieldY-= _camSpeed * (1/PlayFieldZoom));
-            MovePlayFieldDown = new DelegateCommand(param => PlayFieldY += _camSpeed * (1 / PlayFieldZoom));
-            MovePlayFieldLeft = new DelegateCommand(param => PlayFieldX -= _camSpeed * (1 / PlayFieldZoom));
-            MovePlayFieldRight = new DelegateCommand(param => PlayFieldX += _camSpeed * (1 / PlayFieldZoom));
-            MovePlayFieldY = new DelegateCommand(param => PlayFieldY = (float)(_camSpeed * (1 / PlayFieldZoom) * (double)param!));
-            MovePlayFieldX = new DelegateCommand(param => PlayFieldX = (float)(_camSpeed * (1 / PlayFieldZoom) * (double)param!)+(-365)* (1 / PlayFieldZoom));
+            MovePlayFieldUpDown = new DelegateCommand(param => PlayFieldY += (float)param! * (1/PlayFieldZoom)); //Up is positive, down is negative param
+            MovePlayFieldLeftRight = new DelegateCommand(param => PlayFieldX += (float)param! * (1 / PlayFieldZoom)); //Right is positive, left is negative param
+            ZoomPlayField = new DelegateCommand(param => PlayFieldZoom += (float)param!);  //Zoom is positive, minimize is negative param
 
 
-            ZoomPlayField = new DelegateCommand(param => PlayFieldZoom += _zoomSpeed);
-            MinimizePlayField = new DelegateCommand(param => PlayFieldZoom -= _zoomSpeed);
-            
             SelectedBuildable = new DelegateCommand(param => SelectedBuildableSorter((string)param!));
             FlipBuldozeMode = new DelegateCommand(param =>
             {
