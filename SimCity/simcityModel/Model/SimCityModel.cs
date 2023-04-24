@@ -363,7 +363,6 @@ namespace simcityModel.Model
             _gameSpeed = newSpeed;
             OnGameSpeedChanged();
         }
-
         
         public (bool[,] routeExists, (int, int)[,] parents, int[,] distance) BreadthFirst((int x, int y) source)
         {
