@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="View\Textures\barn_red_a.png" />
     <None Remove="View\Textures\building_medium_blue_a.png" />
     <None Remove="View\Textures\building_tall_blue_a.png" />
     <None Remove="View\Textures\building_tall_yellow_a.png" />
@@ -15,6 +16,7 @@
     <None Remove="View\Textures\ground_asphalt.png" />
     <None Remove="View\Textures\ground_dirt.png" />
     <None Remove="View\Textures\ground_grass.png" />
+    <None Remove="View\Textures\house_large_green_a.png" />
     <None Remove="View\Textures\house_small_purple_a.png" />
     <None Remove="View\Textures\house_small_yellow_a.png" />
     <None Remove="View\Textures\light_pole_b.png" />
@@ -36,6 +38,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="View\Textures\barn_red_a.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="View\Textures\building_medium_blue_a.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -55,6 +60,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="View\Textures\ground_grass.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="View\Textures\house_large_green_a.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="View\Textures\house_small_purple_a.png">
