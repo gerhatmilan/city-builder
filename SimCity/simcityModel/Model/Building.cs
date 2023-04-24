@@ -30,7 +30,7 @@ namespace simcityModel.Model
         public List<Person> People { get => _people; }
         public bool OnFire { get => OnFire; }
 
-        public PeopleBuilding(BuildingType type) : base( type)
+        public PeopleBuilding(BuildingType type) : base(type)
         {
             _people = new List<Person>();
         }
@@ -83,11 +83,11 @@ namespace simcityModel.Model
 
     public class Road : Building
     {
-        private Vehicle? _vehicle;
+        private Vehicle _vehicle;
         private int _price;
         private int _maintenanceCost;
 
-        public Vehicle? Vehicle { get => _vehicle; }
+        public Vehicle Vehicle { get => _vehicle; }
         public int Price { get => _price; }
         public int MaintenceCost { get => _maintenanceCost; }
 

@@ -14,8 +14,8 @@ namespace simcityModel.Model
 {
     public enum GameSpeed { Paused, Normal, Fast, Fastest }
     public enum FieldType { IndustrialZone, OfficeZone, ResidentalZone, GeneralField }
-    public enum BuildingType { Industry, OfficeBuilding, Home, Stadium, PoliceStation, FireStation, Road, None }
-    public enum Vehicle { Car, Firecar }
+    public enum BuildingType { Industry, OfficeBuilding, Home, Stadium, PoliceStation, FireStation, Road}
+    public enum Vehicle { Car, Firecar, None }
     
     public class SimCityModel
     {
@@ -24,6 +24,7 @@ namespace simcityModel.Model
         private const int GAMESIZE = 10;
         private const float PRICERETURN_MULTIPLIER = 2f / 3;
         private const int TAX_PER_PERSON = 5;
+
 
         private Dictionary<FieldType, (int price, int returnPrice)> _zonePrices = new Dictionary<FieldType, (int, int)>()
         {
@@ -52,6 +53,8 @@ namespace simcityModel.Model
         private int _happiness;
         private Field[,] _fields;
         private List<Person> _people;
+        private Queue<Person> _homeless;
+        private Queue<Person> _unemployed;
         private List<BudgetRecord> _incomeList;
         private List<BudgetRecord> _expenseList;
 
@@ -139,11 +142,13 @@ namespace simcityModel.Model
             {
                 for (int j = 0; j < GAMESIZE; j++)
                 {
-                    _fields[i, j] = new Field();
+                    _fields[i, j] = new Field(i, j);
                 }
             }
 
             _people = new List<Person>();
+            _homeless = new Queue<Person>();
+            _unemployed = new Queue<Person>();
             _incomeList = new List<BudgetRecord>();
             _expenseList = new List<BudgetRecord>();
 
@@ -167,7 +172,15 @@ namespace simcityModel.Model
             
             return valid;
         }
-
+        private bool isRoad((int x, int y) coordinates)
+        {
+            bool road = false;
+            if (ValidCoordinates(coordinates) && Fields[coordinates.x, coordinates.y].Building != null && Fields[coordinates.x, coordinates.y].Building!.Type == BuildingType.Road)
+            {
+                road = true;
+            }
+            return road;
+        }
         private List<(int,int)> GetAdjacentCoordinates((int x, int y) origin)
         {
             var adjacentCoordinates = new List<(int, int)>();
@@ -185,51 +198,43 @@ namespace simcityModel.Model
             return adjacentCoordinates;
         }
 
-        private (bool[,] routeExists, (int, int)[,] parents, int[,] distance) BreadthFirst((int x, int y) source)
+        private bool NewWorkplaceNeeded()
         {
-            Queue<(int, int)> q = new Queue<(int, int)>();
-            bool[,] used = new bool[GAMESIZE,GAMESIZE];
-            int[,] distance = new int[GAMESIZE, GAMESIZE];
-            (int x, int y)[,] parents = new (int,int)[GAMESIZE, GAMESIZE];
-            if (!ValidCoordinates(source)) return (used, parents, distance);
-
-            q.Enqueue(source);
-            used[source.x, source.y] = true;
-            parents[source.x, source.y] = (-1, -1);
-            while (q.Count != 0)
+            bool needed = false;
+            if (_unemployed.Count > Field.OFFICE_CAPACITY)
             {
-                (int x, int y) v = q.Dequeue();
-                foreach ((int x, int y) u in GetAdjacentCoordinates((v.x, v.y)))
-                    if (!used[u.x, u.y] && Fields[u.x,u.y].Building.Type != BuildingType.None)
-                    {
-                        used[u.x,u.y] = true;
-                        if (Fields[u.x,u.y].Building.Type == BuildingType.Road)
-                            q.Enqueue(u);
-                        distance[u.x, u.y] = distance[v.x, v.y] + 1;
-                        parents[u.x, u.y] = v;
-                    }
-            }   
-            
-            return (used, parents, distance);
-        }
-
-        private Queue<(int x, int y)> CalculateRoute((int x, int y) start, (int x, int y) end)
-        {
-            Queue<(int x, int y)> route = new Queue<(int x, int y)>();
-            if (!ValidCoordinates(start) || !ValidCoordinates(end))
-                return route;
-            var (used, parents, distance) = BreadthFirst((start.x, start.y));
-            if (used[start.x, start.y])
-            {
-                (int x, int y) v = start;
-                while (v != (-1, -1))
-                {
-                    route.Enqueue(v);
-                    v = parents[v.x, v.y];
-                }
+                needed = true;
             }
-            return route;
+            return needed;
         }
+        private bool NewHomeNeeded()
+        {
+            bool needed = false;
+            if (_homeless.Count > Field.RESIDENTAL_CAPACITY)
+            {
+                needed = true;
+            }
+            return needed;
+        }
+        private bool NewPeopleNeeded()
+        {
+            return false;
+        }
+        private bool NewCarSampleNeeded()
+        {
+            return false;
+        }
+        private void SampleNewCars()
+        { 
+        }
+        private void MoveCars()
+        { 
+        }
+        private bool TaxDay()
+        {
+            return false;
+        }
+
 
         #endregion
 
@@ -246,10 +251,68 @@ namespace simcityModel.Model
 
         public void AdvanceTime()
         {
-            /* ... */
+            if(NewHomeNeeded())
+            {
+                foreach (Field field in Fields)
+                {
+                    if (field.Type == FieldType.ResidentalZone && field.Building == null)
+                    {
+                        MakeBuilding(field.X, field.Y, BuildingType.Home);
+                        while (_homeless.Count > 0 && field.Capacity > field.NumberOfPeople)
+                        {
+                            Person person = _homeless.Dequeue();
+                            person.home = (PeopleBuilding?)field.Building;
+                            person.home!.People.Add(person);                            
+                        }
+                        break;
+                    }
+                }
+            }
+            if(NewWorkplaceNeeded())
+            {
+                foreach (Field field in Fields)
+                {
+                    if ((field.Type == FieldType.IndustrialZone || field.Type == FieldType.OfficeZone) && field.Building == null)
+                    {
+                        if (field.Type == FieldType.IndustrialZone)
+                        {
+                            MakeBuilding(field.X, field.Y, BuildingType.Industry);
+                        }
+                        else
+                        {
+                            MakeBuilding(field.X, field.Y, BuildingType.OfficeBuilding);
+                        }
 
+                        while (_unemployed.Count > 0 && field.Capacity > field.NumberOfPeople)
+                        {
+                            Person person = _unemployed.Dequeue();
+                            person.work = (PeopleBuilding?)field.Building;
+                            person.work!.People.Add(person);
+                        }
+                        break;
+                    }
+                }
+            }
+            while(NewPeopleNeeded())
+            {
+                var person = new Person();
+                _people.Add(person);
+                _homeless.Enqueue(person);
+                _unemployed.Enqueue(person);
+            }
+            if(TaxDay())
+            {
+                /* TODO */
+            }
+            
+            MoveCars();
+            if (NewCarSampleNeeded())
+            {
+                SampleNewCars();
+            }
             OnGameAdvanced();
         }
+
         public void ChangeGameSpeed(GameSpeed newSpeed)
         {
             _gameSpeed = newSpeed;
@@ -274,6 +337,51 @@ namespace simcityModel.Model
             _money += sum;
             _incomeList.Add(new BudgetRecord("Adóbevétel", sum));
             OnIncomeListChanged();
+        }
+        
+        public (bool[,] routeExists, (int, int)[,] parents, int[,] distance) BreadthFirst((int x, int y) source)
+        {
+            Queue<(int, int)> q = new Queue<(int, int)>();
+            bool[,] used = new bool[GAMESIZE,GAMESIZE];
+            int[,] distance = new int[GAMESIZE, GAMESIZE];
+            (int x, int y)[,] parents = new (int,int)[GAMESIZE, GAMESIZE];
+            if (!ValidCoordinates(source)) return (used, parents, distance);
+
+            q.Enqueue(source);
+            used[source.x, source.y] = true;
+            parents[source.x, source.y] = (-1, -1);
+            while (q.Count != 0)
+            {
+                (int x, int y) v = q.Dequeue();
+                foreach ((int x, int y) u in GetAdjacentCoordinates((v.x, v.y)))
+                    if (!used[u.x, u.y] && Fields[u.x,u.y].Building != null)
+                    {
+                        used[u.x,u.y] = true;
+                        if (Fields[u.x,u.y].Building!.Type == BuildingType.Road)
+                            q.Enqueue(u);
+                        distance[u.x, u.y] = distance[v.x, v.y] + 1;
+                        parents[u.x, u.y] = v;
+                    }
+            }   
+            
+            return (used, parents, distance);
+        }
+        public Queue<(int x, int y)> CalculateRoute((int x, int y) start, (int x, int y) end)
+        {
+            Queue<(int x, int y)> route = new Queue<(int x, int y)>();
+            if (!ValidCoordinates(start) || !ValidCoordinates(end))
+                return route;
+            var (used, parents, distance) = BreadthFirst((start.x, start.y));
+            if (used[start.x, start.y])
+            {
+                (int x, int y) v = start;
+                while (v != (-1, -1))
+                {
+                    route.Enqueue(v);
+                    v = parents[v.x, v.y];
+                }
+            }
+            return route;
         }
 
         public void MakeZone(int x, int y, FieldType newFieldType)
