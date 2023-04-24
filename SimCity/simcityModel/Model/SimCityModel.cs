@@ -355,7 +355,7 @@ namespace simcityModel.Model
             {
                 SampleNewCars();
             }
-            OnGameAdvanced();
+            OnGameInfoChanged();
         }
 
         public void ChangeGameSpeed(GameSpeed newSpeed)
@@ -364,25 +364,6 @@ namespace simcityModel.Model
             OnGameSpeedChanged();
         }
 
-        public void GetTax()
-        {
-            int sum = 0;
-
-            for (int i = 0; i < GameSize; i++)
-            {
-                for (int j = 0; j < GameSize; j++)
-                {
-                    if (_fields[i, j].Type != FieldType.GeneralField)
-                    {
-                        sum += _fields[i, j].NumberOfPeople * 5;
-                    }
-                }
-            }
-
-            _money += sum;
-            _incomeList.Add(new BudgetRecord("Adóbevétel", sum));
-            OnIncomeListChanged();
-        }
         
         public (bool[,] routeExists, (int, int)[,] parents, int[,] distance) BreadthFirst((int x, int y) source)
         {
