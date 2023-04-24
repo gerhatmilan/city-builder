@@ -44,6 +44,14 @@ namespace simcityModel.Model
             { BuildingType.Road, (100, CalculateReturnPrice(100), 200) }
         };
 
+        private Dictionary<BuildingType, int> _buildings = new Dictionary<BuildingType, int>()
+        {
+            { BuildingType.Stadium, 0 },
+            { BuildingType.PoliceStation, 0 },
+            { BuildingType.FireStation, 0 },
+            { BuildingType.Road, 0 }
+        };
+
         private IDataAccess _dataAccess;
         private DateTime _gameTime;
         private GameSpeed _gameSpeed;
@@ -152,10 +160,47 @@ namespace simcityModel.Model
 
         #region Private methods
 
+        private void GetTax()
+        {
+            int sum = 0;
+
+            for (int i = 0; i < GameSize; i++)
+            {
+                for (int j = 0; j < GameSize; j++)
+                {
+                    if (_fields[i, j].Type != FieldType.GeneralField)
+                    {
+                        sum += _fields[i, j].NumberOfPeople * 5;
+                    }
+                }
+            }
+
+            _money += sum;
+            _incomeList.Add(new BudgetRecord("Adóbevétel", sum));
+            OnIncomeListChanged();
+            OnGameInfoChanged();
+        }
+
+        private void DeductMaintenceCost()
+        {
+            int sum = 0;
+
+            foreach(BuildingType key in _buildings.Keys)
+            {
+                sum += _buildings[key] * _buildingPrices[key].maintenceCost;
+            }
+
+            _money -= sum;
+            _expenseList.Add(new BudgetRecord("Havi fenntartási költségek", sum));
+            OnExpenseListChanged();
+            OnGameInfoChanged();
+        }
+
         private static int CalculateReturnPrice(int originalPrice)
         {
             return Convert.ToInt32(originalPrice * PRICERETURN_MULTIPLIER);
         }
+        
 
         private bool ValidCoordinates((int x, int y) coordinates)
         {
@@ -254,27 +299,6 @@ namespace simcityModel.Model
             OnGameSpeedChanged();
         }
 
-        public void GetTax()
-        {
-            int sum = 0;
-
-            for (int i = 0; i < GameSize; i++)
-            {
-                for (int j = 0; j < GameSize; j++)
-                {
-                    if (_fields[i, j].Type != FieldType.GeneralField)
-                    {
-                        sum += _fields[i, j].NumberOfPeople * 5;
-                    }
-                }
-            }
-
-            _money += sum;
-            _incomeList.Add(new BudgetRecord("Adóbevétel", sum));
-            OnIncomeListChanged();
-            OnGameInfoChanged();
-        }
-
         public void MakeZone(int x, int y, FieldType newFieldType)
         {
             if (_fields[x, y].Type == FieldType.GeneralField && _fields[x, y].Building == null)
@@ -308,6 +332,7 @@ namespace simcityModel.Model
                     {
                         _fields[x, y].Building = new Road();
                         OnMatrixChanged((x, y));
+                        _buildings[newBuildingType]++;
 
                         _money -= _buildingPrices[newBuildingType].price;
                         _expenseList.Add(new BudgetRecord("Útlerakás", _buildingPrices[newBuildingType].price));
@@ -335,8 +360,9 @@ namespace simcityModel.Model
                         _fields[coords.x, coords.y].Building = building;
                         OnMatrixChanged((coords.x, coords.y));
                     }
-                    _money -= _buildingPrices[newBuildingType].price;
 
+                    _buildings[newBuildingType]++;
+                    _money -= _buildingPrices[newBuildingType].price;
                     _expenseList.Add(new BudgetRecord("Épületlerakás", _buildingPrices[newBuildingType].price));
                     OnExpenseListChanged();
                     OnGameInfoChanged();
@@ -371,26 +397,27 @@ namespace simcityModel.Model
                         case Road:
                             /* need to check if every building is still accessible after destroyation */
                             /* maintence cost needs to be handled  */
-                            /* certain percantage of the price must be returned */
 
                             _money += _buildingPrices[_fields[x, y].Building!.Type].returnPrice;
                             _incomeList.Add(new BudgetRecord("Útrombolás", _buildingPrices[_fields[x, y].Building!.Type].returnPrice));
                             OnIncomeListChanged();
                             OnGameInfoChanged();
 
+                            _buildings[_fields[x, y].Building!.Type]--;
                             _fields[x, y].Building = null;
                             OnMatrixChanged((x, y));
 
-                          break;
+                            break;
                         default:
                             /* maintence cost needs to be handled  */
-                            /* certain percantage of the price must be returned */
                             /* additional effects needs to be handled (eg. happiness of nearby people) */
 
                             _money += _buildingPrices[_fields[x, y].Building!.Type].returnPrice;
                             _incomeList.Add(new BudgetRecord("Épületrombolás", _buildingPrices[_fields[x, y].Building!.Type].returnPrice));
                             OnIncomeListChanged();
                             OnGameInfoChanged();
+
+                            _buildings[_fields[x, y].Building!.Type]--;
 
                             foreach ((int x, int y) coords in ((ServiceBuilding)_fields[x, y].Building!).Coordinates)
                             {
