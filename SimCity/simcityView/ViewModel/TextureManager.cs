@@ -14,15 +14,17 @@ namespace simcityView.ViewModel
         #region variables
         private ImageBrush[] _floorTextures = new ImageBrush[20];
         private BitmapImage[] _buildingTextures = new BitmapImage[20];
+        private SimCityModel _model;
 
         #endregion
         #region constructor
+
         public TextureManager(SimCityModel model)
         {
+            _model = model;
             fillFloorTextures();
             fillBuildingTextures();
         }
-
 
         #endregion
 
@@ -68,109 +70,149 @@ namespace simcityView.ViewModel
             _buildingTextures[9] = UriToBitmapImage(@"~\..\Textures\building_medium_blue_a.png");
             _buildingTextures[10] = UriToBitmapImage(@"~\..\Textures\building_tall_yellow_a.png");
 
+            _buildingTextures[11] = UriToBitmapImage(@"~\..\Textures\building_tall_blue_a.png");
+            _buildingTextures[12] = UriToBitmapImage(@"~\..\Textures\building_tall_blue_a.png");
+            _buildingTextures[13] = UriToBitmapImage(@"~\..\Textures\building_tall_blue_a.png");
+            _buildingTextures[14] = UriToBitmapImage(@"~\..\Textures\building_tall_blue_a.png");
 
-            /*
-            _buildingTextures[1] = UriToBitmapImage(@"~\..\Textures\tree_pine_02.png");
-            _buildingTextures[2] = UriToBitmapImage(@"~\..\Textures\building_medium_blue_a.png");
-            _buildingTextures[3] = UriToBitmapImage(@"~\..\Textures\building_tall_yellow_a.png");
-            _buildingTextures[4] = UriToBitmapImage(@"~\..\Textures\fire_station_a.png");
-            _buildingTextures[5] = UriToBitmapImage(@"~\..\Textures\light_pole_b.png");
-            _buildingTextures[6] = UriToBitmapImage(@"~\..\Textures\building_tall_blue_a.png");
-            _buildingTextures[7] = 
-            _buildingTextures[8] = UriToBitmapImage(@"~\..\Textures\police_station_a.png");
-            _buildingTextures[9] = UriToBitmapImage(@"~\..\Textures\warehouse_orange_a.png");
-            
-            _buildingTextures[11] = UriToBitmapImage(@"~\..\Textures\road_sign_b.png");
-            _buildingTextures[12] = UriToBitmapImage(@"~\..\Textures\rocks.png");
-            */
+            _buildingTextures[15] = UriToBitmapImage(@"~\..\Textures\police_station_a.png");
+            _buildingTextures[16] = UriToBitmapImage(@"~\..\Textures\fire_station_a.png");
 
-
-
-
+            _buildingTextures[17] = UriToBitmapImage(@"~\..\Textures\tree_pine_02.png");
         }
 
-        private int residentalBuildingHelper(BuildingType? buildT, int lvl)
+        
+
+        private int residentalBuildingHelper(BuildingType? buildT, int peopleNum, int cap)
         {
-            if (buildT == null)
-            {
-                return 2;
-            }
             switch (buildT)
             {
                 case BuildingType.Home:
-                    if (lvl == 1)
+                    if (peopleNum < cap/2)
                     {
                         return 3;
                     }
                     return 4;
+                case null: return 2;
                 default: return 1;
             }
         }
-        private int industrialBuildingHelper(BuildingType? buildT, int lvl)
+        private int industrialBuildingHelper(BuildingType? buildT, int peopleNum, int cap)
         {
-            if (buildT == null)
-            {
-                return 5;
-            }
             switch (buildT)
             {
                 case BuildingType.Industry:
-                    if (lvl == 1)
+                    if (peopleNum < cap/4)
                     {
                         return 6;
                     }
                     return 7;
+                case null:return 5;
                 default: return 1;
             }
         }
-        private int officeBuildingHelper(BuildingType? buildT, int lvl)
+        private int officeBuildingHelper(BuildingType? buildT, int peopleNum, int cap)
         {
-            if (buildT == null)
-            {
-                return 8;
-            }
+           
             switch (buildT)
             {
                 case BuildingType.Industry:
-                    if (lvl == 1)
+                    if (peopleNum <cap/3)
                     {
                         return 9;
                     }
                     return 10;
+                case null: return 8;
                 default: return 1;
             }
         }
-        private int generalFloorHelper(BuildingType? buildT) 
+        private int generalFloorHelper(BuildingType? buildT, int variation) 
         {
+            switch (buildT)
+            {
+                case BuildingType.Stadium:
+                case BuildingType.PoliceStation:
+                case BuildingType.FireStation: return 3;
+                case BuildingType.Road: return roadHelper(variation);
+                case null: return 1;
+                default: return 0;
+            }  
+        }
 
-            return -1;
+        private int roadHelper(int variation)
+        {
+            return 4;
         }
 
         private int generalBuildingHelper(BuildingType? buildT, int variation)
         {
+            switch (buildT)
+            {
+                case BuildingType.Road: return carHelper(variation);
+                case BuildingType.Stadium: return stadiumHelper(variation);
+                case BuildingType.PoliceStation: return 15;
+                case BuildingType.FireStation: return 16;
+                case null: return 1;
+                default: return 0;
+            }
+        }
 
-            return -1;
+        private int carHelper(int variation)
+        {
+            return 1;
+        }
+
+        private int stadiumHelper(int variation)
+        {
+            return 11;
         }
 
         #endregion
         #region public functions
 
-        public (int floor,int building) GetTextureFromInformation(FieldType zone, BuildingType? buildT, int variation)
+        public (int floor, int building) getStarterTextures()
+        {
+            return (1, 17);
+        }
+
+        public (int floor,int building) GetTextureFromInformation(int x, int y)
         {
             (int floor, int building) sendBack = (0,0);
+            Field f = _model.Fields[x, y];
+            FieldType zone = f.Type;
+            BuildingType? buildT;
+            if (f.Building == null)
+            {
+                buildT = null;
+            }
+            else
+            {
+                buildT = f.Building.Type;
+            }
+            int variation = 0;
             switch (zone)
             {
-                case FieldType.ResidentalZone: sendBack.floor = 1; sendBack.building    =  residentalBuildingHelper(buildT, variation); break;
-                case FieldType.IndustrialZone: sendBack.floor = 2; sendBack.building    =  industrialBuildingHelper(buildT, variation); break;
-                case FieldType.OfficeZone: sendBack.floor = 3; sendBack.building        =  officeBuildingHelper(buildT, variation); break;
-                case FieldType.GeneralField: sendBack.floor = generalFloorHelper(buildT); sendBack.building = generalBuildingHelper(buildT, variation); break;
+                case FieldType.ResidentalZone: sendBack.floor = 1; sendBack.building    =  residentalBuildingHelper(buildT, f.NumberOfPeople,f.Capacity); break;
+                case FieldType.IndustrialZone: sendBack.floor = 2; sendBack.building    =  industrialBuildingHelper(buildT, f.NumberOfPeople,f.Capacity); break;
+                case FieldType.OfficeZone: sendBack.floor = 3; sendBack.building        =  officeBuildingHelper(buildT, f.NumberOfPeople,f.Capacity); break;
+                case FieldType.GeneralField: sendBack.floor = generalFloorHelper(buildT,variation); sendBack.building = generalBuildingHelper(buildT, variation); break;
             }
             return sendBack;
 
         }
+        public ImageBrush getFloorTexture(int index)
+        {
+            return _floorTextures[index];
+        }
+
+        public BitmapImage getBuildingTexture(int index)
+        {
+            return _buildingTextures[index];
+        }
+
 
         #endregion
         #endregion
-    
+
     }
 }

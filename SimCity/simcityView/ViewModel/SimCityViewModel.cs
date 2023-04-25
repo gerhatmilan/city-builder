@@ -16,8 +16,7 @@ namespace simcityView.ViewModel
 
         private SimCityModel _model;
         private string _infoText = string.Empty;
-        private ImageBrush[] _floorTextures = new ImageBrush[20];
-        private BitmapImage[] _buildingTextures = new BitmapImage[20];
+        private TextureManager _textureManager;
         private float _playFieldX = 250f;
         private float _playFieldY = 250f;
         private float _playFieldZoom = 1f;
@@ -97,7 +96,7 @@ namespace simcityView.ViewModel
             _model.GameInfoChanged += new EventHandler<GameEventArgs>(model_UpdateInfoText);
             _model.MatrixChanged += new EventHandler<(int, int)>(model_MatrixChanged);
 
-
+            _textureManager = new TextureManager(_model);
 
             Cells = new ObservableCollection<Block>();
             Income = new ObservableCollection<BudgetItem>();
@@ -142,8 +141,7 @@ namespace simcityView.ViewModel
             });
             
             
-            fillFloorTextures();
-            fillBuildingTextures();
+           
 
             UpdateMouseStateText();
             fillCells();
@@ -165,13 +163,18 @@ namespace simcityView.ViewModel
         private void fillCells()
         {
             Cells.Clear();
+            (int floor, int building) info = _textureManager.getStarterTextures();
+            ImageBrush floor = _textureManager.getFloorTexture(info.floor);
+            BitmapImage building = _textureManager.getBuildingTexture(info.building);
+            
+
             for(int y = 0; y< _model.GameSize; y++)
             {
                 
                 for(int x = 0; x< _model.GameSize; x++)
                 {
                     
-                    Block b = new Block(_floorTextures[1], _buildingTextures[1]);
+                    Block b = new Block(floor, building);
                     b.X = x;
                     b.Y= y;
                     b.UpdateToolTipText = new DelegateCommand(param =>
@@ -257,53 +260,6 @@ namespace simcityView.ViewModel
         }
 
         #endregion
-        #region Texture functions
-
-        private void fillFloorTextures()
-        {
-            
-            _floorTextures[0] = UriToImageBrush(@"~\..\View\Textures\missing_texture.png");
-            _floorTextures[1] = UriToImageBrush(@"~\..\View\Textures\ground_grass.png");
-            _floorTextures[2] = UriToImageBrush(@"~\..\View\Textures\ground_dirt.png");
-            _floorTextures[3] = UriToImageBrush(@"~\..\View\Textures\ground_asphalt.png");
-            _floorTextures[4] = UriToImageBrush(@"~\..\View\Textures\parking_asphalt.png");
-
-
-        }
-
-        private void fillBuildingTextures()
-        {
-            
-            _buildingTextures[0] = UriToBitmapImage(@"~\..\Textures\missing_texture.png");
-            _buildingTextures[1] = UriToBitmapImage(@"~\..\Textures\tree_pine_02.png");
-            _buildingTextures[2] = UriToBitmapImage(@"~\..\Textures\building_medium_blue_a.png");
-            _buildingTextures[3] = UriToBitmapImage(@"~\..\Textures\building_tall_yellow_a.png");
-            _buildingTextures[4] = UriToBitmapImage(@"~\..\Textures\fire_station_a.png");
-            _buildingTextures[5] = UriToBitmapImage(@"~\..\Textures\light_pole_b.png");
-            _buildingTextures[6] = UriToBitmapImage(@"~\..\Textures\building_tall_blue_a.png");
-            _buildingTextures[7] = UriToBitmapImage(@"~\..\Textures\house_small_yellow_a.png");
-            _buildingTextures[8] = UriToBitmapImage(@"~\..\Textures\police_station_a.png");
-            _buildingTextures[9] = UriToBitmapImage(@"~\..\Textures\warehouse_orange_a.png");
-            _buildingTextures[10] = UriToBitmapImage(@"~\..\Textures\weed_medium.png");
-            _buildingTextures[11] = UriToBitmapImage(@"~\..\Textures\road_sign_b.png");
-            _buildingTextures[12] = UriToBitmapImage(@"~\..\Textures\rocks.png");
-
-            _buildingTextures[19] = UriToBitmapImage(@"~\..\Textures\nothing.png");
-
-
-
-        }
-
-        private ImageBrush UriToImageBrush(string s)
-        {
-            return new ImageBrush(UriToBitmapImage(s));
-        }
-        private BitmapImage UriToBitmapImage(string s)
-        {
-            return new BitmapImage(new Uri(s, UriKind.Relative));
-        }
-
-        #endregion
         #region MouseState functions
         
         private void UpdateMouseStateText()
@@ -372,83 +328,17 @@ namespace simcityView.ViewModel
 
         private void model_MatrixChanged(object? s, (int X, int Y) e)
         {
-            Field inField = _model.Fields[e.X, e.Y];
-            switch (inField.Type)
-            {
-                case FieldType.ResidentalZone: Cells[CoordsToListIndex(e.X, e.Y)].FloorTexture = _floorTextures[1]; modelHelper_MatrixChangedResidentalZone(inField,e.X, e.Y); break;
-                case FieldType.OfficeZone: Cells[CoordsToListIndex(e.X, e.Y)].FloorTexture = _floorTextures[3]; modelHelper_MatrixChangedOfficeZone(inField, e.X, e.Y); break;
-                case FieldType.IndustrialZone: Cells[CoordsToListIndex(e.X, e.Y)].FloorTexture = _floorTextures[2]; modelHelper_MatrixChangedIndustrialZone(inField, e.X, e.Y); break;
-                case FieldType.GeneralField: modelHelper_MatrixChangedGeneralField(inField,e.X,e.Y); break;
-            }
-        }
-
-        private void modelHelper_MatrixChangedResidentalZone(Field inField, int X, int Y)
-        {
-            if (inField.Building != null)
-            {
-                PeopleBuilding pb = (PeopleBuilding)inField.Building; //needed for further operations, DON'T DELETE
-                Cells[CoordsToListIndex(X, Y)].BuildingTexture = _buildingTextures[7];
-            }
-            else
-            {
-                Cells[CoordsToListIndex(X, Y)].BuildingTexture = _buildingTextures[10];
-            }
-            
-
-        }
-        private void modelHelper_MatrixChangedOfficeZone(Field inField, int X, int Y)
-        {
-            if (inField.Building != null)
-            {
-                PeopleBuilding pb = (PeopleBuilding)inField.Building; //needed for further operations, DON'T DELETE
-                Cells[CoordsToListIndex(X, Y)].BuildingTexture = _buildingTextures[3];
-            }
-            else
-            {
-                Cells[CoordsToListIndex(X, Y)].BuildingTexture = _buildingTextures[11];
-            }
-
-
-        }
-        private void modelHelper_MatrixChangedIndustrialZone(Field inField, int X, int Y)
-        {
-            if (inField.Building != null)
-            {
-                PeopleBuilding pb = (PeopleBuilding)inField.Building; //needed for further operations, DON'T DELETE
-                Cells[CoordsToListIndex(X, Y)].BuildingTexture = _buildingTextures[9];
-            }
-            else
-            {
-                Cells[CoordsToListIndex(X, Y)].BuildingTexture = _buildingTextures[12];
-            }
-
+            (int floor, int building) info = _textureManager.GetTextureFromInformation(e.X, e.Y);
+            Cells[CoordsToListIndex(e.X, e.Y)].FloorTexture = _textureManager.getFloorTexture(info.floor);
+            Cells[CoordsToListIndex(e.X, e.Y)].BuildingTexture = _textureManager.getBuildingTexture(info.building);
 
         }
 
-        private void modelHelper_MatrixChangedGeneralField(Field inField, int X, int Y)
-        {
-            if (inField.Building == null)
-            {
-                Cells[CoordsToListIndex(X, Y)].FloorTexture = _floorTextures[1];
-                Cells[CoordsToListIndex(X, Y)].BuildingTexture = _buildingTextures[19];
-                return;
-            }
-            switch(inField.Building.Type)
-            {
-                case BuildingType.Road: 
-                    Cells[CoordsToListIndex(X, Y)].FloorTexture = _floorTextures[4];
-                    Cells[CoordsToListIndex(X, Y)].BuildingTexture = _buildingTextures[19]; break;
-                case BuildingType.PoliceStation: 
-                    Cells[CoordsToListIndex(X, Y)].FloorTexture = _floorTextures[3];
-                    Cells[CoordsToListIndex(X, Y)].BuildingTexture = _buildingTextures[8];  break;
-                case BuildingType.FireStation:
-                    Cells[CoordsToListIndex(X, Y)].FloorTexture = _floorTextures[3];
-                    Cells[CoordsToListIndex(X, Y)].BuildingTexture = _buildingTextures[4]; break;
-                case BuildingType.Stadium:
-                    Cells[CoordsToListIndex(X, Y)].FloorTexture = _floorTextures[3];
-                    Cells[CoordsToListIndex(X, Y)].BuildingTexture = _buildingTextures[6]; break;
-            }
-        }
+
+
+
+
+
 
         #endregion
     }
