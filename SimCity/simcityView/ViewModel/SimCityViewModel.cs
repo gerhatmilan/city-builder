@@ -141,7 +141,7 @@ namespace simcityView.ViewModel
             });
             
             
-           
+            
 
             UpdateMouseStateText();
             fillCells();

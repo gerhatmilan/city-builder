@@ -147,7 +147,7 @@
                     <Border BorderThickness="1" BorderBrush="DeepPink">
                         <StackPanel Orientation="Vertical">
                             <RadioButton GroupName="buildable2" Width="140" Command="{Binding SelectedBuildable}" CommandParameter="Ro" IsChecked="True">Út</RadioButton>
-                            <Image Source="Textures/street_straight.png" Width="64"/>
+                            <Image Source="Textures/street_straight_upDown.png" Width="64"/>
                         </StackPanel>
                     </Border>
                     <Border BorderThickness="1" BorderBrush="DeepPink">

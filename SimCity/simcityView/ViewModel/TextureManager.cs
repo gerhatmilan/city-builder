@@ -15,6 +15,9 @@ namespace simcityView.ViewModel
         private ImageBrush[] _floorTextures = new ImageBrush[20];
         private BitmapImage[] _buildingTextures = new BitmapImage[20];
         private SimCityModel _model;
+        private int _currX = 0;
+        private int _currY = 0;
+        private int _modelSize;
 
         #endregion
         #region constructor
@@ -22,6 +25,7 @@ namespace simcityView.ViewModel
         public TextureManager(SimCityModel model)
         {
             _model = model;
+            _modelSize = _model.Fields.GetLength(0);
             fillFloorTextures();
             fillBuildingTextures();
         }
@@ -42,12 +46,37 @@ namespace simcityView.ViewModel
 
         private void fillFloorTextures()
         {
-
+            
             _floorTextures[0] = UriToImageBrush(@"~\..\View\Textures\missing_texture.png");
             _floorTextures[1] = UriToImageBrush(@"~\..\View\Textures\ground_grass.png");
             _floorTextures[2] = UriToImageBrush(@"~\..\View\Textures\ground_dirt.png");
             _floorTextures[3] = UriToImageBrush(@"~\..\View\Textures\ground_asphalt.png");
+            //2
             _floorTextures[4] = UriToImageBrush(@"~\..\View\Textures\parking_asphalt.png");
+            _floorTextures[5] = UriToImageBrush(@"~\..\View\Textures\street_straight_upDown.png");
+            _floorTextures[6] = UriToImageBrush(@"~\..\View\Textures\street_straight_leftRight.png");
+            //2
+            _floorTextures[7] = UriToImageBrush(@"~\..\View\Textures\street_corner_leftUp.png");
+            _floorTextures[8] = UriToImageBrush(@"~\..\View\Textures\street_corner_rightUp.png");
+            _floorTextures[9] = UriToImageBrush(@"~\..\View\Textures\street_corner_leftDown.png");
+            _floorTextures[10] = UriToImageBrush(@"~\..\View\Textures\street_corner_rightDown.png");
+            //3
+            _floorTextures[11] = UriToImageBrush(@"~\..\View\Textures\street_t_down.png");
+            _floorTextures[12] = UriToImageBrush(@"~\..\View\Textures\street_t_up.png");
+            //1
+            _floorTextures[13] = UriToImageBrush(@"~\..\View\Textures\street_end_up.png");
+            _floorTextures[14] = UriToImageBrush(@"~\..\View\Textures\street_end_right.png");
+            _floorTextures[15] = UriToImageBrush(@"~\..\View\Textures\street_end_down.png");
+            _floorTextures[16] = UriToImageBrush(@"~\..\View\Textures\street_end_left.png");
+            //4
+            _floorTextures[17] = UriToImageBrush(@"~\..\View\Textures\street_xing.png");
+
+
+
+
+
+
+
 
 
         }
@@ -138,9 +167,37 @@ namespace simcityView.ViewModel
                 default: return 0;
             }  
         }
+        private bool isValidCoord(int x, int y)
+        {
+            return -1 < x && -1 < y && x < _modelSize && y < _modelSize;
+        }
+
 
         private int roadHelper(int variation)
         {
+            int neighborCount = 0;
+            bool[] dirs = { false, false, false, false }; //-1,-1;-1,1;1,-1;1,1
+            int ind = 0;
+            for(int x = -1; x<=1; x += 2)
+            {
+                
+                for(int y = -1; y<=1; y += 2)
+                {
+                    if (isValidCoord(x, y))
+                    {
+                        Building? f = _model.Fields[x, y].Building;
+                        if (f != null && f.Type==BuildingType.Road)
+                        {
+                            dirs[ind] = true;
+                            neighborCount++;
+                        }
+                    }
+                    ind++;
+                }
+                ind++;
+            }
+            
+
             return 4;
         }
 
@@ -178,6 +235,8 @@ namespace simcityView.ViewModel
         public (int floor,int building) GetTextureFromInformation(int x, int y)
         {
             (int floor, int building) sendBack = (0,0);
+            _currX = x;
+            _currY = y;
             Field f = _model.Fields[x, y];
             FieldType zone = f.Type;
             BuildingType? buildT;

@@ -26,7 +26,19 @@
     <None Remove="View\Textures\police_station_a.png" />
     <None Remove="View\Textures\road_sign_b.png" />
     <None Remove="View\Textures\rocks.png" />
-    <None Remove="View\Textures\street_straight.png" />
+    <None Remove="View\Textures\street_corner_leftDown.png" />
+    <None Remove="View\Textures\street_corner_leftUp.png" />
+    <None Remove="View\Textures\street_corner_rightDown.png" />
+    <None Remove="View\Textures\street_corner_rightUp.png" />
+    <None Remove="View\Textures\street_end_down.png" />
+    <None Remove="View\Textures\street_end_left.png" />
+    <None Remove="View\Textures\street_end_right.png" />
+    <None Remove="View\Textures\street_end_up.png" />
+    <None Remove="View\Textures\street_straight_leftRight.png" />
+    <None Remove="View\Textures\street_straight_upDown.png" />
+    <None Remove="View\Textures\street_t_down.png" />
+    <None Remove="View\Textures\street_t_up.png" />
+    <None Remove="View\Textures\street_xing.png" />
     <None Remove="View\Textures\tree_pine_02.png" />
     <None Remove="View\Textures\warehouse_orange_a.png" />
     <None Remove="View\Textures\weed_medium.png" />
@@ -92,7 +104,43 @@
     <Content Include="View\Textures\rocks.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="View\Textures\street_straight.png">
+    <Content Include="View\Textures\street_corner_leftDown.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="View\Textures\street_corner_leftUp.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="View\Textures\street_corner_rightDown.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="View\Textures\street_corner_rightUp.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="View\Textures\street_end_down.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="View\Textures\street_end_left.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="View\Textures\street_end_right.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="View\Textures\street_end_up.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="View\Textures\street_straight_upDown.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="View\Textures\street_straight_leftRight.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="View\Textures\street_t_down.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="View\Textures\street_t_up.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="View\Textures\street_xing.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="View\Textures\tree_pine_02.png">
