@@ -16,7 +16,7 @@ namespace simcityModel.Model
     public enum FieldType { IndustrialZone, OfficeZone, ResidentalZone, GeneralField }
     public enum BuildingType { Industry, OfficeBuilding, Home, Stadium, PoliceStation, FireStation, Road}
     public enum Vehicle { Car, Firecar, None }
-    
+
     public class SimCityModel
     {
         #region Private fields
@@ -111,6 +111,18 @@ namespace simcityModel.Model
         /// </summary>
         public event EventHandler? GameOver;
 
+        /// <summary>
+        /// One day passed event.
+        /// Gets invoked every time a day passes.
+        /// </summary>
+        public event EventHandler? OneDayPassed;
+
+        /// <summary>
+        /// One month passed event.
+        /// Gets invoked every time a month passes.
+        /// </summary>
+        public event EventHandler? OneMonthPassed;
+
         #endregion
 
         #region Properties
@@ -159,6 +171,8 @@ namespace simcityModel.Model
             _unemployed = new Queue<Person>();
             _incomeList = new List<BudgetRecord>();
             _expenseList = new List<BudgetRecord>();
+
+            OneDayPassed += new EventHandler(DeductMaintenceCost);
         }
 
         #endregion
@@ -186,7 +200,7 @@ namespace simcityModel.Model
             OnGameInfoChanged();
         }
 
-        private void DeductMaintenceCost()
+        private void DeductMaintenceCost(object? sender, EventArgs e)
         {
             int sum = 0;
 
@@ -244,7 +258,7 @@ namespace simcityModel.Model
         private bool NewWorkplaceNeeded()
         {
             bool needed = false;
-            if (_unemployed.Count > Field.OFFICE_CAPACITY)
+            if (_unemployed.Count < Field.OFFICE_CAPACITY)
             {
                 needed = true;
             }
@@ -295,6 +309,16 @@ namespace simcityModel.Model
         }
 
         public void AdvanceTime()
+        {
+            _gameTime = _gameTime.AddDays(1);
+            OnOneDayPassed();
+
+            if (_gameTime.Day == 1) OnOneMonthPassed();
+
+            OnGameInfoChanged();
+        }
+    
+        public void AdvanceTime1()
         {
             if(NewHomeNeeded())
             {
@@ -347,9 +371,9 @@ namespace simcityModel.Model
             }
             if(TaxDay())
             {
-                /* TODO */
+                // TODO
             }
-            
+
             MoveCars();
             if (NewCarSampleNeeded())
             {
@@ -590,6 +614,22 @@ namespace simcityModel.Model
         private void OnGameOver()
         {
             GameOver?.Invoke(this, new EventArgs());
+        }
+
+        /// <summary>
+        /// Invoking GameOver event.
+        /// </summary>
+        private void OnOneDayPassed()
+        {
+            OneDayPassed?.Invoke(this, new EventArgs());
+        }
+
+        /// <summary>
+        /// Invoking GameOver event.
+        /// </summary>
+        private void OnOneMonthPassed()
+        {
+            OneMonthPassed?.Invoke(this, new EventArgs());
         }
 
         #endregion
