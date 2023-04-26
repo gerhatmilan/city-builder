@@ -172,14 +172,15 @@ namespace simcityModel.Model
             _incomeList = new List<BudgetRecord>();
             _expenseList = new List<BudgetRecord>();
 
-            OneDayPassed += new EventHandler(DeductMaintenceCost);
+            OneMonthPassed += new EventHandler(GetTax);
+            OneMonthPassed += new EventHandler(DeductMaintenceCost);
         }
 
         #endregion
 
         #region Private methods
 
-        private void GetTax()
+        private void GetTax(object? sender, EventArgs e)
         {
             int sum = 0;
 
@@ -189,7 +190,7 @@ namespace simcityModel.Model
                 {
                     if (_fields[i, j].Type != FieldType.GeneralField)
                     {
-                        sum += _fields[i, j].NumberOfPeople * 5;
+                        sum += _fields[i, j].NumberOfPeople * TAX_PER_PERSON;
                     }
                 }
             }
