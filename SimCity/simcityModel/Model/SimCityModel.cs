@@ -14,8 +14,8 @@ namespace simcityModel.Model
 {
     public enum GameSpeed { Paused, Normal, Fast, Fastest }
     public enum FieldType { IndustrialZone, OfficeZone, ResidentalZone, GeneralField }
-    public enum BuildingType { Industry, OfficeBuilding, Home, Stadium, PoliceStation, FireStation, Road }
-    public enum Vehicle { Car, Firecar }
+    public enum BuildingType { Industry, OfficeBuilding, Home, Stadium, PoliceStation, FireStation, Road}
+    public enum Vehicle { Car, Firecar, None }
     
     public class SimCityModel
     {
@@ -24,6 +24,7 @@ namespace simcityModel.Model
         private const int GAMESIZE = 15;
         private const float PRICERETURN_MULTIPLIER = 2f / 3;
         private const int TAX_PER_PERSON = 5;
+
 
         private Dictionary<FieldType, (int price, int returnPrice)> _zonePrices = new Dictionary<FieldType, (int, int)>()
         {
@@ -44,6 +45,14 @@ namespace simcityModel.Model
             { BuildingType.Road, (100, CalculateReturnPrice(100), 200) }
         };
 
+        private Dictionary<BuildingType, int> _buildings = new Dictionary<BuildingType, int>()
+        {
+            { BuildingType.Stadium, 0 },
+            { BuildingType.PoliceStation, 0 },
+            { BuildingType.FireStation, 0 },
+            { BuildingType.Road, 0 }
+        };
+
         private IDataAccess _dataAccess;
         private DateTime _gameTime;
         private GameSpeed _gameSpeed;
@@ -52,6 +61,8 @@ namespace simcityModel.Model
         private int _happiness;
         private Field[,] _fields;
         private List<Person> _people;
+        private Queue<Person> _homeless;
+        private Queue<Person> _unemployed;
         private List<BudgetRecord> _incomeList;
         private List<BudgetRecord> _expenseList;
 
@@ -86,6 +97,13 @@ namespace simcityModel.Model
         /// As a parameter, it passes a list of BudgetRecord, which holds the data of every single expense.
         /// </summary>
         public event EventHandler<List<BudgetRecord>>? ExpenseListChanged;
+
+        /// <summary>
+        /// Game speed change event.
+        /// Gets invoked when the game speed changes.
+        /// As a parameter, it passes the new GameSpeed.
+        /// </summary>
+        public event EventHandler<GameSpeed>? GameSpeedChanged;
 
         /// <summary>
         /// Game over event.
@@ -132,11 +150,13 @@ namespace simcityModel.Model
             {
                 for (int j = 0; j < GAMESIZE; j++)
                 {
-                    _fields[i, j] = new Field();
+                    _fields[i, j] = new Field(i, j);
                 }
             }
 
             _people = new List<Person>();
+            _homeless = new Queue<Person>();
+            _unemployed = new Queue<Person>();
             _incomeList = new List<BudgetRecord>();
             _expenseList = new List<BudgetRecord>();
         }
@@ -145,32 +165,7 @@ namespace simcityModel.Model
 
         #region Private methods
 
-        private static int CalculateReturnPrice(int originalPrice)
-        {
-            return Convert.ToInt32(originalPrice * PRICERETURN_MULTIPLIER);
-        }
-
-        #endregion
-
-        #region Public methods
-
-        public void InitializeGame()
-        {
-            _gameTime = DateTime.Now;
-            _gameSpeed = GameSpeed.Normal;
-            _population = 0;
-            _money = 3000;
-            _happiness = 0;
-
-            OnGameInfoChanged();
-        }
-
-        public void AdvanceTime()
-        {
-            /* ... */
-        }
-
-        public void GetTax()
+        private void GetTax()
         {
             int sum = 0;
 
@@ -189,6 +184,229 @@ namespace simcityModel.Model
             _incomeList.Add(new BudgetRecord("Adóbevétel", sum));
             OnIncomeListChanged();
             OnGameInfoChanged();
+        }
+
+        private void DeductMaintenceCost()
+        {
+            int sum = 0;
+
+            foreach(BuildingType key in _buildings.Keys)
+            {
+                sum += _buildings[key] * _buildingPrices[key].maintenceCost;
+            }
+
+            _money -= sum;
+            _expenseList.Add(new BudgetRecord("Havi fenntartási költségek", sum));
+            OnExpenseListChanged();
+            OnGameInfoChanged();
+        }
+
+        private static int CalculateReturnPrice(int originalPrice)
+        {
+            return Convert.ToInt32(originalPrice * PRICERETURN_MULTIPLIER);
+        }
+        
+
+        private bool ValidCoordinates((int x, int y) coordinates)
+        {
+            bool valid = true;
+            if (coordinates.x >= GAMESIZE || coordinates.y >= GAMESIZE || coordinates.x < 0 || coordinates.y < 0)
+                valid = false;
+            
+            return valid;
+        }
+        private bool isRoad((int x, int y) coordinates)
+        {
+            bool road = false;
+            if (ValidCoordinates(coordinates) && Fields[coordinates.x, coordinates.y].Building != null && Fields[coordinates.x, coordinates.y].Building!.Type == BuildingType.Road)
+            {
+                road = true;
+            }
+            return road;
+        }
+        private List<(int,int)> GetAdjacentCoordinates((int x, int y) origin)
+        {
+            var adjacentCoordinates = new List<(int, int)>();
+            if (!ValidCoordinates(origin)) return adjacentCoordinates;
+            
+            if (ValidCoordinates((origin.x + 1, origin.y)))
+                adjacentCoordinates.Add((origin.x + 1, origin.y));
+            if (ValidCoordinates((origin.x - 1, origin.y)))
+                adjacentCoordinates.Add((origin.x - 1, origin.y));
+            if (ValidCoordinates((origin.x, origin.y + 1)))
+                adjacentCoordinates.Add((origin.x, origin.y +1));
+            if (ValidCoordinates((origin.x, origin.y - 1)))
+                adjacentCoordinates.Add((origin.x, origin.y - 1));
+
+            return adjacentCoordinates;
+        }
+
+        private bool NewWorkplaceNeeded()
+        {
+            bool needed = false;
+            if (_unemployed.Count > Field.OFFICE_CAPACITY)
+            {
+                needed = true;
+            }
+            return needed;
+        }
+        private bool NewHomeNeeded()
+        {
+            bool needed = false;
+            if (_homeless.Count > Field.RESIDENTAL_CAPACITY)
+            {
+                needed = true;
+            }
+            return needed;
+        }
+        private bool NewPeopleNeeded()
+        {
+            return false;
+        }
+        private bool NewCarSampleNeeded()
+        {
+            return false;
+        }
+        private void SampleNewCars()
+        { 
+        }
+        private void MoveCars()
+        { 
+        }
+        private bool TaxDay()
+        {
+            return false;
+        }
+
+
+        #endregion
+
+        #region Public methods
+
+        public void InitializeGame()
+        {
+            _gameTime = DateTime.Now;
+            _gameSpeed = GameSpeed.Normal;
+            _population = 0;
+            _money = 3000;
+            _happiness = 0;
+
+            OnGameInfoChanged();
+        }
+
+        public void AdvanceTime()
+        {
+            if(NewHomeNeeded())
+            {
+                foreach (Field field in Fields)
+                {
+                    if (field.Type == FieldType.ResidentalZone && field.Building == null)
+                    {
+                        MakeBuilding(field.X, field.Y, BuildingType.Home);
+                        while (_homeless.Count > 0 && field.Capacity > field.NumberOfPeople)
+                        {
+                            Person person = _homeless.Dequeue();
+                            person.home = (PeopleBuilding?)field.Building;
+                            person.home!.People.Add(person);                            
+                        }
+                        break;
+                    }
+                }
+            }
+            if(NewWorkplaceNeeded())
+            {
+                foreach (Field field in Fields)
+                {
+                    if ((field.Type == FieldType.IndustrialZone || field.Type == FieldType.OfficeZone) && field.Building == null)
+                    {
+                        if (field.Type == FieldType.IndustrialZone)
+                        {
+                            MakeBuilding(field.X, field.Y, BuildingType.Industry);
+                        }
+                        else
+                        {
+                            MakeBuilding(field.X, field.Y, BuildingType.OfficeBuilding);
+                        }
+
+                        while (_unemployed.Count > 0 && field.Capacity > field.NumberOfPeople)
+                        {
+                            Person person = _unemployed.Dequeue();
+                            person.work = (PeopleBuilding?)field.Building;
+                            person.work!.People.Add(person);
+                        }
+                        break;
+                    }
+                }
+            }
+            while(NewPeopleNeeded())
+            {
+                var person = new Person();
+                _people.Add(person);
+                _homeless.Enqueue(person);
+                _unemployed.Enqueue(person);
+            }
+            if(TaxDay())
+            {
+                /* TODO */
+            }
+            
+            MoveCars();
+            if (NewCarSampleNeeded())
+            {
+                SampleNewCars();
+            }
+            OnGameInfoChanged();
+        }
+
+        public void ChangeGameSpeed(GameSpeed newSpeed)
+        {
+            _gameSpeed = newSpeed;
+            OnGameSpeedChanged();
+        }
+        
+        public (bool[,] routeExists, (int, int)[,] parents, int[,] distance) BreadthFirst((int x, int y) source)
+        {
+            Queue<(int, int)> q = new Queue<(int, int)>();
+            bool[,] used = new bool[GAMESIZE,GAMESIZE];
+            int[,] distance = new int[GAMESIZE, GAMESIZE];
+            (int x, int y)[,] parents = new (int,int)[GAMESIZE, GAMESIZE];
+            if (!ValidCoordinates(source)) return (used, parents, distance);
+
+            q.Enqueue(source);
+            used[source.x, source.y] = true;
+            parents[source.x, source.y] = (-1, -1);
+            while (q.Count != 0)
+            {
+                (int x, int y) v = q.Dequeue();
+                foreach ((int x, int y) u in GetAdjacentCoordinates((v.x, v.y)))
+                    if (!used[u.x, u.y] && Fields[u.x,u.y].Building != null)
+                    {
+                        used[u.x,u.y] = true;
+                        if (Fields[u.x,u.y].Building!.Type == BuildingType.Road)
+                            q.Enqueue(u);
+                        distance[u.x, u.y] = distance[v.x, v.y] + 1;
+                        parents[u.x, u.y] = v;
+                    }
+            }   
+            
+            return (used, parents, distance);
+        }
+        public Queue<(int x, int y)> CalculateRoute((int x, int y) start, (int x, int y) end)
+        {
+            Queue<(int x, int y)> route = new Queue<(int x, int y)>();
+            if (!ValidCoordinates(start) || !ValidCoordinates(end))
+                return route;
+            var (used, parents, distance) = BreadthFirst((start.x, start.y));
+            if (used[start.x, start.y])
+            {
+                (int x, int y) v = start;
+                while (v != (-1, -1))
+                {
+                    route.Enqueue(v);
+                    v = parents[v.x, v.y];
+                }
+            }
+            return route;
         }
 
         public void MakeZone(int x, int y, FieldType newFieldType)
@@ -224,6 +442,7 @@ namespace simcityModel.Model
                     {
                         _fields[x, y].Building = new Road();
                         OnMatrixChanged((x, y));
+                        _buildings[newBuildingType]++;
 
                         _money -= _buildingPrices[newBuildingType].price;
                         _expenseList.Add(new BudgetRecord("Útlerakás", _buildingPrices[newBuildingType].price));
@@ -251,8 +470,9 @@ namespace simcityModel.Model
                         _fields[coords.x, coords.y].Building = building;
                         OnMatrixChanged((coords.x, coords.y));
                     }
-                    _money -= _buildingPrices[newBuildingType].price;
 
+                    _buildings[newBuildingType]++;
+                    _money -= _buildingPrices[newBuildingType].price;
                     _expenseList.Add(new BudgetRecord("Épületlerakás", _buildingPrices[newBuildingType].price));
                     OnExpenseListChanged();
                     OnGameInfoChanged();
@@ -287,26 +507,27 @@ namespace simcityModel.Model
                         case Road:
                             /* need to check if every building is still accessible after destroyation */
                             /* maintence cost needs to be handled  */
-                            /* certain percantage of the price must be returned */
 
                             _money += _buildingPrices[_fields[x, y].Building!.Type].returnPrice;
                             _incomeList.Add(new BudgetRecord("Útrombolás", _buildingPrices[_fields[x, y].Building!.Type].returnPrice));
                             OnIncomeListChanged();
                             OnGameInfoChanged();
 
+                            _buildings[_fields[x, y].Building!.Type]--;
                             _fields[x, y].Building = null;
                             OnMatrixChanged((x, y));
 
-                          break;
+                            break;
                         default:
                             /* maintence cost needs to be handled  */
-                            /* certain percantage of the price must be returned */
                             /* additional effects needs to be handled (eg. happiness of nearby people) */
 
                             _money += _buildingPrices[_fields[x, y].Building!.Type].returnPrice;
                             _incomeList.Add(new BudgetRecord("Épületrombolás", _buildingPrices[_fields[x, y].Building!.Type].returnPrice));
                             OnIncomeListChanged();
                             OnGameInfoChanged();
+
+                            _buildings[_fields[x, y].Building!.Type]--;
 
                             foreach ((int x, int y) coords in ((ServiceBuilding)_fields[x, y].Building!).Coordinates)
                             {
@@ -353,6 +574,14 @@ namespace simcityModel.Model
         private void OnExpenseListChanged()
         {
             ExpenseListChanged?.Invoke(this, _expenseList);
+        }
+
+        /// <summary>
+        /// Invoking ExpenseListChanged event.
+        /// </summary>
+        private void OnGameSpeedChanged()
+        {
+            GameSpeedChanged?.Invoke(this, _gameSpeed);
         }
 
         /// <summary>
