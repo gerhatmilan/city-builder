@@ -241,11 +241,6 @@ namespace simcityModel.Model
             }
 
             building.AddEffect(_fields);
-
-            foreach ((int x, int y) coordinates in building.EffectCoordinates)
-            {
-                int a = _fields[coordinates.x, coordinates.y].FieldHappiness;
-            }
         }
 
         private void RemoveServiceBuildingEffects(ServiceBuilding building)
@@ -259,11 +254,6 @@ namespace simcityModel.Model
             }
 
             building.RemoveEffect(_fields);
-
-            foreach ((int x, int y) coordinates in building.EffectCoordinates)
-            {
-                int a = _fields[coordinates.x, coordinates.y].FieldHappiness;
-            }
         }
 
         private bool ValidCoordinates((int x, int y) coordinates)
@@ -274,6 +264,7 @@ namespace simcityModel.Model
             
             return valid;
         }
+
         private bool isRoad((int x, int y) coordinates)
         {
             bool road = false;
@@ -283,6 +274,7 @@ namespace simcityModel.Model
             }
             return road;
         }
+
         private List<(int,int)> GetAdjacentCoordinates((int x, int y) origin)
         {
             var adjacentCoordinates = new List<(int, int)>();
@@ -299,7 +291,25 @@ namespace simcityModel.Model
 
             return adjacentCoordinates;
         }
-        private bool IsAdjacentWithRoad(ServiceBuilding building)
+
+        private List<Building> GetAdjacentBuildings((int x, int y) origin)
+        {
+            var adjacentBuildings = new List<Building>();
+            if (!ValidCoordinates(origin)) return adjacentBuildings;
+
+            if (ValidCoordinates((origin.x + 1, origin.y)) && _fields[origin.x + 1, origin.y].Building != null)
+                adjacentBuildings.Add(_fields[origin.x + 1, origin.y].Building!);
+            if (ValidCoordinates((origin.x - 1, origin.y)) && _fields[origin.x - 1, origin.y].Building != null)
+                adjacentBuildings.Add(_fields[origin.x - 1, origin.y].Building!);
+            if (ValidCoordinates((origin.x, origin.y + 1)) && _fields[origin.x, origin.y + 1].Building != null)
+                adjacentBuildings.Add(_fields[origin.x, origin.y + 1].Building!);
+            if (ValidCoordinates((origin.x, origin.y - 1)) && _fields[origin.x, origin.y - 1].Building != null)
+                adjacentBuildings.Add(_fields[origin.x, origin.y - 1].Building!);
+
+            return adjacentBuildings;
+        }
+
+        private bool IsAdjacentWithRoad(Building building)
         {
             foreach((int x, int y) coordinates in building.Coordinates)
             {
@@ -311,6 +321,25 @@ namespace simcityModel.Model
             }
 
             return false;
+        }
+
+        private bool AdjacentBuildingsAreStillAccessibleAfterRoadDestroyation((int x, int y) coordinates)
+        {
+            List<Building> adjacentBuildings = GetAdjacentBuildings((coordinates.x, coordinates.y));
+
+            Road saveRoadInstance = (Road)_fields[coordinates.x, coordinates.y].Building!; 
+            _fields[coordinates.x, coordinates.y].Building = null;
+            foreach (Building building in adjacentBuildings)
+            {
+                if (!IsAdjacentWithRoad(building) && building.GetType() != typeof(Road))
+                {
+                    _fields[coordinates.x, coordinates.y].Building = saveRoadInstance;
+                    return false;
+                }
+            }
+
+            _fields[coordinates.x, coordinates.y].Building = saveRoadInstance;
+            return true;
         }
 
         private bool NewWorkplaceNeeded()
@@ -517,14 +546,14 @@ namespace simcityModel.Model
                 case BuildingType.OfficeBuilding:
                 case BuildingType.Industry:
                 case BuildingType.Home:
-                    _fields[x, y].Building = new PeopleBuilding(newBuildingType);
+                    _fields[x, y].Building = new PeopleBuilding((x, y), newBuildingType);
                     OnMatrixChanged((x, y));
 
                     break;
                 case BuildingType.Road:
                     if (_fields[x, y].Type == FieldType.GeneralField && _fields[x, y].Building == null)
                     {
-                        _fields[x, y].Building = new Road();
+                        _fields[x, y].Building = new Road((x, y));
                         OnMatrixChanged((x, y));
                         _buildings[newBuildingType]++;
 
@@ -576,7 +605,7 @@ namespace simcityModel.Model
                 case FieldType.IndustrialZone:
                 case FieldType.ResidentalZone:
                 case FieldType.OfficeZone:
-                    if (_fields[x, y].Building == null)
+                    if (_fields[x, y].Building == null || (_fields[x, y].Building != null && ((PeopleBuilding)_fields[x, y].Building!).People.Count == 0))
                     {
                         _money += _zonePrices[_fields[x, y].Type].returnPrice;
                         _incomeList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} Zónarombolás", _zonePrices[_fields[x, y].Type].returnPrice));
@@ -584,6 +613,7 @@ namespace simcityModel.Model
                         OnGameInfoChanged();
 
                         _fields[x, y].Type = FieldType.GeneralField;
+                        _fields[x, y].Building = null;
                         OnMatrixChanged((x, y));
                     }
                     break;
@@ -593,16 +623,19 @@ namespace simcityModel.Model
                         case null:
                             break;
                         case Road:
-                            /* need to check if every building is still accessible after destroyation */   
+                            /* still need to check if the road network is still connected after destroyation */
 
-                            _money += _buildingPrices[_fields[x, y].Building!.Type].returnPrice;
-                            _incomeList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} Útrombolás", _buildingPrices[_fields[x, y].Building!.Type].returnPrice));
-                            OnIncomeListChanged();
-                            OnGameInfoChanged();
+                            if (AdjacentBuildingsAreStillAccessibleAfterRoadDestroyation((x, y)))
+                            {
+                                _money += _buildingPrices[_fields[x, y].Building!.Type].returnPrice;
+                                _incomeList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} Útrombolás", _buildingPrices[_fields[x, y].Building!.Type].returnPrice));
+                                OnIncomeListChanged();
+                                OnGameInfoChanged();
 
-                            _buildings[_fields[x, y].Building!.Type]--;
-                            _fields[x, y].Building = null;
-                            OnMatrixChanged((x, y));
+                                _buildings[_fields[x, y].Building!.Type]--;
+                                _fields[x, y].Building = null;
+                                OnMatrixChanged((x, y));
+                            }
 
                             break;
                         default:

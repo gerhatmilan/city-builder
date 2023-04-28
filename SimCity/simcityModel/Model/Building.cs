@@ -14,12 +14,24 @@ namespace simcityModel.Model
     public abstract class Building
     {
         protected BuildingType _type;
+        protected (int x, int y) _coordinates;
 
         public BuildingType Type { get => _type; }
 
-        public Building(BuildingType type)
+        public virtual List<(int x, int y)> Coordinates
         {
-            _type = type;     
+            get
+            {
+                List<(int x, int y)> coordinates = new List<(int x, int y)>();
+                coordinates.Add(_coordinates);
+                return coordinates;
+            }
+        }
+
+        public Building((int x, int y) coordinates, BuildingType type)
+        {
+            _type = type;    
+            _coordinates = coordinates;
         }
     }
 
@@ -32,7 +44,7 @@ namespace simcityModel.Model
         public List<Person> People { get => _people; }
         public bool OnFire { get => OnFire; }
 
-        public PeopleBuilding(BuildingType type) : base(type)
+        public PeopleBuilding((int x, int y) coordinates, BuildingType type) : base(coordinates, type)
         {
             _people = new List<Person>();
         }
@@ -51,7 +63,6 @@ namespace simcityModel.Model
         private int _maintenanceCost;
         private bool _onFire;
         private float _fireProb;
-        private (int x, int y) _coordinates;
 
         #endregion
 
@@ -60,7 +71,7 @@ namespace simcityModel.Model
         public int Price { get => _price; }
         public int MaintenceCost { get => _maintenanceCost; }
         public bool Onfire { get => _onFire; }
-        public List<(int, int)> Coordinates
+        public override List<(int, int)> Coordinates
         {
             get
             {
@@ -121,7 +132,7 @@ namespace simcityModel.Model
 
         #region Constructor
 
-        public ServiceBuilding((int x, int y) coordinates, BuildingType type) : base(type)
+        public ServiceBuilding((int x, int y) coordinates, BuildingType type) : base(coordinates, type)
         {
             _coordinates = coordinates;
         }
@@ -182,7 +193,7 @@ namespace simcityModel.Model
         public int Price { get => _price; }
         public int MaintenceCost { get => _maintenanceCost; }
 
-        public Road() : base(BuildingType.Road)
+        public Road((int x, int y) coordinates) : base(coordinates, BuildingType.Road)
         {
             
         }
