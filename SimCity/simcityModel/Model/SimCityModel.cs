@@ -229,7 +229,6 @@ namespace simcityModel.Model
         {
             return Convert.ToInt32(originalPrice * PRICERETURN_MULTIPLIER);
         }
-        
 
         private bool ValidCoordinates((int x, int y) coordinates)
         {
@@ -453,7 +452,7 @@ namespace simcityModel.Model
                 OnMatrixChanged((x, y));
 
                 _money -= _zonePrices[newFieldType].price;
-                _expenseList.Add(new BudgetRecord("Zónalerakás", _zonePrices[newFieldType].price));
+                _expenseList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} Zónalerakás", _zonePrices[newFieldType].price));
                 OnExpenseListChanged();
                 OnGameInfoChanged();
             }
@@ -481,7 +480,7 @@ namespace simcityModel.Model
                         _buildings[newBuildingType]++;
 
                         _money -= _buildingPrices[newBuildingType].price;
-                        _expenseList.Add(new BudgetRecord("Útlerakás", _buildingPrices[newBuildingType].price));
+                        _expenseList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} Útlerakás", _buildingPrices[newBuildingType].price));
                         OnExpenseListChanged();
                         OnGameInfoChanged();
                     }
@@ -495,7 +494,7 @@ namespace simcityModel.Model
                     ServiceBuilding building = new ServiceBuilding((x, y), newBuildingType);
                     foreach ((int x, int y) coords in building.Coordinates)
                     {
-                        if (coords.x >= GameSize || coords.y >= GameSize || _fields[coords.x, coords.y].Type != FieldType.GeneralField || _fields[coords.x, coords.y].Building != null)
+                        if (!ValidCoordinates((coords.x, coords.y)) || _fields[coords.x, coords.y].Type != FieldType.GeneralField || _fields[coords.x, coords.y].Building != null)
                         {
                             throw new CannotBuildException("Ide nem építhetsz ilyen épületet.");
                         }
@@ -509,7 +508,7 @@ namespace simcityModel.Model
 
                     _buildings[newBuildingType]++;
                     _money -= _buildingPrices[newBuildingType].price;
-                    _expenseList.Add(new BudgetRecord("Épületlerakás", _buildingPrices[newBuildingType].price));
+                    _expenseList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} Épületlerakás", _buildingPrices[newBuildingType].price));
                     OnExpenseListChanged();
                     OnGameInfoChanged();
 
@@ -527,7 +526,7 @@ namespace simcityModel.Model
                     if (_fields[x, y].Building == null)
                     {
                         _money += _zonePrices[_fields[x, y].Type].returnPrice;
-                        _incomeList.Add(new BudgetRecord("Zónarombolás", _zonePrices[_fields[x, y].Type].returnPrice));
+                        _incomeList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} Zónarombolás", _zonePrices[_fields[x, y].Type].returnPrice));
                         OnIncomeListChanged();
                         OnGameInfoChanged();
 
@@ -545,7 +544,7 @@ namespace simcityModel.Model
                             /* maintence cost needs to be handled  */
 
                             _money += _buildingPrices[_fields[x, y].Building!.Type].returnPrice;
-                            _incomeList.Add(new BudgetRecord("Útrombolás", _buildingPrices[_fields[x, y].Building!.Type].returnPrice));
+                            _incomeList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} Útrombolás", _buildingPrices[_fields[x, y].Building!.Type].returnPrice));
                             OnIncomeListChanged();
                             OnGameInfoChanged();
 
@@ -559,7 +558,7 @@ namespace simcityModel.Model
                             /* additional effects needs to be handled (eg. happiness of nearby people) */
 
                             _money += _buildingPrices[_fields[x, y].Building!.Type].returnPrice;
-                            _incomeList.Add(new BudgetRecord("Épületrombolás", _buildingPrices[_fields[x, y].Building!.Type].returnPrice));
+                            _incomeList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} Épületrombolás", _buildingPrices[_fields[x, y].Building!.Type].returnPrice));
                             OnIncomeListChanged();
                             OnGameInfoChanged();
 

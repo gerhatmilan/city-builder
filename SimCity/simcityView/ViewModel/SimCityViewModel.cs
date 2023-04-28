@@ -375,7 +375,7 @@ namespace simcityView.ViewModel
 
         private void model_UpdateInfoText(object? s, GameEventArgs e )
         {
-            InfoText = "Dátum: " + e.GameTime.ToString() + "\t|\tPénz: " + e.Money + "💸\t|\tLakosság: " + e.Population + " fő";
+            InfoText = "Dátum: " + e.GameTime.ToString("yyyy. MM. dd.") + "\t|\tPénz: " + e.Money + "💸\t|\tLakosság: " + e.Population + " fő";
         }
 
         private void model_MatrixChanged(object? s, (int X, int Y) e)
