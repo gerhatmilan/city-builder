@@ -197,9 +197,13 @@ namespace simcityModel.Model
             }
 
             _money += sum;
-            _incomeList.Add(new BudgetRecord("Adóbevétel", sum));
-            OnIncomeListChanged();
-            OnGameInfoChanged();
+
+            if (sum > 0)
+            {
+                _incomeList.Add(new BudgetRecord("Adóbevétel", sum));
+                OnIncomeListChanged();
+                OnGameInfoChanged();
+            }
         }
 
         private void DeductMaintenceCost(object? sender, EventArgs e)
@@ -212,9 +216,13 @@ namespace simcityModel.Model
             }
 
             _money -= sum;
-            _expenseList.Add(new BudgetRecord("Havi fenntartási költségek", sum));
-            OnExpenseListChanged();
-            OnGameInfoChanged();
+
+            if (sum > 0)
+            {
+                _expenseList.Add(new BudgetRecord("Havi fenntartási költségek", sum));
+                OnExpenseListChanged();
+                OnGameInfoChanged();
+            }
         }
 
         private static int CalculateReturnPrice(int originalPrice)
