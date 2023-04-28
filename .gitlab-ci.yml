@@ -1,0 +1,27 @@
+image: mcr.microsoft.com/dotnet/sdk:7.0
+
+stages:
+  - build
+  - test
+
+before_script:
+  - dotnet --version
+
+# Build
+build_project:
+  stage: build
+  # Windows-based docker images for .NET Framework:
+  # https://hub.docker.com/_/microsoft-dotnet-framework-sdk/
+  image: mcr.microsoft.com/dotnet/sdk:7.0
+  tags: [windows]
+  script:
+    - dotnet build SimCity/simcityView/simcity.sln
+
+# Test
+test_project:
+  stage: test
+  image: mcr.microsoft.com/dotnet/sdk:7.0
+  tags: [windows]
+  script:
+    - dotnet test SimCity/simcityTest
+
