@@ -61,10 +61,11 @@ namespace simcityModel.Model
         private int _happiness;
         private Field[,] _fields;
         private List<Person> _people;
-        private Queue<Person> _homeless;
-        private Queue<Person> _unemployed;
+        private List<Person> _homeless;
+        private List<Person> _unemployed;
         private List<BudgetRecord> _incomeList;
         private List<BudgetRecord> _expenseList;
+
 
         #endregion
 
@@ -166,10 +167,10 @@ namespace simcityModel.Model
                 }
             }
 
-            _people = new List<Person>();
-            _homeless = new Queue<Person>();
-            _unemployed = new Queue<Person>();
-            _incomeList = new List<BudgetRecord>();
+            _people      = new List<Person>();
+            _homeless    = new List<Person>();
+            _unemployed  = new List<Person>();
+            _incomeList  = new List<BudgetRecord>();
             _expenseList = new List<BudgetRecord>();
 
             OneMonthPassed += new EventHandler(GetTax);
@@ -321,7 +322,7 @@ namespace simcityModel.Model
     
         public void AdvanceTime1()
         {
-            if(NewHomeNeeded())
+ 
             {
                 foreach (Field field in Fields)
                 {
@@ -330,9 +331,10 @@ namespace simcityModel.Model
                         MakeBuilding(field.X, field.Y, BuildingType.Home);
                         while (_homeless.Count > 0 && field.Capacity > field.NumberOfPeople)
                         {
-                            Person person = _homeless.Dequeue();
-                            person.home = (PeopleBuilding?)field.Building;
-                            person.home!.People.Add(person);                            
+                            Person person = _homeless[0];
+                            _homeless.RemoveAt(0);
+                            person.home = field;
+                            ((PeopleBuilding)(person.home!.Building!)).People.Add(person);                            
                         }
                         break;
                     }
@@ -355,9 +357,10 @@ namespace simcityModel.Model
 
                         while (_unemployed.Count > 0 && field.Capacity > field.NumberOfPeople)
                         {
-                            Person person = _unemployed.Dequeue();
-                            person.work = (PeopleBuilding?)field.Building;
-                            person.work!.People.Add(person);
+                            Person person = _unemployed[0];
+                            _unemployed.RemoveAt(0);
+                            person.work = field;
+                            ((PeopleBuilding)(person.work!.Building!)).People.Add(person); ;
                         }
                         break;
                     }
@@ -367,8 +370,8 @@ namespace simcityModel.Model
             {
                 var person = new Person();
                 _people.Add(person);
-                _homeless.Enqueue(person);
-                _unemployed.Enqueue(person);
+                _homeless.Add(person);
+                _unemployed.Add(person);
             }
             if(TaxDay())
             {

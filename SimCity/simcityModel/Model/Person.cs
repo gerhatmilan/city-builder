@@ -18,8 +18,8 @@ namespace simcityModel.Model
         }
 
         public int happyness;
-        public PeopleBuilding? home;
-        public PeopleBuilding? work;
+        public Field? home;
+        public Field? work;
         public int distanceToWork;
 
     }
