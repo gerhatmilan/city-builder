@@ -200,7 +200,7 @@ namespace simcityModel.Model
 
             if (sum > 0)
             {
-                _incomeList.Add(new BudgetRecord("Adóbevétel", sum));
+                _incomeList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} - Adóbevétel", sum));
                 OnIncomeListChanged();
                 OnGameInfoChanged();
             }
@@ -219,7 +219,7 @@ namespace simcityModel.Model
 
             if (sum > 0)
             {
-                _expenseList.Add(new BudgetRecord("Havi fenntartási költségek", sum));
+                _expenseList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} - Havi fenntartási költségek", sum));
                 OnExpenseListChanged();
                 OnGameInfoChanged();
             }
@@ -530,7 +530,7 @@ namespace simcityModel.Model
                 OnMatrixChanged((x, y));
 
                 _money -= _zonePrices[newFieldType].price;
-                _expenseList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} Zónalerakás", _zonePrices[newFieldType].price));
+                _expenseList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} - Zónalerakás", _zonePrices[newFieldType].price));
                 OnExpenseListChanged();
                 OnGameInfoChanged();
             }
@@ -558,7 +558,7 @@ namespace simcityModel.Model
                         _buildings[newBuildingType]++;
 
                         _money -= _buildingPrices[newBuildingType].price;
-                        _expenseList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} Útlerakás", _buildingPrices[newBuildingType].price));
+                        _expenseList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} - Útlerakás", _buildingPrices[newBuildingType].price));
                         OnExpenseListChanged();
                         OnGameInfoChanged();
                     }
@@ -590,7 +590,7 @@ namespace simcityModel.Model
 
                     _buildings[newBuildingType]++;
                     _money -= _buildingPrices[newBuildingType].price;
-                    _expenseList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} Épületlerakás", _buildingPrices[newBuildingType].price));
+                    _expenseList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} - Épületlerakás", _buildingPrices[newBuildingType].price));
                     OnExpenseListChanged();
                     OnGameInfoChanged();
 
@@ -628,7 +628,7 @@ namespace simcityModel.Model
                             if (AdjacentBuildingsAreStillAccessibleAfterRoadDestroyation((x, y)))
                             {
                                 _money += _buildingPrices[_fields[x, y].Building!.Type].returnPrice;
-                                _incomeList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} Útrombolás", _buildingPrices[_fields[x, y].Building!.Type].returnPrice));
+                                _incomeList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} - Útrombolás", _buildingPrices[_fields[x, y].Building!.Type].returnPrice));
                                 OnIncomeListChanged();
                                 OnGameInfoChanged();
 
@@ -640,7 +640,7 @@ namespace simcityModel.Model
                             break;
                         default:
                             _money += _buildingPrices[_fields[x, y].Building!.Type].returnPrice;
-                            _incomeList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} Épületrombolás", _buildingPrices[_fields[x, y].Building!.Type].returnPrice));
+                            _incomeList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} - Épületrombolás", _buildingPrices[_fields[x, y].Building!.Type].returnPrice));
                             OnIncomeListChanged();
                             OnGameInfoChanged();
 
