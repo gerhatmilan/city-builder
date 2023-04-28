@@ -20,7 +20,7 @@ build_project:
 # Test
 test_project:
   stage: test
-  image: mcr.microsoft.com/dotnet/sdk:7.0
+  image: mcr.microsoft.com/dotnet/sdk:6.0
   tags: [windows]
   script:
     - dotnet test SimCity/simcityTest
