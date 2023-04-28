@@ -10,8 +10,6 @@ before_script:
 # Build
 build_project:
   stage: build
-  # Windows-based docker images for .NET Framework:
-  # https://hub.docker.com/_/microsoft-dotnet-framework-sdk/
   image: mcr.microsoft.com/dotnet/sdk:7.0
   tags: [windows]
   script:
