@@ -230,6 +230,42 @@ namespace simcityModel.Model
             return Convert.ToInt32(originalPrice * PRICERETURN_MULTIPLIER);
         }
 
+        private void AddServiceBuildingEffects(ServiceBuilding building)
+        {
+            foreach ((int x, int y) coordinates in building.EffectCoordinates)
+            {
+                if (!ValidCoordinates(coordinates))
+                {
+                    building.EffectCoordinates.Remove(coordinates);
+                }
+            }
+
+            building.AddEffect(_fields);
+
+            foreach ((int x, int y) coordinates in building.EffectCoordinates)
+            {
+                int a = _fields[coordinates.x, coordinates.y].FieldHappiness;
+            }
+        }
+
+        private void RemoveServiceBuildingEffects(ServiceBuilding building)
+        {
+            foreach ((int x, int y) coordinates in building.EffectCoordinates)
+            {
+                if (!ValidCoordinates(coordinates))
+                {
+                    building.EffectCoordinates.Remove(coordinates);
+                }
+            }
+
+            building.RemoveEffect(_fields);
+
+            foreach ((int x, int y) coordinates in building.EffectCoordinates)
+            {
+                int a = _fields[coordinates.x, coordinates.y].FieldHappiness;
+            }
+        }
+
         private bool ValidCoordinates((int x, int y) coordinates)
         {
             bool valid = true;
@@ -262,6 +298,19 @@ namespace simcityModel.Model
                 adjacentCoordinates.Add((origin.x, origin.y - 1));
 
             return adjacentCoordinates;
+        }
+        private bool IsAdjacentWithRoad(ServiceBuilding building)
+        {
+            foreach((int x, int y) coordinates in building.Coordinates)
+            {
+                List<(int, int)> adjacentCoordinates = GetAdjacentCoordinates((coordinates.x, coordinates.y));
+                foreach ((int x, int y) adjacentCoordinate in adjacentCoordinates)
+                {
+                    if (isRoad((adjacentCoordinate.x, adjacentCoordinate.y))) return true;
+                }
+            }
+
+            return false;
         }
 
         private bool NewWorkplaceNeeded()
@@ -500,11 +549,15 @@ namespace simcityModel.Model
                         }
                     }
 
+                    if (!IsAdjacentWithRoad(building)) return;
+
                     foreach ((int x, int y) coords in building.Coordinates)
                     {
                         _fields[coords.x, coords.y].Building = building;
                         OnMatrixChanged((coords.x, coords.y));
                     }
+
+                    AddServiceBuildingEffects(building);
 
                     _buildings[newBuildingType]++;
                     _money -= _buildingPrices[newBuildingType].price;
@@ -540,8 +593,7 @@ namespace simcityModel.Model
                         case null:
                             break;
                         case Road:
-                            /* need to check if every building is still accessible after destroyation */
-                            /* maintence cost needs to be handled  */
+                            /* need to check if every building is still accessible after destroyation */   
 
                             _money += _buildingPrices[_fields[x, y].Building!.Type].returnPrice;
                             _incomeList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} Útrombolás", _buildingPrices[_fields[x, y].Building!.Type].returnPrice));
@@ -554,21 +606,20 @@ namespace simcityModel.Model
 
                             break;
                         default:
-                            /* maintence cost needs to be handled  */
-                            /* additional effects needs to be handled (eg. happiness of nearby people) */
-
                             _money += _buildingPrices[_fields[x, y].Building!.Type].returnPrice;
                             _incomeList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} Épületrombolás", _buildingPrices[_fields[x, y].Building!.Type].returnPrice));
                             OnIncomeListChanged();
                             OnGameInfoChanged();
 
                             _buildings[_fields[x, y].Building!.Type]--;
+                            RemoveServiceBuildingEffects((ServiceBuilding)_fields[x, y].Building!);
 
                             foreach ((int x, int y) coords in ((ServiceBuilding)_fields[x, y].Building!).Coordinates)
                             {
                                 _fields[coords.x, coords.y].Building = null;
                                 OnMatrixChanged((coords.x, coords.y));
                             }
+
                             break;
                     }
                     break;
