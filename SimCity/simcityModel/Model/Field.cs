@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 namespace simcityModel.Model
 {
     
+    public enum FieldType { IndustrialZone, OfficeZone, ResidentalZone, GeneralField }
     public class Field
     {
         #region Private fields

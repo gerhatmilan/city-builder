@@ -11,11 +11,54 @@ using System.Threading.Tasks;
 
 namespace simcityModel.Model
 {
+    public class BuildingStat
+    {
+        private BuildingType _type;
+        private int _distance;
+        private (int x, int y) _coordinates;
+        private Queue<(int x, int y)> _route;
+
+        public BuildingStat(BuildingType type, int distance, (int x, int y) coordinates, Queue<(int x, int y)> route)
+        {
+            _type = type;
+            _distance = distance;
+            _coordinates = coordinates;
+            _route = route;
+        }
+
+        public BuildingType Type { get => _type; }
+        public int Distance { get => _distance; }
+        public (int x, int y) Coordinates { get => _coordinates; }
+        public Queue<(int x, int y)> Route { get => _route; }
+    }
+    
+    public enum BuildingType { Industry, OfficeBuilding, Home, Stadium, PoliceStation, FireStation, Road }
     public abstract class Building
     {
         protected BuildingType _type;
         protected (int x, int y) _coordinates;
+        protected List<BuildingStat> _stats;
+        public void updateBuildingStats(SimCityModel model)
+        {  
+           (bool[,] routeExists, (int, int)[,] parents, int[,] distance)  = model.BreadthFirst(_coordinates);
+            for (int i = 0; i < model.GameSize; i++)
+            {
+                for (int j = 0; j < model.GameSize; j++)
+                {
+                    if (model.Fields[i, j].Building != null && model.Fields[i, j].Building!.Type != BuildingType.Road)
+                    {
+                        var bType = model.Fields[i, j].Building!.Type;
+                        int dist  = distance[i, j];
+                        var route = model.CalculateRoute((_coordinates.x, _coordinates.y), (i, j));
+                        var stat = new BuildingStat(bType, dist, (i, j), route);
+                        _stats.Add(stat);
+                    }
+                }
+            }
+            _stats.Sort((x, y) => x.Distance.CompareTo(y.Distance));
+        }
 
+        public List<BuildingStat> BuildingStats { get => _stats; } 
         public BuildingType Type { get => _type; }
 
         public virtual List<(int x, int y)> Coordinates
@@ -32,7 +75,9 @@ namespace simcityModel.Model
         {
             _type = type;    
             _coordinates = coordinates;
+            _stats = new List<BuildingStat>();
         }
+
     }
 
     public class PeopleBuilding : Building
@@ -185,17 +230,16 @@ namespace simcityModel.Model
 
     public class Road : Building
     {
-        private Vehicle _vehicle;
+        private VehicleType _vehicle;
         private int _price;
         private int _maintenanceCost;
 
-        public Vehicle Vehicle { get => _vehicle; }
+        public VehicleType Vehicle { get => _vehicle; }
         public int Price { get => _price; }
         public int MaintenceCost { get => _maintenanceCost; }
 
         public Road((int x, int y) coordinates) : base(coordinates, BuildingType.Road)
-        {
-            
+        {  
         }
     }
 }

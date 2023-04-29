@@ -12,11 +12,6 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace simcityModel.Model
 {
-    public enum GameSpeed { Paused, Normal, Fast, Fastest }
-    public enum FieldType { IndustrialZone, OfficeZone, ResidentalZone, GeneralField }
-    public enum BuildingType { Industry, OfficeBuilding, Home, Stadium, PoliceStation, FireStation, Road}
-    public enum Vehicle { Car, Firecar, None }
-
     public class SimCityModel
     {
         #region Private fields
@@ -55,7 +50,6 @@ namespace simcityModel.Model
 
         private IDataAccess _dataAccess;
         private DateTime _gameTime;
-        private GameSpeed _gameSpeed;
         private int _population;
         private int _money;
         private int _happiness;
@@ -100,13 +94,6 @@ namespace simcityModel.Model
         public event EventHandler<List<BudgetRecord>>? ExpenseListChanged;
 
         /// <summary>
-        /// Game speed change event.
-        /// Gets invoked when the game speed changes.
-        /// As a parameter, it passes the new GameSpeed.
-        /// </summary>
-        public event EventHandler<GameSpeed>? GameSpeedChanged;
-
-        /// <summary>
         /// Game over event.
         /// Gets invoked when the game is over.
         /// </summary>
@@ -149,6 +136,8 @@ namespace simcityModel.Model
                 return GAMESIZE;
             }
         }
+
+
 
         #endregion
 
@@ -323,7 +312,7 @@ namespace simcityModel.Model
             return false;
         }
 
-        private bool AdjacentBuildingsAreStillAccessibleAfterRoadDestroyation((int x, int y) coordinates)
+        private bool AdjacentBuildingsAreStillAccessibleAfterRoadDestruction((int x, int y) coordinates)
         {
             List<Building> adjacentBuildings = GetAdjacentBuildings((coordinates.x, coordinates.y));
 
@@ -387,7 +376,6 @@ namespace simcityModel.Model
         public void InitializeGame()
         {
             _gameTime = DateTime.Now;
-            _gameSpeed = GameSpeed.Normal;
             _population = 0;
             _money = 3000;
             _happiness = 0;
@@ -471,12 +459,6 @@ namespace simcityModel.Model
             OnGameInfoChanged();
         }
 
-        public void ChangeGameSpeed(GameSpeed newSpeed)
-        {
-            _gameSpeed = newSpeed;
-            OnGameSpeedChanged();
-        }
-        
         public (bool[,] routeExists, (int, int)[,] parents, int[,] distance) BreadthFirst((int x, int y) source)
         {
             Queue<(int, int)> q = new Queue<(int, int)>();
@@ -519,6 +501,8 @@ namespace simcityModel.Model
                     v = parents[v.x, v.y];
                 }
             }
+
+            route = new Queue<(int x, int y)>(route.Reverse());
             return route;
         }
 
@@ -625,7 +609,7 @@ namespace simcityModel.Model
                         case Road:
                             /* still need to check if the road network is still connected after destroyation */
 
-                            if (AdjacentBuildingsAreStillAccessibleAfterRoadDestroyation((x, y)))
+                            if (AdjacentBuildingsAreStillAccessibleAfterRoadDestruction((x, y)))
                             {
                                 _money += _buildingPrices[_fields[x, y].Building!.Type].returnPrice;
                                 _incomeList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} - Útrombolás", _buildingPrices[_fields[x, y].Building!.Type].returnPrice));
@@ -695,14 +679,7 @@ namespace simcityModel.Model
             ExpenseListChanged?.Invoke(this, _expenseList);
         }
 
-        /// <summary>
-        /// Invoking ExpenseListChanged event.
-        /// </summary>
-        private void OnGameSpeedChanged()
-        {
-            GameSpeedChanged?.Invoke(this, _gameSpeed);
-        }
-
+        
         /// <summary>
         /// Invoking GameOver event.
         /// </summary>
