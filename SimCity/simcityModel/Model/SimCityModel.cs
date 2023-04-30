@@ -40,8 +40,11 @@ namespace simcityModel.Model
             { BuildingType.Road, (100, CalculateReturnPrice(100), 200) }
         };
 
-        private Dictionary<BuildingType, int> _buildings = new Dictionary<BuildingType, int>()
+        private Dictionary<BuildingType, int> _numberOfBuildings = new Dictionary<BuildingType, int>()
         {
+            { BuildingType.Home, 0},
+            {BuildingType.OfficeBuilding, 0 },
+            { BuildingType.Industry, 0 },
             { BuildingType.Stadium, 0 },
             { BuildingType.PoliceStation, 0 },
             { BuildingType.FireStation, 0 },
@@ -57,6 +60,7 @@ namespace simcityModel.Model
         private List<Person> _people;
         private List<Person> _homeless;
         private List<Person> _unemployed;
+        private List<Building> _buildings;
         private List<BudgetRecord> _incomeList;
         private List<BudgetRecord> _expenseList;
 
@@ -159,6 +163,7 @@ namespace simcityModel.Model
             _people      = new List<Person>();
             _homeless    = new List<Person>();
             _unemployed  = new List<Person>();
+            _buildings = new List<Building>();
             _incomeList  = new List<BudgetRecord>();
             _expenseList = new List<BudgetRecord>();
 
@@ -199,9 +204,9 @@ namespace simcityModel.Model
         {
             int sum = 0;
 
-            foreach(BuildingType key in _buildings.Keys)
+            foreach(BuildingType key in _numberOfBuildings.Keys)
             {
-                sum += _buildings[key] * _buildingPrices[key].maintenceCost;
+                sum += _numberOfBuildings[key] * _buildingPrices[key].maintenceCost;
             }
 
             _money -= sum;
@@ -531,6 +536,8 @@ namespace simcityModel.Model
                 case BuildingType.Industry:
                 case BuildingType.Home:
                     _fields[x, y].Building = new PeopleBuilding((x, y), newBuildingType);
+                    _buildings.Add(_fields[x, y].Building!);
+                    _numberOfBuildings[newBuildingType]++;
                     OnMatrixChanged((x, y));
 
                     break;
@@ -538,8 +545,9 @@ namespace simcityModel.Model
                     if (_fields[x, y].Type == FieldType.GeneralField && _fields[x, y].Building == null)
                     {
                         _fields[x, y].Building = new Road((x, y));
+                        _buildings.Add(_fields[x, y].Building!);
+                        _numberOfBuildings[newBuildingType]++;
                         OnMatrixChanged((x, y));
-                        _buildings[newBuildingType]++;
 
                         _money -= _buildingPrices[newBuildingType].price;
                         _expenseList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} - Útlerakás", _buildingPrices[newBuildingType].price));
@@ -571,8 +579,8 @@ namespace simcityModel.Model
                     }
 
                     AddServiceBuildingEffects(building);
-
-                    _buildings[newBuildingType]++;
+                    _buildings.Add(building);
+                    _numberOfBuildings[newBuildingType]++;
                     _money -= _buildingPrices[newBuildingType].price;
                     _expenseList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} - Épületlerakás", _buildingPrices[newBuildingType].price));
                     OnExpenseListChanged();
@@ -589,14 +597,20 @@ namespace simcityModel.Model
                 case FieldType.IndustrialZone:
                 case FieldType.ResidentalZone:
                 case FieldType.OfficeZone:
-                    if (_fields[x, y].Building == null || (_fields[x, y].Building != null && ((PeopleBuilding)_fields[x, y].Building!).People.Count == 0))
+                    if (_fields[x, y].Building == null)
                     {
                         _money += _zonePrices[_fields[x, y].Type].returnPrice;
-                        _incomeList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} Zónarombolás", _zonePrices[_fields[x, y].Type].returnPrice));
+                        _incomeList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} - Zónarombolás", _zonePrices[_fields[x, y].Type].returnPrice));
                         OnIncomeListChanged();
                         OnGameInfoChanged();
 
                         _fields[x, y].Type = FieldType.GeneralField;
+                        OnMatrixChanged((x, y));
+                    }
+                    if ((_fields[x, y].Building != null && ((PeopleBuilding)_fields[x, y].Building!).People.Count == 0))
+                    {
+                        _buildings.Remove(_fields[x, y].Building!);
+                        _numberOfBuildings[_fields[x, y].Building!.Type]--;
                         _fields[x, y].Building = null;
                         OnMatrixChanged((x, y));
                     }
@@ -616,7 +630,8 @@ namespace simcityModel.Model
                                 OnIncomeListChanged();
                                 OnGameInfoChanged();
 
-                                _buildings[_fields[x, y].Building!.Type]--;
+                                _numberOfBuildings[_fields[x, y].Building!.Type]--;
+                                _buildings.Remove(_fields[x, y].Building!);
                                 _fields[x, y].Building = null;
                                 OnMatrixChanged((x, y));
                             }
@@ -628,7 +643,8 @@ namespace simcityModel.Model
                             OnIncomeListChanged();
                             OnGameInfoChanged();
 
-                            _buildings[_fields[x, y].Building!.Type]--;
+                            _numberOfBuildings[_fields[x, y].Building!.Type]--;
+                            _buildings.Remove(_fields[x, y].Building!);
                             RemoveServiceBuildingEffects((ServiceBuilding)_fields[x, y].Building!);
 
                             foreach ((int x, int y) coords in ((ServiceBuilding)_fields[x, y].Building!).Coordinates)
