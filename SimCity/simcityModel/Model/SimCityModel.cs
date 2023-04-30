@@ -588,6 +588,11 @@ namespace simcityModel.Model
 
                     break;
             }
+
+            foreach(Building building in _buildings)
+            {
+                building.updateBuildingStats(this);
+            }
         }
 
         public void Destroy(int x, int y)
@@ -656,6 +661,11 @@ namespace simcityModel.Model
                             break;
                     }
                     break;
+            }
+
+            foreach (Building building in _buildings)
+            {
+                building.updateBuildingStats(this);
             }
         }
 
