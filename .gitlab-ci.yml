@@ -1,0 +1,23 @@
+image: mcr.microsoft.com/dotnet/sdk:7.0
+
+stages:
+  - build
+  - test
+
+before_script:
+  - dotnet --version
+
+# Build
+build_model:
+  stage: build
+  script:
+    - dotnet build SimCity/simcityModel
+    - dotnet build SimCity/simcityPersistance
+
+# Test
+test_project:
+  stage: test
+  image: mcr.microsoft.com/dotnet/sdk:6.0
+  script:
+    - dotnet test SimCity/simcityTest
+
