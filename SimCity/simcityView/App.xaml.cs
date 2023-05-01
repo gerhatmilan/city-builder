@@ -44,6 +44,7 @@ namespace simcityView
             _vm = new SimCityViewModel(_model);
             _view = new MainWindow();
             _view.DataContext = _vm;
+            _view.CamInit();
             _view.Show();
 
             _model.InitializeGame();
