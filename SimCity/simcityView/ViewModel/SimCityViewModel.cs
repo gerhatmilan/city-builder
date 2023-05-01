@@ -96,7 +96,7 @@ namespace simcityView.ViewModel
             _model.GameInfoChanged += new EventHandler<GameEventArgs>(model_UpdateInfoText);
             _model.MatrixChanged += new EventHandler<(int, int)>(model_MatrixChanged);
 
-            _textureManager = new TextureManager(_model);
+            _textureManager = new TextureManager(_model,this);
 
             Cells = new ObservableCollection<Block>();
             Income = new ObservableCollection<BudgetItem>();
@@ -155,17 +155,11 @@ namespace simcityView.ViewModel
         #region ViewModel functions
         #region Cell functions
         
-        private int CoordsToListIndex(int x, int y)
-        {
-            return (x + y * _model.GameSize);
-        }
 
         private void fillCells()
         {
             Cells.Clear();
-            (int floor, int building) info = _textureManager.getStarterTextures();
-            ImageBrush floor = _textureManager.getFloorTexture(info.floor);
-            BitmapImage building = _textureManager.getBuildingTexture(info.building);
+            (ImageBrush floor, BitmapImage building) starterTextures = _textureManager.getStarterTextures();
             
 
             for(int y = 0; y< _model.GameSize; y++)
@@ -174,7 +168,7 @@ namespace simcityView.ViewModel
                 for(int x = 0; x< _model.GameSize; x++)
                 {
                     
-                    Block b = new Block(floor, building);
+                    Block b = new Block(starterTextures.floor, starterTextures.building);
                     b.X = x;
                     b.Y= y;
                     b.UpdateToolTipText = new DelegateCommand(param =>
@@ -328,10 +322,7 @@ namespace simcityView.ViewModel
 
         private void model_MatrixChanged(object? s, (int X, int Y) e)
         {
-            (int floor, int building) info = _textureManager.GetTextureFromInformation(e.X, e.Y);
-            Cells[CoordsToListIndex(e.X, e.Y)].FloorTexture = _textureManager.getFloorTexture(info.floor);
-            Cells[CoordsToListIndex(e.X, e.Y)].BuildingTexture = _textureManager.getBuildingTexture(info.building);
-
+            _textureManager.SetTextureFromInformation(e.X, e.Y);
         }
 
 

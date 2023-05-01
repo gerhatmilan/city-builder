@@ -1,40 +1,50 @@
-﻿using simcityModel.Model;
+﻿#define UP 
+
+using simcityModel.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
+
 namespace simcityView.ViewModel
 {
+
     internal class TextureManager
     {
+
         #region variables
         private ImageBrush[] _floorTextures = new ImageBrush[20];
         private BitmapImage[] _buildingTextures = new BitmapImage[20];
         private SimCityModel _model;
-        private int _currX = 0;
-        private int _currY = 0;
+        private SimCityViewModel _view;
+        
         private int _modelSize;
 
         #endregion
         #region constructor
 
-        public TextureManager(SimCityModel model)
+        public TextureManager(SimCityModel model, SimCityViewModel view)
         {
             _model = model;
             _modelSize = _model.Fields.GetLength(0);
             fillFloorTextures();
             fillBuildingTextures();
+            _view = view;
         }
 
         #endregion
-
         #region functions
         #region private functions
 
+        private int CoordsToListIndex(int x, int y)
+        {
+            return (x + y * _model.GameSize);
+        }
         private ImageBrush UriToImageBrush(string s)
         {
             return new ImageBrush(UriToBitmapImage(s));
@@ -43,7 +53,6 @@ namespace simcityView.ViewModel
         {
             return new BitmapImage(new Uri(s, UriKind.Relative));
         }
-
         private void fillFloorTextures()
         {
             
@@ -51,25 +60,31 @@ namespace simcityView.ViewModel
             _floorTextures[1] = UriToImageBrush(@"~\..\View\Textures\ground_grass.png");
             _floorTextures[2] = UriToImageBrush(@"~\..\View\Textures\ground_dirt.png");
             _floorTextures[3] = UriToImageBrush(@"~\..\View\Textures\ground_asphalt.png");
+            
+            //0
+            _floorTextures[4] = UriToImageBrush(@"~\..\View\Textures\parking_asphalt.png"); // 0,0,0,0
+             //1
+            _floorTextures[12] = UriToImageBrush(@"~\..\View\Textures\street_end_up.png");     // 0 0 0 1
+            _floorTextures[8] = UriToImageBrush(@"~\..\View\Textures\street_end_left.png");  // 0 0 1 0
+            _floorTextures[6] = UriToImageBrush(@"~\..\View\Textures\street_end_down.png");  // 0 1 0 0
+            _floorTextures[5] = UriToImageBrush(@"~\..\View\Textures\street_end_right.png"); // 1 0 0 0
             //2
-            _floorTextures[4] = UriToImageBrush(@"~\..\View\Textures\parking_asphalt.png");
-            _floorTextures[5] = UriToImageBrush(@"~\..\View\Textures\street_straight_upDown.png");
-            _floorTextures[6] = UriToImageBrush(@"~\..\View\Textures\street_straight_leftRight.png");
-            //2
-            _floorTextures[7] = UriToImageBrush(@"~\..\View\Textures\street_corner_leftUp.png");
-            _floorTextures[8] = UriToImageBrush(@"~\..\View\Textures\street_corner_rightUp.png");
-            _floorTextures[9] = UriToImageBrush(@"~\..\View\Textures\street_corner_leftDown.png");
-            _floorTextures[10] = UriToImageBrush(@"~\..\View\Textures\street_corner_rightDown.png");
+            _floorTextures[14] = UriToImageBrush(@"~\..\View\Textures\street_straight_upDown.png");    // 0 1 0 1
+            _floorTextures[9] = UriToImageBrush(@"~\..\View\Textures\street_straight_leftRight.png"); // 1 0 1 0
+            
+            _floorTextures[13] = UriToImageBrush(@"~\..\View\Textures\street_corner_leftDown.png");       // 1 0 0 1
+            _floorTextures[16] = UriToImageBrush(@"~\..\View\Textures\street_corner_rightDown.png");     // 0 0 1 1
+            _floorTextures[7] = UriToImageBrush(@"~\..\View\Textures\street_corner_leftUp.png");    // 1 1 0 0
+            _floorTextures[10] = UriToImageBrush(@"~\..\View\Textures\street_corner_rightUp.png"); // 0 1 1 0
+            
             //3
-            _floorTextures[11] = UriToImageBrush(@"~\..\View\Textures\street_t_down.png");
-            _floorTextures[12] = UriToImageBrush(@"~\..\View\Textures\street_t_up.png");
-            //1
-            _floorTextures[13] = UriToImageBrush(@"~\..\View\Textures\street_end_up.png");
-            _floorTextures[14] = UriToImageBrush(@"~\..\View\Textures\street_end_right.png");
-            _floorTextures[15] = UriToImageBrush(@"~\..\View\Textures\street_end_down.png");
-            _floorTextures[16] = UriToImageBrush(@"~\..\View\Textures\street_end_left.png");
+            _floorTextures[17] = UriToImageBrush(@"~\..\View\Textures\street_t_down.png");     // 1 0 1 1
+            _floorTextures[11] = UriToImageBrush(@"~\..\View\Textures\street_t_up.png");      // 1 1 1 0
+            _floorTextures[15] = UriToImageBrush(@"~\..\View\Textures\street_t_right.png");  // 1 1 0 1
+            _floorTextures[18] = UriToImageBrush(@"~\..\View\Textures\street_t_left.png");  // 0 1 1 1
+
             //4
-            _floorTextures[17] = UriToImageBrush(@"~\..\View\Textures\street_xing.png");
+            _floorTextures[19] = UriToImageBrush(@"~\..\View\Textures\street_xing.png"); // 1 1 1 1
 
 
 
@@ -80,7 +95,6 @@ namespace simcityView.ViewModel
 
 
         }
-
         private void fillBuildingTextures()
         {
 
@@ -155,14 +169,14 @@ namespace simcityView.ViewModel
                 default: return 1;
             }
         }
-        private int generalFloorHelper(BuildingType? buildT, int variation) 
+        private int generalFloorHelper(BuildingType? buildT, int x, int y) 
         {
             switch (buildT)
             {
                 case BuildingType.Stadium:
                 case BuildingType.PoliceStation:
                 case BuildingType.FireStation: return 3;
-                case BuildingType.Road: return roadHelper(variation);
+                case BuildingType.Road: return roadHelper(x,y,true);
                 case null: return 1;
                 default: return 0;
             }  
@@ -173,32 +187,38 @@ namespace simcityView.ViewModel
         }
 
 
-        private int roadHelper(int variation)
+        private int roadHelper(int centerX, int centerY, bool isMiddle)
         {
-            int neighborCount = 0;
-            bool[] dirs = { false, false, false, false }; //-1,-1;-1,1;1,-1;1,1
-            int ind = 0;
-            for(int x = -1; x<=1; x += 2)
+            //              left   down   right  up
+            int[] dirs =    { 0    , 0,     0,    0 }; //(-1,0);(0,-1);(1,0);(0,1)
+            int x = -1;
+            int y = 0;
+            for(int ind = 0; ind<4; ind++)
             {
-                
-                for(int y = -1; y<=1; y += 2)
+                int cellX = centerX + x;
+                int cellY = centerY + y;
+                if (isValidCoord(cellX,cellY))
                 {
-                    if (isValidCoord(x, y))
+                    Building? f = _model.Fields[cellX, cellY].Building;
+                    if (f != null && f.Type==BuildingType.Road)
                     {
-                        Building? f = _model.Fields[x, y].Building;
-                        if (f != null && f.Type==BuildingType.Road)
+                        dirs[ind] = 1;
+                        if (isMiddle)
                         {
-                            dirs[ind] = true;
-                            neighborCount++;
+                           
+                            int neighbourIndex = roadHelper(cellX, cellY, false);
+                            _view.Cells[CoordsToListIndex(cellX,cellY)].FloorTexture = _floorTextures[neighbourIndex];
                         }
                     }
-                    ind++;
                 }
-                ind++;
+                
+                int z = x;
+                x = y;
+                y = z;
+                x *=-1;
             }
-            
-
-            return 4;
+            int roadIndex = dirs[0] * 1 + dirs[1] * 2 + dirs[2] * 4 + dirs[3] * 8;
+            return 4 + roadIndex;
         }
 
         private int generalBuildingHelper(BuildingType? buildT, int variation)
@@ -227,16 +247,15 @@ namespace simcityView.ViewModel
         #endregion
         #region public functions
 
-        public (int floor, int building) getStarterTextures()
+        public (ImageBrush floor, BitmapImage building) getStarterTextures()
         {
-            return (1, 17);
+            return (_floorTextures[1], _buildingTextures[17]);
         }
 
-        public (int floor,int building) GetTextureFromInformation(int x, int y)
+        public void SetTextureFromInformation(int x, int y)
         {
-            (int floor, int building) sendBack = (0,0);
-            _currX = x;
-            _currY = y;
+            (int floor, int building) whatToSet = (0,0);
+            
             Field f = _model.Fields[x, y];
             FieldType zone = f.Type;
             BuildingType? buildT;
@@ -251,23 +270,17 @@ namespace simcityView.ViewModel
             int variation = 0;
             switch (zone)
             {
-                case FieldType.ResidentalZone: sendBack.floor = 1; sendBack.building    =  residentalBuildingHelper(buildT, f.NumberOfPeople,f.Capacity); break;
-                case FieldType.IndustrialZone: sendBack.floor = 2; sendBack.building    =  industrialBuildingHelper(buildT, f.NumberOfPeople,f.Capacity); break;
-                case FieldType.OfficeZone: sendBack.floor = 3; sendBack.building        =  officeBuildingHelper(buildT, f.NumberOfPeople,f.Capacity); break;
-                case FieldType.GeneralField: sendBack.floor = generalFloorHelper(buildT,variation); sendBack.building = generalBuildingHelper(buildT, variation); break;
+                case FieldType.ResidentalZone: whatToSet.floor = 1; whatToSet.building    =  residentalBuildingHelper(buildT, f.NumberOfPeople,f.Capacity); break;
+                case FieldType.IndustrialZone: whatToSet.floor = 2; whatToSet.building    =  industrialBuildingHelper(buildT, f.NumberOfPeople,f.Capacity); break;
+                case FieldType.OfficeZone: whatToSet.floor = 3; whatToSet.building        =  officeBuildingHelper(buildT, f.NumberOfPeople,f.Capacity); break;
+                case FieldType.GeneralField: whatToSet.floor = generalFloorHelper(buildT,x,y); whatToSet.building = generalBuildingHelper(buildT, variation); break;
             }
-            return sendBack;
+            _view.Cells[CoordsToListIndex(x,y)].BuildingTexture = _buildingTextures[whatToSet.building];
+            _view.Cells[CoordsToListIndex(x,y)].FloorTexture = _floorTextures[whatToSet.floor];
+
 
         }
-        public ImageBrush getFloorTexture(int index)
-        {
-            return _floorTextures[index];
-        }
-
-        public BitmapImage getBuildingTexture(int index)
-        {
-            return _buildingTextures[index];
-        }
+       
 
 
         #endregion

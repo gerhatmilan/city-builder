@@ -37,6 +37,8 @@
     <None Remove="View\Textures\street_straight_leftRight.png" />
     <None Remove="View\Textures\street_straight_upDown.png" />
     <None Remove="View\Textures\street_t_down.png" />
+    <None Remove="View\Textures\street_t_left.png" />
+    <None Remove="View\Textures\street_t_right.png" />
     <None Remove="View\Textures\street_t_up.png" />
     <None Remove="View\Textures\street_xing.png" />
     <None Remove="View\Textures\tree_pine_02.png" />
@@ -134,10 +136,16 @@
     <Content Include="View\Textures\street_straight_leftRight.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="View\Textures\street_t_down.png">
+    <Content Include="View\Textures\street_t_left.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="View\Textures\street_t_right.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="View\Textures\street_t_up.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="View\Textures\street_t_down.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="View\Textures\street_xing.png">
