@@ -541,7 +541,10 @@ namespace simcityModel.Model
                 case BuildingType.OfficeBuilding:
                 case BuildingType.Industry:
                 case BuildingType.Home:
-                    _fields[x, y].Building = new PeopleBuilding((x, y), newBuildingType);
+                    Building building = new PeopleBuilding((x, y), newBuildingType);
+                    if (!IsAdjacentWithRoad(building)) return;
+
+                    _fields[x, y].Building = building;
                     _buildings.Add(_fields[x, y].Building!);
                     _numberOfBuildings[newBuildingType]++;
                     OnMatrixChanged((x, y));
@@ -567,7 +570,7 @@ namespace simcityModel.Model
 
                     break;
                 default:
-                    ServiceBuilding building = new ServiceBuilding((x, y), newBuildingType);
+                    building = new ServiceBuilding((x, y), newBuildingType);
                     foreach ((int x, int y) coords in building.Coordinates)
                     {
                         if (!ValidCoordinates((coords.x, coords.y)) || _fields[coords.x, coords.y].Type != FieldType.GeneralField || _fields[coords.x, coords.y].Building != null)
@@ -584,7 +587,7 @@ namespace simcityModel.Model
                         OnMatrixChanged((coords.x, coords.y));
                     }
 
-                    AddServiceBuildingEffects(building);
+                    AddServiceBuildingEffects((ServiceBuilding)building);
                     _buildings.Add(building);
                     _numberOfBuildings[newBuildingType]++;
                     _money -= _buildingPrices[newBuildingType].price;
