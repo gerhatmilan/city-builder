@@ -169,6 +169,7 @@ namespace simcityModel.Model
 
             OneMonthPassed += new EventHandler(GetTax);
             OneMonthPassed += new EventHandler(DeductMaintenceCost);
+            OneMonthPassed += new EventHandler(CheckGameOver);
         }
 
         #endregion
@@ -222,6 +223,11 @@ namespace simcityModel.Model
         private static int CalculateReturnPrice(int originalPrice)
         {
             return Convert.ToInt32(originalPrice * PRICERETURN_MULTIPLIER);
+        }
+
+        private void CheckGameOver(object? sender, EventArgs e)
+        {
+            if (_happiness < 10) OnGameOver();
         }
 
         private void AddServiceBuildingEffects(ServiceBuilding building)
@@ -383,7 +389,7 @@ namespace simcityModel.Model
             _gameTime = DateTime.Now;
             _population = 0;
             _money = 3000;
-            _happiness = 0;
+            _happiness = 50;
 
             OnGameInfoChanged();
         }
