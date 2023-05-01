@@ -12,6 +12,10 @@
     <None Remove="View\Textures\building_medium_blue_a.png" />
     <None Remove="View\Textures\building_tall_blue_a.png" />
     <None Remove="View\Textures\building_tall_yellow_a.png" />
+    <None Remove="View\Textures\car_white_down.png" />
+    <None Remove="View\Textures\car_white_left.png" />
+    <None Remove="View\Textures\car_white_right.png" />
+    <None Remove="View\Textures\car_white_up.png" />
     <None Remove="View\Textures\fire_station_a.png" />
     <None Remove="View\Textures\ground_asphalt.png" />
     <None Remove="View\Textures\ground_dirt.png" />
@@ -62,6 +66,18 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="View\Textures\building_tall_yellow_a.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="View\Textures\car_white_left.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="View\Textures\car_white_down.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="View\Textures\car_white_up.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="View\Textures\car_white_right.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="View\Textures\fire_station_a.png">

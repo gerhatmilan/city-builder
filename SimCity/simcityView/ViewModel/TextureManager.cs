@@ -19,7 +19,7 @@ namespace simcityView.ViewModel
 
         #region variables
         private ImageBrush[] _floorTextures = new ImageBrush[20];
-        private BitmapImage[] _buildingTextures = new BitmapImage[20];
+        private BitmapImage[] _buildingTextures = new BitmapImage[22];
         private SimCityModel _model;
         private SimCityViewModel _view;
         
@@ -78,8 +78,8 @@ namespace simcityView.ViewModel
             _floorTextures[10] = UriToImageBrush(@"~\..\View\Textures\street_corner_rightUp.png"); // 0 1 1 0
             
             //3
-            _floorTextures[17] = UriToImageBrush(@"~\..\View\Textures\street_t_down.png");     // 1 0 1 1
-            _floorTextures[11] = UriToImageBrush(@"~\..\View\Textures\street_t_up.png");      // 1 1 1 0
+            _floorTextures[17] = UriToImageBrush(@"~\..\View\Textures\street_t_up.png");     // 1 0 1 1
+            _floorTextures[11] = UriToImageBrush(@"~\..\View\Textures\street_t_down.png");      // 1 1 1 0
             _floorTextures[15] = UriToImageBrush(@"~\..\View\Textures\street_t_right.png");  // 1 1 0 1
             _floorTextures[18] = UriToImageBrush(@"~\..\View\Textures\street_t_left.png");  // 0 1 1 1
 
@@ -122,9 +122,15 @@ namespace simcityView.ViewModel
             _buildingTextures[16] = UriToBitmapImage(@"~\..\Textures\fire_station_a.png");
 
             _buildingTextures[17] = UriToBitmapImage(@"~\..\Textures\tree_pine_02.png");
+
+            _buildingTextures[18] = UriToBitmapImage(@"~\..\Textures\car_white_down.png");
+            _buildingTextures[19] = UriToBitmapImage(@"~\..\Textures\car_white_up.png");
+            _buildingTextures[20] = UriToBitmapImage(@"~\..\Textures\car_white_left.png");
+            _buildingTextures[21] = UriToBitmapImage(@"~\..\Textures\car_white_right.png");
+
         }
 
-        
+
 
         private int residentalBuildingHelper(BuildingType? buildT, int peopleNum, int cap)
         {
@@ -221,12 +227,12 @@ namespace simcityView.ViewModel
             return 4 + roadIndex;
         }
 
-        private int generalBuildingHelper(BuildingType? buildT, int variation)
+        private int generalBuildingHelper(BuildingType? buildT, int x, int y)
         {
             switch (buildT)
             {
-                case BuildingType.Road: return carHelper(variation);
-                case BuildingType.Stadium: return stadiumHelper(variation);
+                case BuildingType.Road: return carHelper(x,y);
+                case BuildingType.Stadium: return stadiumHelper(x,y);
                 case BuildingType.PoliceStation: return 15;
                 case BuildingType.FireStation: return 16;
                 case null: return 1;
@@ -234,12 +240,12 @@ namespace simcityView.ViewModel
             }
         }
 
-        private int carHelper(int variation)
+        private int carHelper(int x, int y)
         {
             return 1;
         }
 
-        private int stadiumHelper(int variation)
+        private int stadiumHelper(int x, int y)
         {
             return 11;
         }
@@ -267,13 +273,12 @@ namespace simcityView.ViewModel
             {
                 buildT = f.Building.Type;
             }
-            int variation = 0;
             switch (zone)
             {
                 case FieldType.ResidentalZone: whatToSet.floor = 1; whatToSet.building    =  residentalBuildingHelper(buildT, f.NumberOfPeople,f.Capacity); break;
                 case FieldType.IndustrialZone: whatToSet.floor = 2; whatToSet.building    =  industrialBuildingHelper(buildT, f.NumberOfPeople,f.Capacity); break;
                 case FieldType.OfficeZone: whatToSet.floor = 3; whatToSet.building        =  officeBuildingHelper(buildT, f.NumberOfPeople,f.Capacity); break;
-                case FieldType.GeneralField: whatToSet.floor = generalFloorHelper(buildT,x,y); whatToSet.building = generalBuildingHelper(buildT, variation); break;
+                case FieldType.GeneralField: whatToSet.floor = generalFloorHelper(buildT,x,y); whatToSet.building = generalBuildingHelper(buildT, x,y); break;
             }
             _view.Cells[CoordsToListIndex(x,y)].BuildingTexture = _buildingTextures[whatToSet.building];
             _view.Cells[CoordsToListIndex(x,y)].FloorTexture = _floorTextures[whatToSet.floor];
