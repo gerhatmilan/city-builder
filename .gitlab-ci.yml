@@ -10,16 +10,14 @@ before_script:
 # Build
 build_project:
   stage: build
-  image: mcr.microsoft.com/dotnet/sdk:7.0
   tags: [windows]
   script:
     - dotnet build SimCity/simcityView/simcity.sln
 
 # Test
-test_project:
+test_model:
   stage: test
   image: mcr.microsoft.com/dotnet/sdk:6.0
-  tags: [windows]
   script:
     - dotnet test SimCity/simcityTest
 
