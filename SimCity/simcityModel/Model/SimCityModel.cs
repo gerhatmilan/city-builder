@@ -119,29 +119,16 @@ namespace simcityModel.Model
 
         #region Properties
 
-        /// <summary>
-        /// Getter property for _fields 
-        /// </summary>
-        public Field[,] Fields
-        {
-            get
-            {
-                return _fields;
-            }
-        }
-
-        /// <summary>
-        /// Getter property for GAMESIZE
-        /// </summary>
-        public int GameSize
-        {
-            get
-            {
-                return GAMESIZE;
-            }
-        }
-
-
+        public Field[,] Fields { get => _fields; }
+        public List<Person> People { get => _people; }
+        public List<Building> Buildings { get => _buildings; }
+        public List<BudgetRecord> IncomeList { get => _incomeList; }
+        public List<BudgetRecord> ExpenseList { get => _expenseList; }
+        public int GameSize { get => GAMESIZE; }
+        public DateTime GameTime { get => _gameTime; }
+        public int Population { get => _population; }
+        public int Money { get => _money; }
+        public int Happinness { get => _happiness; }
 
         #endregion
 
