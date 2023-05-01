@@ -8,8 +8,8 @@ namespace simcityPersistance.Persistance
 {
     public class SimCityPersistance
     {
-        public (int, bool, float)[,] _fields;
-        public ((int, int), (int, int))[] _people;
+        public (int fieldType, int buildingType, bool onFire, float fireProb, int happyness)[,] _fields;
+        public ((int homeX, int homeY), (int workX, int workY), int happyness)[] _people;
         public int _gameSize;
         public int _happyness;
         public int _money;
