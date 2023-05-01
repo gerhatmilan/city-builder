@@ -104,9 +104,9 @@
             </StackPanel.Resources>
             <ItemsControl>
                 <RadioButton Content="STOP" Style="{StaticResource Time}" CommandParameter="0" IsChecked="True"/>
-                <RadioButton Content="▶"    Style="{StaticResource Time}" CommandParameter="1"/>
-                <RadioButton Content="▶▶"   Style="{StaticResource Time}" CommandParameter="2"/>
-                <RadioButton Content="▶▶▶"  Style="{StaticResource Time}" CommandParameter="3"/>
+                <RadioButton Content="▶"    Style="{StaticResource Time}" CommandParameter="1000"/>
+                <RadioButton Content="▶▶"   Style="{StaticResource Time}" CommandParameter="500"/>
+                <RadioButton Content="▶▶▶"  Style="{StaticResource Time}" CommandParameter="250"/>
             </ItemsControl>
             
             

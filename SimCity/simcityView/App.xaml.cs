@@ -9,6 +9,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
+using System.Timers;
 
 namespace simcityView
 {
@@ -22,7 +23,7 @@ namespace simcityView
         private SimCityViewModel _vm = null!;
         private MainWindow _view = null!;
         private SimCityModel _model = null!;
-
+        private DispatcherTimer _timer;
         #endregion
 
 
@@ -35,13 +36,14 @@ namespace simcityView
         public void AppStart(object? s, StartupEventArgs e)
         {
             /* only for testing purposes for now */
-            DispatcherTimer _timer = new DispatcherTimer();
+            _timer = new DispatcherTimer();
             _timer.Interval = TimeSpan.FromSeconds(1);
             _timer.Tick += Timer_Tick;
-            _timer.Start();
+            
 
             _model = new SimCityModel(new FileDataAccess());
             _vm = new SimCityViewModel(_model);
+            _vm.ChangeTime += Vm_ChangeTimer;
             _view = new MainWindow();
             _view.DataContext = _vm;
             _view.CamInit();
@@ -49,12 +51,34 @@ namespace simcityView
 
             _model.InitializeGame();
 
-            void Timer_Tick(object? s, EventArgs e)
-            {
-                _model.AdvanceTime();
-            }
+            
 
         }
+        #endregion
+        #region events
+        #region Timer events
+        void Timer_Tick(object? s, EventArgs e)
+        {
+            _model.AdvanceTime();
+        }
+        #endregion
+        #region View events
+        void Vm_ChangeTimer(object? s, int status)
+        {
+            switch (status)
+            {
+                case 0: _timer.Stop(); break;
+                default:
+                    if (!_timer.IsEnabled)
+                    {
+                        _timer.Start();
+                    }
+                    _timer.Interval = TimeSpan.FromMilliseconds(status);
+                    
+                    break;
+            }
+        }
+        #endregion
         #endregion
     }
 }

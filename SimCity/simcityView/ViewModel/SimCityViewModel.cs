@@ -83,7 +83,10 @@ namespace simcityView.ViewModel
         public DelegateCommand SelectedBuildable { get; set; }
         public DelegateCommand FlipBuldozeMode { get; set; }
         public DelegateCommand TimeSet { get; set; }
-        
+
+        #endregion
+        #region Events
+        public event EventHandler<int>? ChangeTime;
         #endregion
         #endregion
 
@@ -128,14 +131,9 @@ namespace simcityView.ViewModel
                 int num = int.Parse((string)param!);
                 if (num != _time)
                 {
-                    switch (num)
-                    {
-                        case 0: 
-                        case 1: 
-                        case 2:
-                        case 3: _time = num; UpdateMouseStateText(); break;
-                        default: break;
-                    }
+                    _time = num; 
+                    UpdateMouseStateText();
+                    ChangeTime?.Invoke(this, num);
                 }
             
             });

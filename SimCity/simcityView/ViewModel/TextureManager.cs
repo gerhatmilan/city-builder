@@ -242,6 +242,8 @@ namespace simcityView.ViewModel
 
         private int carHelper(int x, int y)
         {
+            //Road r = (Road)_model.Fields[x, y].Building;
+            
             return 1;
         }
 
