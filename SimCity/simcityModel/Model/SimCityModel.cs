@@ -12,11 +12,6 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace simcityModel.Model
 {
-    public enum GameSpeed { Paused, Normal, Fast, Fastest }
-    public enum FieldType { IndustrialZone, OfficeZone, ResidentalZone, GeneralField }
-    public enum BuildingType { Industry, OfficeBuilding, Home, Stadium, PoliceStation, FireStation, Road}
-    public enum Vehicle { Car, Firecar, None }
-    
     public class SimCityModel
     {
         #region Private fields
@@ -45,8 +40,11 @@ namespace simcityModel.Model
             { BuildingType.Road, (100, CalculateReturnPrice(100), 200) }
         };
 
-        private Dictionary<BuildingType, int> _buildings = new Dictionary<BuildingType, int>()
+        private Dictionary<BuildingType, int> _numberOfBuildings = new Dictionary<BuildingType, int>()
         {
+            { BuildingType.Home, 0},
+            {BuildingType.OfficeBuilding, 0 },
+            { BuildingType.Industry, 0 },
             { BuildingType.Stadium, 0 },
             { BuildingType.PoliceStation, 0 },
             { BuildingType.FireStation, 0 },
@@ -55,16 +53,17 @@ namespace simcityModel.Model
 
         private IDataAccess _dataAccess;
         private DateTime _gameTime;
-        private GameSpeed _gameSpeed;
         private int _population;
         private int _money;
         private int _happiness;
         private Field[,] _fields;
         private List<Person> _people;
-        private Queue<Person> _homeless;
-        private Queue<Person> _unemployed;
+        private List<Person> _homeless;
+        private List<Person> _unemployed;
+        private List<Building> _buildings;
         private List<BudgetRecord> _incomeList;
         private List<BudgetRecord> _expenseList;
+
 
         #endregion
 
@@ -99,17 +98,22 @@ namespace simcityModel.Model
         public event EventHandler<List<BudgetRecord>>? ExpenseListChanged;
 
         /// <summary>
-        /// Game speed change event.
-        /// Gets invoked when the game speed changes.
-        /// As a parameter, it passes the new GameSpeed.
-        /// </summary>
-        public event EventHandler<GameSpeed>? GameSpeedChanged;
-
-        /// <summary>
         /// Game over event.
         /// Gets invoked when the game is over.
         /// </summary>
         public event EventHandler? GameOver;
+
+        /// <summary>
+        /// One day passed event.
+        /// Gets invoked every time a day passes.
+        /// </summary>
+        public event EventHandler? OneDayPassed;
+
+        /// <summary>
+        /// One month passed event.
+        /// Gets invoked every time a month passes.
+        /// </summary>
+        public event EventHandler? OneMonthPassed;
 
         #endregion
 
@@ -137,6 +141,8 @@ namespace simcityModel.Model
             }
         }
 
+
+
         #endregion
 
         #region Constructors
@@ -154,18 +160,23 @@ namespace simcityModel.Model
                 }
             }
 
-            _people = new List<Person>();
-            _homeless = new Queue<Person>();
-            _unemployed = new Queue<Person>();
-            _incomeList = new List<BudgetRecord>();
+            _people      = new List<Person>();
+            _homeless    = new List<Person>();
+            _unemployed  = new List<Person>();
+            _buildings = new List<Building>();
+            _incomeList  = new List<BudgetRecord>();
             _expenseList = new List<BudgetRecord>();
+
+            OneMonthPassed += new EventHandler(GetTax);
+            OneMonthPassed += new EventHandler(DeductMaintenceCost);
+            OneMonthPassed += new EventHandler(CheckGameOver);
         }
 
         #endregion
 
         #region Private methods
 
-        private void GetTax()
+        private void GetTax(object? sender, EventArgs e)
         {
             int sum = 0;
 
@@ -175,37 +186,75 @@ namespace simcityModel.Model
                 {
                     if (_fields[i, j].Type != FieldType.GeneralField)
                     {
-                        sum += _fields[i, j].NumberOfPeople * 5;
+                        sum += _fields[i, j].NumberOfPeople * TAX_PER_PERSON;
                     }
                 }
             }
 
             _money += sum;
-            _incomeList.Add(new BudgetRecord("Adóbevétel", sum));
-            OnIncomeListChanged();
-            OnGameInfoChanged();
+
+            if (sum > 0)
+            {
+                _incomeList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} - Adóbevétel", sum));
+                OnIncomeListChanged();
+                OnGameInfoChanged();
+            }
         }
 
-        private void DeductMaintenceCost()
+        private void DeductMaintenceCost(object? sender, EventArgs e)
         {
             int sum = 0;
 
-            foreach(BuildingType key in _buildings.Keys)
+            foreach(BuildingType key in _numberOfBuildings.Keys)
             {
-                sum += _buildings[key] * _buildingPrices[key].maintenceCost;
+                sum += _numberOfBuildings[key] * _buildingPrices[key].maintenceCost;
             }
 
             _money -= sum;
-            _expenseList.Add(new BudgetRecord("Havi fenntartási költségek", sum));
-            OnExpenseListChanged();
-            OnGameInfoChanged();
+
+            if (sum > 0)
+            {
+                _expenseList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} - Havi fenntartási költségek", sum));
+                OnExpenseListChanged();
+                OnGameInfoChanged();
+            }
         }
 
         private static int CalculateReturnPrice(int originalPrice)
         {
             return Convert.ToInt32(originalPrice * PRICERETURN_MULTIPLIER);
         }
-        
+
+        private void CheckGameOver(object? sender, EventArgs e)
+        {
+            if (_happiness < 10) OnGameOver();
+        }
+
+        private void AddServiceBuildingEffects(ServiceBuilding building)
+        {
+            foreach ((int x, int y) coordinates in building.EffectCoordinates)
+            {
+                if (!ValidCoordinates(coordinates))
+                {
+                    building.EffectCoordinates.Remove(coordinates);
+                }
+            }
+
+            building.AddEffect(_fields);
+        }
+
+        private void RemoveServiceBuildingEffects(ServiceBuilding building)
+        {
+            foreach ((int x, int y) coordinates in building.EffectCoordinates)
+            {
+                if (!ValidCoordinates(coordinates))
+                {
+                    building.EffectCoordinates.Remove(coordinates);
+                }
+            }
+
+            building.RemoveEffect(_fields);
+        }
 
         private bool ValidCoordinates((int x, int y) coordinates)
         {
@@ -215,6 +264,7 @@ namespace simcityModel.Model
             
             return valid;
         }
+
         private bool isRoad((int x, int y) coordinates)
         {
             bool road = false;
@@ -224,6 +274,7 @@ namespace simcityModel.Model
             }
             return road;
         }
+
         private List<(int,int)> GetAdjacentCoordinates((int x, int y) origin)
         {
             var adjacentCoordinates = new List<(int, int)>();
@@ -241,10 +292,60 @@ namespace simcityModel.Model
             return adjacentCoordinates;
         }
 
+        private List<Building> GetAdjacentBuildings((int x, int y) origin)
+        {
+            var adjacentBuildings = new List<Building>();
+            if (!ValidCoordinates(origin)) return adjacentBuildings;
+
+            if (ValidCoordinates((origin.x + 1, origin.y)) && _fields[origin.x + 1, origin.y].Building != null)
+                adjacentBuildings.Add(_fields[origin.x + 1, origin.y].Building!);
+            if (ValidCoordinates((origin.x - 1, origin.y)) && _fields[origin.x - 1, origin.y].Building != null)
+                adjacentBuildings.Add(_fields[origin.x - 1, origin.y].Building!);
+            if (ValidCoordinates((origin.x, origin.y + 1)) && _fields[origin.x, origin.y + 1].Building != null)
+                adjacentBuildings.Add(_fields[origin.x, origin.y + 1].Building!);
+            if (ValidCoordinates((origin.x, origin.y - 1)) && _fields[origin.x, origin.y - 1].Building != null)
+                adjacentBuildings.Add(_fields[origin.x, origin.y - 1].Building!);
+
+            return adjacentBuildings;
+        }
+
+        private bool IsAdjacentWithRoad(Building building)
+        {
+            foreach((int x, int y) coordinates in building.Coordinates)
+            {
+                List<(int, int)> adjacentCoordinates = GetAdjacentCoordinates((coordinates.x, coordinates.y));
+                foreach ((int x, int y) adjacentCoordinate in adjacentCoordinates)
+                {
+                    if (isRoad((adjacentCoordinate.x, adjacentCoordinate.y))) return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool AdjacentBuildingsAreStillAccessibleAfterRoadDestruction((int x, int y) coordinates)
+        {
+            List<Building> adjacentBuildings = GetAdjacentBuildings((coordinates.x, coordinates.y));
+
+            Road saveRoadInstance = (Road)_fields[coordinates.x, coordinates.y].Building!; 
+            _fields[coordinates.x, coordinates.y].Building = null;
+            foreach (Building building in adjacentBuildings)
+            {
+                if (!IsAdjacentWithRoad(building) && building.GetType() != typeof(Road))
+                {
+                    _fields[coordinates.x, coordinates.y].Building = saveRoadInstance;
+                    return false;
+                }
+            }
+
+            _fields[coordinates.x, coordinates.y].Building = saveRoadInstance;
+            return true;
+        }
+
         private bool NewWorkplaceNeeded()
         {
             bool needed = false;
-            if (_unemployed.Count > Field.OFFICE_CAPACITY)
+            if (_unemployed.Count < Field.OFFICE_CAPACITY)
             {
                 needed = true;
             }
@@ -286,17 +387,26 @@ namespace simcityModel.Model
         public void InitializeGame()
         {
             _gameTime = DateTime.Now;
-            _gameSpeed = GameSpeed.Normal;
             _population = 0;
             _money = 3000;
-            _happiness = 0;
+            _happiness = 50;
 
             OnGameInfoChanged();
         }
 
         public void AdvanceTime()
         {
-            if(NewHomeNeeded())
+            _gameTime = _gameTime.AddDays(1);
+            OnOneDayPassed();
+
+            if (_gameTime.Day == 1) OnOneMonthPassed();
+
+            OnGameInfoChanged();
+        }
+    
+        public void AdvanceTime1()
+        {
+ 
             {
                 foreach (Field field in Fields)
                 {
@@ -305,9 +415,10 @@ namespace simcityModel.Model
                         MakeBuilding(field.X, field.Y, BuildingType.Home);
                         while (_homeless.Count > 0 && field.Capacity > field.NumberOfPeople)
                         {
-                            Person person = _homeless.Dequeue();
-                            person.home = (PeopleBuilding?)field.Building;
-                            person.home!.People.Add(person);                            
+                            Person person = _homeless[0];
+                            _homeless.RemoveAt(0);
+                            person.home = field;
+                            ((PeopleBuilding)(person.home!.Building!)).People.Add(person);                            
                         }
                         break;
                     }
@@ -330,9 +441,10 @@ namespace simcityModel.Model
 
                         while (_unemployed.Count > 0 && field.Capacity > field.NumberOfPeople)
                         {
-                            Person person = _unemployed.Dequeue();
-                            person.work = (PeopleBuilding?)field.Building;
-                            person.work!.People.Add(person);
+                            Person person = _unemployed[0];
+                            _unemployed.RemoveAt(0);
+                            person.work = field;
+                            ((PeopleBuilding)(person.work!.Building!)).People.Add(person); ;
                         }
                         break;
                     }
@@ -342,14 +454,14 @@ namespace simcityModel.Model
             {
                 var person = new Person();
                 _people.Add(person);
-                _homeless.Enqueue(person);
-                _unemployed.Enqueue(person);
+                _homeless.Add(person);
+                _unemployed.Add(person);
             }
             if(TaxDay())
             {
-                /* TODO */
+                // TODO
             }
-            
+
             MoveCars();
             if (NewCarSampleNeeded())
             {
@@ -358,12 +470,6 @@ namespace simcityModel.Model
             OnGameInfoChanged();
         }
 
-        public void ChangeGameSpeed(GameSpeed newSpeed)
-        {
-            _gameSpeed = newSpeed;
-            OnGameSpeedChanged();
-        }
-        
         public (bool[,] routeExists, (int, int)[,] parents, int[,] distance) BreadthFirst((int x, int y) source)
         {
             Queue<(int, int)> q = new Queue<(int, int)>();
@@ -406,6 +512,8 @@ namespace simcityModel.Model
                     v = parents[v.x, v.y];
                 }
             }
+
+            route = new Queue<(int x, int y)>(route.Reverse());
             return route;
         }
 
@@ -417,7 +525,7 @@ namespace simcityModel.Model
                 OnMatrixChanged((x, y));
 
                 _money -= _zonePrices[newFieldType].price;
-                _expenseList.Add(new BudgetRecord("Zónalerakás", _zonePrices[newFieldType].price));
+                _expenseList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} - Zónalerakás", _zonePrices[newFieldType].price));
                 OnExpenseListChanged();
                 OnGameInfoChanged();
             }
@@ -433,19 +541,25 @@ namespace simcityModel.Model
                 case BuildingType.OfficeBuilding:
                 case BuildingType.Industry:
                 case BuildingType.Home:
-                    _fields[x, y].Building = new PeopleBuilding(newBuildingType);
+                    Building building = new PeopleBuilding((x, y), newBuildingType);
+                    if (!IsAdjacentWithRoad(building)) return;
+
+                    _fields[x, y].Building = building;
+                    _buildings.Add(_fields[x, y].Building!);
+                    _numberOfBuildings[newBuildingType]++;
                     OnMatrixChanged((x, y));
 
                     break;
                 case BuildingType.Road:
                     if (_fields[x, y].Type == FieldType.GeneralField && _fields[x, y].Building == null)
                     {
-                        _fields[x, y].Building = new Road();
+                        _fields[x, y].Building = new Road((x, y));
+                        _buildings.Add(_fields[x, y].Building!);
+                        _numberOfBuildings[newBuildingType]++;
                         OnMatrixChanged((x, y));
-                        _buildings[newBuildingType]++;
 
                         _money -= _buildingPrices[newBuildingType].price;
-                        _expenseList.Add(new BudgetRecord("Útlerakás", _buildingPrices[newBuildingType].price));
+                        _expenseList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} - Útlerakás", _buildingPrices[newBuildingType].price));
                         OnExpenseListChanged();
                         OnGameInfoChanged();
                     }
@@ -456,14 +570,16 @@ namespace simcityModel.Model
 
                     break;
                 default:
-                    ServiceBuilding building = new ServiceBuilding((x, y), newBuildingType);
+                    building = new ServiceBuilding((x, y), newBuildingType);
                     foreach ((int x, int y) coords in building.Coordinates)
                     {
-                        if (coords.x >= GameSize || coords.y >= GameSize || _fields[coords.x, coords.y].Type != FieldType.GeneralField || _fields[coords.x, coords.y].Building != null)
+                        if (!ValidCoordinates((coords.x, coords.y)) || _fields[coords.x, coords.y].Type != FieldType.GeneralField || _fields[coords.x, coords.y].Building != null)
                         {
                             throw new CannotBuildException("Ide nem építhetsz ilyen épületet.");
                         }
                     }
+
+                    if (!IsAdjacentWithRoad(building)) return;
 
                     foreach ((int x, int y) coords in building.Coordinates)
                     {
@@ -471,13 +587,20 @@ namespace simcityModel.Model
                         OnMatrixChanged((coords.x, coords.y));
                     }
 
-                    _buildings[newBuildingType]++;
+                    AddServiceBuildingEffects((ServiceBuilding)building);
+                    _buildings.Add(building);
+                    _numberOfBuildings[newBuildingType]++;
                     _money -= _buildingPrices[newBuildingType].price;
-                    _expenseList.Add(new BudgetRecord("Épületlerakás", _buildingPrices[newBuildingType].price));
+                    _expenseList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} - Épületlerakás", _buildingPrices[newBuildingType].price));
                     OnExpenseListChanged();
                     OnGameInfoChanged();
 
                     break;
+            }
+
+            foreach(Building building in _buildings)
+            {
+                building.updateBuildingStats(this);
             }
         }
 
@@ -491,11 +614,18 @@ namespace simcityModel.Model
                     if (_fields[x, y].Building == null)
                     {
                         _money += _zonePrices[_fields[x, y].Type].returnPrice;
-                        _incomeList.Add(new BudgetRecord("Zónarombolás", _zonePrices[_fields[x, y].Type].returnPrice));
+                        _incomeList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} - Zónarombolás", _zonePrices[_fields[x, y].Type].returnPrice));
                         OnIncomeListChanged();
                         OnGameInfoChanged();
 
                         _fields[x, y].Type = FieldType.GeneralField;
+                        OnMatrixChanged((x, y));
+                    }
+                    if ((_fields[x, y].Building != null && ((PeopleBuilding)_fields[x, y].Building!).People.Count == 0))
+                    {
+                        _buildings.Remove(_fields[x, y].Building!);
+                        _numberOfBuildings[_fields[x, y].Building!.Type]--;
+                        _fields[x, y].Building = null;
                         OnMatrixChanged((x, y));
                     }
                     break;
@@ -505,38 +635,46 @@ namespace simcityModel.Model
                         case null:
                             break;
                         case Road:
-                            /* need to check if every building is still accessible after destroyation */
-                            /* maintence cost needs to be handled  */
+                            /* still need to check if the road network is still connected after destroyation */
 
-                            _money += _buildingPrices[_fields[x, y].Building!.Type].returnPrice;
-                            _incomeList.Add(new BudgetRecord("Útrombolás", _buildingPrices[_fields[x, y].Building!.Type].returnPrice));
-                            OnIncomeListChanged();
-                            OnGameInfoChanged();
+                            if (AdjacentBuildingsAreStillAccessibleAfterRoadDestruction((x, y)))
+                            {
+                                _money += _buildingPrices[_fields[x, y].Building!.Type].returnPrice;
+                                _incomeList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} - Útrombolás", _buildingPrices[_fields[x, y].Building!.Type].returnPrice));
+                                OnIncomeListChanged();
+                                OnGameInfoChanged();
 
-                            _buildings[_fields[x, y].Building!.Type]--;
-                            _fields[x, y].Building = null;
-                            OnMatrixChanged((x, y));
+                                _numberOfBuildings[_fields[x, y].Building!.Type]--;
+                                _buildings.Remove(_fields[x, y].Building!);
+                                _fields[x, y].Building = null;
+                                OnMatrixChanged((x, y));
+                            }
 
                             break;
                         default:
-                            /* maintence cost needs to be handled  */
-                            /* additional effects needs to be handled (eg. happiness of nearby people) */
-
                             _money += _buildingPrices[_fields[x, y].Building!.Type].returnPrice;
-                            _incomeList.Add(new BudgetRecord("Épületrombolás", _buildingPrices[_fields[x, y].Building!.Type].returnPrice));
+                            _incomeList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} - Épületrombolás", _buildingPrices[_fields[x, y].Building!.Type].returnPrice));
                             OnIncomeListChanged();
                             OnGameInfoChanged();
 
-                            _buildings[_fields[x, y].Building!.Type]--;
+                            _numberOfBuildings[_fields[x, y].Building!.Type]--;
+                            _buildings.Remove(_fields[x, y].Building!);
+                            RemoveServiceBuildingEffects((ServiceBuilding)_fields[x, y].Building!);
 
                             foreach ((int x, int y) coords in ((ServiceBuilding)_fields[x, y].Building!).Coordinates)
                             {
                                 _fields[coords.x, coords.y].Building = null;
                                 OnMatrixChanged((coords.x, coords.y));
                             }
+
                             break;
                     }
                     break;
+            }
+
+            foreach (Building building in _buildings)
+            {
+                building.updateBuildingStats(this);
             }
         }
 
@@ -576,20 +714,29 @@ namespace simcityModel.Model
             ExpenseListChanged?.Invoke(this, _expenseList);
         }
 
-        /// <summary>
-        /// Invoking ExpenseListChanged event.
-        /// </summary>
-        private void OnGameSpeedChanged()
-        {
-            GameSpeedChanged?.Invoke(this, _gameSpeed);
-        }
-
+        
         /// <summary>
         /// Invoking GameOver event.
         /// </summary>
         private void OnGameOver()
         {
             GameOver?.Invoke(this, new EventArgs());
+        }
+
+        /// <summary>
+        /// Invoking GameOver event.
+        /// </summary>
+        private void OnOneDayPassed()
+        {
+            OneDayPassed?.Invoke(this, new EventArgs());
+        }
+
+        /// <summary>
+        /// Invoking GameOver event.
+        /// </summary>
+        private void OnOneMonthPassed()
+        {
+            OneMonthPassed?.Invoke(this, new EventArgs());
         }
 
         #endregion
