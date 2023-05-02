@@ -310,23 +310,27 @@ namespace simcityModel.Model
             return false;
         }
 
-        private bool AdjacentBuildingsAreStillAccessibleAfterRoadDestruction((int x, int y) coordinates)
+        private bool MapConnectedAfterDestruction((int x, int y) coordinates)
         {
-            List<Building> adjacentBuildings = GetAdjacentBuildings((coordinates.x, coordinates.y));
-
-            Road saveRoadInstance = (Road)_fields[coordinates.x, coordinates.y].Building!; 
+            if (!isRoad(coordinates) || _buildings.Count <= 1) return true;
+            
+            Road saveRoadInstance = (Road)_fields[coordinates.x, coordinates.y].Building!;
             _fields[coordinates.x, coordinates.y].Building = null;
-            foreach (Building building in adjacentBuildings)
+            _buildings.Remove(saveRoadInstance);
+            _numberOfBuildings[BuildingType.Road] -= 1;
+
+            
+            bool connected = true;
+            if (!mapIsConnected())
             {
-                if (!IsAdjacentWithRoad(building) && building.GetType() != typeof(Road))
-                {
-                    _fields[coordinates.x, coordinates.y].Building = saveRoadInstance;
-                    return false;
-                }
+                connected = false;
             }
 
             _fields[coordinates.x, coordinates.y].Building = saveRoadInstance;
-            return true;
+            _buildings.Add(saveRoadInstance);
+            _numberOfBuildings[BuildingType.Road] += 1;
+
+            return connected;
         }
 
         private bool NewWorkplaceNeeded()
@@ -461,49 +465,48 @@ namespace simcityModel.Model
         {
             //inits
             Queue<(int, int)> q = new Queue<(int, int)>();
-            bool[,] used = new bool[GAMESIZE,GAMESIZE];
+            bool[,] found = new bool[GAMESIZE,GAMESIZE];
             int[,] distance = new int[GAMESIZE, GAMESIZE];
             (int x, int y)[,] parents = new (int,int)[GAMESIZE, GAMESIZE];
             bool allBuildingsFound = true;
             var numberOfVisitedBuildings = new Dictionary<BuildingType, int>(_numberOfBuildings);
-            
+
             foreach (var (key, value) in numberOfVisitedBuildings)
             {
                 if (value != 0) allBuildingsFound = false;
                 numberOfVisitedBuildings[key] = 0;
             }
+            if (!ValidCoordinates(source)) return (found, allBuildingsFound, parents, distance);
 
-            if (!ValidCoordinates(source)) return (used, allBuildingsFound, parents, distance);
-
-            //bfs
+            //breadth first search
             q.Enqueue(source);
-            used[source.x, source.y] = true;
+            found[source.x, source.y] = true;
             parents[source.x, source.y] = (-1, -1);
             while (q.Count != 0)
             {
                 (int x, int y) v = q.Dequeue();
                 foreach ((int x, int y) u in GetAdjacentCoordinates((v.x, v.y)))
-                    if (!used[u.x, u.y] && Fields[u.x,u.y].Building != null)
+                    if (!found[u.x, u.y] && Fields[u.x,u.y].Building != null)
                     {
                         numberOfVisitedBuildings[Fields[u.x, u.y].Building!.Type] += 1;
                         if (Fields[u.x,u.y].Building!.Type == BuildingType.Road)
                             q.Enqueue(u);
                         foreach (var c in Fields[u.x, u.y].Building!.Coordinates)
                         {
-                            used[c.x, c.y] = true;
+                            found[c.x, c.y] = true;
                             distance[c.x, c.y] = distance[v.x, v.y] + 1;
                             parents[c.x, c.y] = v;
                         }
                     }
             }
 
-            //check if all buildings have been found
+            //check if all buildings have been found. yes => map is connected.
             foreach (var (key, value) in _numberOfBuildings)
             {
                 if (_numberOfBuildings[key] != numberOfVisitedBuildings[key]) allBuildingsFound = false;        
             }
 
-            return (used, allBuildingsFound, parents, distance);
+            return (found, allBuildingsFound, parents, distance);
         }
 
         public bool mapIsConnected()
@@ -655,9 +658,7 @@ namespace simcityModel.Model
                         case null:
                             break;
                         case Road:
-                            /* still need to check if the road network is still connected after destroyation */
-
-                            if (AdjacentBuildingsAreStillAccessibleAfterRoadDestruction((x, y)))
+                            if (MapConnectedAfterDestruction((x, y)))
                             {
                                 _money += _buildingPrices[_fields[x, y].Building!.Type].returnPrice;
                                 _incomeList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} - Útrombolás", _buildingPrices[_fields[x, y].Building!.Type].returnPrice));
