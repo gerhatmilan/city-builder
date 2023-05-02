@@ -43,7 +43,7 @@ namespace simcityModel.Model
         private Dictionary<BuildingType, int> _numberOfBuildings = new Dictionary<BuildingType, int>()
         {
             { BuildingType.Home, 0},
-            {BuildingType.OfficeBuilding, 0 },
+            { BuildingType.OfficeBuilding, 0 },
             { BuildingType.Industry, 0 },
             { BuildingType.Stadium, 0 },
             { BuildingType.PoliceStation, 0 },
@@ -63,7 +63,6 @@ namespace simcityModel.Model
         private List<Building> _buildings;
         private List<BudgetRecord> _incomeList;
         private List<BudgetRecord> _expenseList;
-
 
         #endregion
 
@@ -379,6 +378,20 @@ namespace simcityModel.Model
             _happiness = 50;
 
             OnGameInfoChanged();
+        }
+
+        public async Task SaveGameAsync(string path)
+        {
+            SimCityPersistance persistence = new SimCityPersistance();
+            /* ... */
+
+            await _dataAccess.SaveAsync(path, persistence);
+        }
+
+        public async Task LoadGameAsync(string path)
+        {
+            SimCityPersistance persistence = await _dataAccess.LoadAsync(path);
+            /* ... */
         }
 
         public void AdvanceTime()
