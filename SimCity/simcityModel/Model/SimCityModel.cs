@@ -341,43 +341,6 @@ namespace simcityModel.Model
             return connected;
         }
 
-        private bool NewWorkplaceNeeded()
-        {
-            bool needed = false;
-            if (_unemployed.Count < Field.OFFICE_CAPACITY)
-            {
-                needed = true;
-            }
-            return needed;
-        }
-        private bool NewHomeNeeded()
-        {
-            bool needed = false;
-            if (_homeless.Count > Field.RESIDENTAL_CAPACITY)
-            {
-                needed = true;
-            }
-            return needed;
-        }
-        private bool NewPeopleNeeded()
-        {
-            return false;
-        }
-        private bool NewCarSampleNeeded()
-        {
-            return false;
-        }
-        private void SampleNewCars()
-        { 
-        }
-        private void MoveCars()
-        { 
-        }
-        private bool TaxDay()
-        {
-            return false;
-        }
-
         private void MoveIn()
         { 
             int pendingMoveIns = (int)(_random.NextDouble() * (double)_happiness);
@@ -422,7 +385,7 @@ namespace simcityModel.Model
                 Field work = targetField.Type == FieldType.ResidentalZone ? sourceField : targetField;
                 while (true)
                 {
-                    Person person = new Person();
+                    Person person = new Person(home, work, fieldStat.Distance);
                     _people.Add(person);
                     ((PeopleBuilding)home.Building!).People.Add(person);
                     ((PeopleBuilding)work.Building!).People.Add(person);
