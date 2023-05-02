@@ -64,6 +64,7 @@ namespace simcityView
            
 
             _model.InitializeGame();
+            _timer.Start();
         }
 
         private void reset()
@@ -89,6 +90,7 @@ namespace simcityView
             _view.CamInit();
 
             _model.InitializeGame();
+            _timer.Start();
             GC.Collect();
         }
         
