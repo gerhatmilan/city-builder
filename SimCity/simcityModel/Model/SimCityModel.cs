@@ -10,6 +10,12 @@ using System.Security.Cryptography;
 using System.Xml.Linq;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Text.Json;
+using System.Collections;
+using System.Text.Json.Serialization;
+using System.Net.Http.Json;
+using System.Xml;
+using Newtonsoft.Json;
 
 namespace simcityModel.Model
 {
@@ -132,6 +138,11 @@ namespace simcityModel.Model
         /// Gets invoked every time when a person's happiness changes on the Field with (x, y) coordinates
         /// </summary>
         public event EventHandler<(int x, int y)>? PeopleHappinessChanged;
+
+        /// <summary>
+        /// Gets invoked when LoadGameAsync function returns a value.
+        /// </summary>
+        public event EventHandler<SimCityModel>? GameLoaded;
 
 
         #endregion
@@ -422,16 +433,16 @@ namespace simcityModel.Model
 
         public async Task SaveGameAsync(string path)
         {
-            SimCityPersistance persistence = new SimCityPersistance();
-            /* ... */
-
-            await _dataAccess.SaveAsync(path, persistence);
+            string gameData = Newtonsoft.Json.JsonConvert.SerializeObject(this);
+            await _dataAccess.SaveAsync(path, gameData);
         }
 
         public async Task LoadGameAsync(string path)
         {
-            SimCityPersistance persistence = await _dataAccess.LoadAsync(path);
-            /* ... */
+            string gameData = await _dataAccess.LoadAsync(path);
+
+            SimCityModel loadedModel = Newtonsoft.Json.JsonConvert.DeserializeObject<SimCityModel>(gameData)!;
+            OnGameLoaded(loadedModel);
         }
 
         public void AdvanceTime()
@@ -756,6 +767,11 @@ namespace simcityModel.Model
         private void OnPeopleHappinessChanged(object? sender, (int x, int y) coords)
         {
             PeopleHappinessChanged?.Invoke(this, (coords.x, coords.y));
+        }
+
+        private void OnGameLoaded(SimCityModel loadedModel)
+        {
+            GameLoaded?.Invoke(this, loadedModel);
         }
 
         #endregion

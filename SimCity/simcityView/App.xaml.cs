@@ -49,6 +49,7 @@ namespace simcityView
 
             _model = new SimCityModel(new FileDataAccess());
             _model.GameOver += M_GameOver;
+            _model.GameLoaded += M_GameLoaded;
 
             _vm = new SimCityViewModel(_model);
             
@@ -77,6 +78,7 @@ namespace simcityView
             _model = new SimCityModel(new FileDataAccess());
             
             _model.GameOver += M_GameOver;
+            _model.GameLoaded += M_GameLoaded;
 
             _vm = new SimCityViewModel(_model);
 
@@ -86,6 +88,34 @@ namespace simcityView
             _vm.NewGameEvent += Vm_NewGame;
 
             
+            _view.DataContext = _vm;
+            _view.CamInit();
+
+            _model.InitializeGame();
+            _timer.Start();
+            GC.Collect();
+        }
+
+        private void ChangeModel(SimCityModel model)
+        {
+            _timer = new DispatcherTimer();
+            _timer.Interval = TimeSpan.FromSeconds(1);
+            _timer.Tick += Timer_Tick;
+
+
+            _model = model;
+
+            _model.GameOver += M_GameOver;
+            _model.GameLoaded += M_GameLoaded;
+
+            _vm = new SimCityViewModel(_model);
+
+            _vm.ChangeTime += Vm_ChangeTimer;
+            _vm.SaveGameEvent += Vm_SaveGame;
+            _vm.LoadGameEvent += Vm_LoadGame;
+            _vm.NewGameEvent += Vm_NewGame;
+
+
             _view.DataContext = _vm;
             _view.CamInit();
 
@@ -133,7 +163,7 @@ namespace simcityView
                 {
                     try
                     {
-                        //await _model.Save(saveFileDialog.FileName);
+                        await _model.SaveGameAsync(saveFileDialog.FileName);
                     }
                     catch (Exception ex)
                     {
@@ -155,7 +185,7 @@ namespace simcityView
                 openFileDialog.Filter = "SimCity tábla|*.sc";
                 if (openFileDialog.ShowDialog() == true)
                 {
-                    //await _model.Load(openFileDialog.FileName);
+                    await _model.LoadGameAsync(openFileDialog.FileName);
 
                 }
             }
@@ -172,6 +202,11 @@ namespace simcityView
             _vm.GameIsNotOver = false;
             _vm.TimeSet.Execute("0");
             MessageBox.Show("☠ Vége a játéknak! ☠", "SimCity", MessageBoxButton.OK);
+        }
+
+        void M_GameLoaded(object? s, SimCityModel loadedModel)
+        {
+            ChangeModel(loadedModel);
         }
         #endregion
         #endregion
