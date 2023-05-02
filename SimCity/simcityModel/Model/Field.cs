@@ -53,8 +53,6 @@ namespace simcityModel.Model
         private FieldType _type;
         private Building? _building;
         private int _fieldHappiness;
-        private int _numberOfPeople;
-
 
         #endregion
 
@@ -199,6 +197,15 @@ namespace simcityModel.Model
             {
                 return 0;
             }
+        }
+
+        #endregion
+
+        #region Public event triggers
+
+        public void OnPeopleHappinessChanged(object? sender, EventArgs e)
+        {
+            PeopleHappinessChanged?.Invoke(this, (X, Y));
         }
 
         #endregion

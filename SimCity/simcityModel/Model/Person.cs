@@ -42,6 +42,9 @@ namespace simcityModel.Model
             _distanceToWork = distanceToWork;
             _home = home;
             _work = work;
+
+            HappinessChanged += new EventHandler(_home.OnPeopleHappinessChanged);
+            HappinessChanged += new EventHandler(_work.OnPeopleHappinessChanged);
         }
 
         #endregion
