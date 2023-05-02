@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Data;
 using System.Linq;
 using System.Reflection.Metadata.Ecma335;
@@ -12,54 +14,17 @@ using System.Threading.Tasks;
 namespace simcityModel.Model
 {
     public enum BuildingType { Industry, OfficeBuilding, Home, Stadium, PoliceStation, FireStation, Road }
-
-    public class BuildingStat
-    {
-        private BuildingType _type;
-        private int _distance;
-        private (int x, int y) _coordinates;
-        private Queue<(int x, int y)> _route;
-
-        public BuildingStat(BuildingType type, int distance, (int x, int y) coordinates, Queue<(int x, int y)> route)
-        {
-            _type = type;
-            _distance = distance;
-            _coordinates = coordinates;
-            _route = route;
-        }
-
-        public BuildingType Type { get => _type; }
-        public int Distance { get => _distance; }
-        public (int x, int y) Coordinates { get => _coordinates; }
-        public Queue<(int x, int y)> Route { get => _route; }
-    }
     
     public abstract class Building
     {
+        #region Fields
         protected BuildingType _type;
         protected (int x, int y) _topLeftCoordinate;
-        protected List<BuildingStat> _stats;
-        public void updateBuildingStats(SimCityModel model)
-        {  
-           (bool[,] routeExists, bool allBuildingsFound, (int, int)[,] parents, int[,] distance)  = model.BreadthFirst(_topLeftCoordinate);
-            for (int i = 0; i < model.GameSize; i++)
-            {
-                for (int j = 0; j < model.GameSize; j++)
-                {
-                    if (model.Fields[i, j].Building != null && model.Fields[i, j].Building!.Type != BuildingType.Road)
-                    {
-                        var bType = model.Fields[i, j].Building!.Type;
-                        int dist  = distance[i, j];
-                        var route = model.CalculateRoute((_topLeftCoordinate.x, _topLeftCoordinate.y), (i, j));
-                        var stat = new BuildingStat(bType, dist, (i, j), route);
-                        _stats.Add(stat);
-                    }
-                }
-            }
-            _stats.Sort((x, y) => x.Distance.CompareTo(y.Distance));
-        }
 
-        public List<BuildingStat> BuildingStats { get => _stats; } 
+        #endregion
+
+        #region Properties
+
         public BuildingType Type { get => _type; }
         public virtual bool Full { get => true; }
         public (int x, int y) TopLeftCoordinate
@@ -78,30 +43,58 @@ namespace simcityModel.Model
             }
         }
 
+        #endregion
+
+        #region Constructor
+
         public Building((int x, int y) coordinates, BuildingType type)
         {
             _type = type;    
             _topLeftCoordinate = coordinates;
-            _stats = new List<BuildingStat>();
         }
+
+        #endregion
 
     }
 
     public class PeopleBuilding : Building
     {
-        private List<Person> _people;
+        #region Fields
+        private ObservableCollection<Person> _people;
         private bool _onFire;
         private float _fireProb;
 
-        public List<Person> People { get => _people; }
+        #endregion
+
+        #region Properties
+
+        public ObservableCollection<Person> People { get => _people; }
         public bool OnFire { get => OnFire; }
+
+        #endregion
+
+        #region Events
+
+        public event EventHandler? NumberOfPeopleChanged;
+
+        #endregion
 
         public PeopleBuilding((int x, int y) coordinates, BuildingType type) : base(coordinates, type)
         {
-            _people = new List<Person>();
+            _people = new ObservableCollection<Person>();
+            _people.CollectionChanged += new NotifyCollectionChangedEventHandler(OnNumberOfPeopleChanged);
         }
 
         public void CalculateFire() { }
+
+        #region Private event triggers
+
+        private void OnNumberOfPeopleChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            NumberOfPeopleChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        #endregion
     }
 
     public class ServiceBuilding : Building

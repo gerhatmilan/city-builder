@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata.Ecma335;
@@ -52,6 +53,8 @@ namespace simcityModel.Model
         private FieldType _type;
         private Building? _building;
         private int _fieldHappiness;
+        private int _numberOfPeople;
+
 
         #endregion
 
@@ -77,6 +80,13 @@ namespace simcityModel.Model
             _stats.Sort((x, y) => x.Distance.CompareTo(y.Distance));
         }
 
+        #region Events
+
+        public event EventHandler<(int x, int y)> NumberOfPeopleChanged;
+        public event EventHandler<(int x, int y)> PeopleHappinessChanged;
+
+        #endregion
+
         #region Properties
 
         public int X { get => _x; }
@@ -93,7 +103,14 @@ namespace simcityModel.Model
         public Building? Building
         {
             get { return _building; }
-            set { _building = value; }
+            set
+            {
+                _building = value;
+                if (_building != null && _building.GetType() == typeof(PeopleBuilding))
+                {
+                    ((PeopleBuilding)_building).NumberOfPeopleChanged += new EventHandler(OnNumberOfPeopleChanged);
+                }
+            }
         }
 
         public int Capacity
@@ -127,6 +144,9 @@ namespace simcityModel.Model
             _type = FieldType.GeneralField;
             _building = null;
             _fieldHappiness = 0;
+            _numberOfPeople = 0;
+
+
         }
 
         #endregion
@@ -143,7 +163,7 @@ namespace simcityModel.Model
 
                     foreach (Person person in ((PeopleBuilding)_building).People)
                     {
-                        sum += person.happyness;
+                        sum += person.Happiness;
                     }
 
                     return sum / ((PeopleBuilding)_building).People.Count;
@@ -176,6 +196,15 @@ namespace simcityModel.Model
             {
                 return 0;
             }
+        }
+
+        #endregion
+
+        #region Private event triggers
+
+        private void OnNumberOfPeopleChanged(object? sender, EventArgs e)
+        {
+            NumberOfPeopleChanged?.Invoke(this, (X, Y));
         }
 
         #endregion
