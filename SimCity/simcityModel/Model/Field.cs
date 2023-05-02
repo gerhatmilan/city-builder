@@ -9,6 +9,25 @@ namespace simcityModel.Model
 {
     
     public enum FieldType { IndustrialZone, OfficeZone, ResidentalZone, GeneralField }
+
+    public class FieldStat
+    {
+        private FieldType _type;
+        private int _distance;
+        private (int x, int y) _coordinates;
+
+        public FieldStat(FieldType type, int distance, (int x, int y) coordinates)
+        {
+            _type = type;
+            _distance = distance;
+            _coordinates = coordinates;
+        }
+
+        public FieldType Type { get => _type; }
+        public int Distance { get => _distance; }
+        public (int x, int y) Coordinates { get => _coordinates; }
+    }
+
     public class Field
     {
         #region Private fields
@@ -25,6 +44,26 @@ namespace simcityModel.Model
 
         #endregion
 
+        protected List<FieldStat> _stats;
+        public void updateFieldStats(SimCityModel model)
+        {
+            (bool[,] routeExists, bool allBuildingsFound, (int, int)[,] parents, int[,] distance) = model.BreadthFirst((_x,_y), true);
+            for (int i = 0; i < model.GameSize; i++)
+            {
+                for (int j = 0; j < model.GameSize; j++)
+                {
+                    if (model.Fields[i, j].Building == null && model.Fields[i,j].Type != FieldType.GeneralField)
+                    {
+                        var fType = model.Fields[i, j].Type;
+                        int dist = distance[i, j];
+                        var stat = new FieldStat(fType, dist, (i, j));
+                        _stats.Add(stat);
+                    }
+                }
+            }
+            _stats.Sort((x, y) => x.Distance.CompareTo(y.Distance));
+        }
+
         #region Properties
 
         public int X { get => _x; }
@@ -35,6 +74,8 @@ namespace simcityModel.Model
             get { return _type; }
             set { _type = value; }
         }
+        
+        public List<FieldStat> FieldStats { get => _stats; }
 
         public Building? Building
         {

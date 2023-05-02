@@ -61,11 +61,12 @@ namespace simcityModel.Model
 
         public List<BuildingStat> BuildingStats { get => _stats; } 
         public BuildingType Type { get => _type; }
-
+        public virtual bool Full { get => true; }
         public (int x, int y) TopLeftCoordinate
         {
             get => _topLeftCoordinate;
         }
+
 
         public virtual List<(int x, int y)> Coordinates
         {

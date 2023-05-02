@@ -9,6 +9,7 @@ using System.Timers;
 using System.Security.Cryptography;
 using System.Xml.Linq;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 
 namespace simcityModel.Model
 {
@@ -18,7 +19,7 @@ namespace simcityModel.Model
 
         private const int GAMESIZE = 15;
         private const float PRICERETURN_MULTIPLIER = 2f / 3;
-        private const int TAX_PER_PERSON = 5;
+        private const int TAX_PER_PERSON = 5; 
 
 
         private Dictionary<FieldType, (int price, int returnPrice)> _zonePrices = new Dictionary<FieldType, (int, int)>()
@@ -50,7 +51,8 @@ namespace simcityModel.Model
             { BuildingType.FireStation, 0 },
             { BuildingType.Road, 0 }
         };
-
+        private static Random _random = new Random();
+        
         private IDataAccess _dataAccess;
         private DateTime _gameTime;
         private int _population;
@@ -369,6 +371,19 @@ namespace simcityModel.Model
             return false;
         }
 
+        private void MoveIn()
+        { 
+            int pendingMoveIns = (int)(_random.NextDouble() * (double)_happiness);
+            foreach (var building in _buildings)
+            {
+                if (building.Type == BuildingType.Home && ((PeopleBuilding)building).People.Count < Field.RESIDENTAL_CAPACITY)
+                { 
+                    // összegyűjtjük a listát
+                }
+            }
+
+        }
+
 
         #endregion
 
@@ -474,7 +489,7 @@ namespace simcityModel.Model
             OnGameInfoChanged();
         }
 
-        public (bool[,] routeExists, bool allBuildingsFound, (int, int)[,] parents, int[,] distance) BreadthFirst((int x, int y) source)
+        public (bool[,] routeExists, bool allBuildingsFound, (int, int)[,] parents, int[,] distance) BreadthFirst((int x, int y) source, bool includeFields = false)
         {
             //inits
             Queue<(int, int)> q = new Queue<(int, int)>();
@@ -483,27 +498,26 @@ namespace simcityModel.Model
             (int x, int y)[,] parents = new (int,int)[GAMESIZE, GAMESIZE];
             bool allBuildingsFound = true;
             var numberOfVisitedBuildings = new Dictionary<BuildingType, int>(_numberOfBuildings);
-
-            foreach (var (key, value) in numberOfVisitedBuildings)
-            {
-                if (value != 0) allBuildingsFound = false;
-                numberOfVisitedBuildings[key] = 0;
-            }
             if (!ValidCoordinates(source)) return (found, allBuildingsFound, parents, distance);
 
             //breadth first search
             q.Enqueue(source);
             found[source.x, source.y] = true;
+            if (_fields[source.x, source.y].Building != null)
+            {
+                numberOfVisitedBuildings[_fields[source.x, source.y].Building!.Type] = 1;
+            }
             parents[source.x, source.y] = (-1, -1);
             while (q.Count != 0)
             {
                 (int x, int y) v = q.Dequeue();
                 foreach ((int x, int y) u in GetAdjacentCoordinates((v.x, v.y)))
-                    if (!found[u.x, u.y] && Fields[u.x,u.y].Building != null)
+                {
+                    if (!found[u.x, u.y] && Fields[u.x, u.y].Building != null)
                     {
-                        numberOfVisitedBuildings[Fields[u.x, u.y].Building!.Type] += 1;
-                        if (Fields[u.x,u.y].Building!.Type == BuildingType.Road)
+                        if (Fields[u.x, u.y].Building!.Type == BuildingType.Road)
                             q.Enqueue(u);
+                        numberOfVisitedBuildings[Fields[u.x, u.y].Building!.Type] += 1;
                         foreach (var c in Fields[u.x, u.y].Building!.Coordinates)
                         {
                             found[c.x, c.y] = true;
@@ -511,6 +525,13 @@ namespace simcityModel.Model
                             parents[c.x, c.y] = v;
                         }
                     }
+                    if (!found[u.x, u.y] && includeFields)
+                    {
+                        found[u.x, u.y] = true;
+                        distance[u.x, u.y] = distance[v.x, v.y] + 1;
+                        parents[u.x, u.y] = v;
+                    }
+                }
             }
 
             //check if all buildings have been found. yes => map is connected.
