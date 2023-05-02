@@ -145,7 +145,6 @@ namespace simcityModel.Model
             _stats = new List<FieldStat>();
             _building = null;
             _fieldHappiness = 0;
-            _numberOfPeople = 0;
         }
 
         #endregion
