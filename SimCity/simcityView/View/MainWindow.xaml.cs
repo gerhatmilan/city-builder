@@ -41,18 +41,24 @@ namespace simcityView
             
         }
         
+       
+         
+
         public void CamInit()
         {
            
             PropertyInfo? upDownInfo = DataContext.GetType().GetProperty("MovePlayFieldUpDown");
             PropertyInfo? leftRightInfo = DataContext.GetType().GetProperty("MovePlayFieldLeftRight");
             PropertyInfo? zoomInfo = DataContext.GetType().GetProperty("ZoomPlayField");
+            CompositionTarget.Rendering -= KeyboardKeys;
 
             if (upDownInfo!=null && leftRightInfo!=null && zoomInfo!=null)
             {
+                
                 MoveUpDownCom = upDownInfo.GetValue(DataContext) as ICommand;
                 MoveLeftRightCom = leftRightInfo.GetValue(DataContext) as ICommand;
                 ZoomCom = zoomInfo.GetValue(DataContext) as ICommand;
+
                 
                 CompositionTarget.Rendering += KeyboardKeys;
                 _stopwatch.Start();

@@ -28,6 +28,7 @@ namespace simcityView.ViewModel
         private bool _flipBuldozeMode = false;
         private int _time = 0;
         private bool _gameIsNotOver = true;
+        private bool _timeReset = true;
 
         #endregion
 
@@ -79,6 +80,11 @@ namespace simcityView.ViewModel
             get { return _selectedTab; }
             set { _selectedTab = value; OnPropertyChanged(nameof(SelectedTab)); UpdateMouseStateText(); }
         }
+        public bool TimeReset
+        {
+            get { return _timeReset; }
+            set { _timeReset = value; OnPropertyChanged(nameof(_timeReset)); UpdateMouseStateText(); }
+        }
 
         #endregion
         #region DelegateCommands
@@ -109,6 +115,7 @@ namespace simcityView.ViewModel
             _model.ExpenseListChanged += new EventHandler<List<BudgetRecord>>(model_UpdateExpenseList);
             _model.GameInfoChanged += new EventHandler<GameEventArgs>(model_UpdateInfoText);
             _model.MatrixChanged += new EventHandler<(int, int)>(model_MatrixChanged);
+            
 
             _textureManager = new TextureManager(_model,this);
 
@@ -297,6 +304,7 @@ namespace simcityView.ViewModel
                 default: break;
             }
         }
+
 
         #endregion
         #endregion

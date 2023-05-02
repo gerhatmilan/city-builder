@@ -65,23 +65,26 @@ namespace simcityView
            
 
             _model.InitializeGame();
-            _timer.Start();
         }
 
         private void reset()
         {
-            _timer = new DispatcherTimer();
-            _timer.Interval = TimeSpan.FromSeconds(1);
-            _timer.Tick += Timer_Tick;
+
+            _timer.Stop();
+            
+
+
+            _model.GameOver -= M_GameOver;
+            _vm.ChangeTime -= Vm_ChangeTimer;
+            _vm.SaveGameEvent -= Vm_SaveGame;
+            _vm.LoadGameEvent -= Vm_LoadGame;
+            _vm.NewGameEvent -= Vm_NewGame;
 
 
             _model = new SimCityModel(new FileDataAccess());
+            _vm = new SimCityViewModel(_model);
             
             _model.GameOver += M_GameOver;
-            _model.GameLoaded += M_GameLoaded;
-
-            _vm = new SimCityViewModel(_model);
-
             _vm.ChangeTime += Vm_ChangeTimer;
             _vm.SaveGameEvent += Vm_SaveGame;
             _vm.LoadGameEvent += Vm_LoadGame;
@@ -90,10 +93,11 @@ namespace simcityView
             
             _view.DataContext = _vm;
             _view.CamInit();
-
             _model.InitializeGame();
-            _timer.Start();
+            
+
             GC.Collect();
+            
         }
 
         private void ChangeModel(SimCityModel model)
