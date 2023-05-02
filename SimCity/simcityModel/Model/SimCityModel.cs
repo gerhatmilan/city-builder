@@ -609,9 +609,17 @@ namespace simcityModel.Model
 
                     break;
                 case BuildingType.Road:
+
                     if (_fields[x, y].Type == FieldType.GeneralField && _fields[x, y].Building == null)
                     {
                         _fields[x, y].Building = new Road((x, y));
+
+                        if (!IsAdjacentWithRoad(_fields[x, y].Building!) && _numberOfBuildings[BuildingType.Road] > 0)
+                        {
+                            _fields[x, y].Building = null;
+                            return;
+                        }
+
                         _buildings.Add(_fields[x, y].Building!);
                         _numberOfBuildings[newBuildingType]++;
                         OnMatrixChanged((x, y));
