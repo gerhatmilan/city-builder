@@ -121,7 +121,17 @@ namespace simcityModel.Model
         /// </summary>
         public event EventHandler? OneMonthPassed;
 
-        public event EventHandler<(int x, int y)> NumberOfPeopleChanged;
+        /// <summary>
+        /// Number of people changed event.
+        /// Gets invoked every time when the number of people changes on the Field with (x, y) coordinates
+        /// </summary>
+        public event EventHandler<(int x, int y)>? NumberOfPeopleChanged;
+
+        /// <summary>
+        /// People happiness changed event.
+        /// Gets invoked every time when a person's happiness changes on the Field with (x, y) coordinates
+        /// </summary>
+        public event EventHandler<(int x, int y)>? PeopleHappinessChanged;
 
 
         #endregion
@@ -137,7 +147,7 @@ namespace simcityModel.Model
         public DateTime GameTime { get => _gameTime; }
         public int Population { get => _population; }
         public int Money { get => _money; }
-        public int Happinness { get => _happiness; }
+        public int Happiness { get => _happiness; }
 
         #endregion
 
@@ -154,6 +164,7 @@ namespace simcityModel.Model
                 {
                     _fields[i, j] = new Field(i, j);
                     _fields[i, j].NumberOfPeopleChanged += new EventHandler<(int x, int y)>(OnNumberOfPeopleChanged);
+                    _fields[i, j].PeopleHappinessChanged += new EventHandler<(int x, int y)>(OnPeopleHappinessChanged);
                 }
             }
 
@@ -740,6 +751,11 @@ namespace simcityModel.Model
         private void OnNumberOfPeopleChanged(object? sender, (int x, int y) coords)
         {
             NumberOfPeopleChanged?.Invoke(this, (coords.x, coords.y));
+        }
+
+        private void OnPeopleHappinessChanged(object? sender, (int x, int y) coords)
+        {
+            PeopleHappinessChanged?.Invoke(this, (coords.x, coords.y));
         }
 
         #endregion
