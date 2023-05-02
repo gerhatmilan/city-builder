@@ -10,6 +10,7 @@ using System.Security.Cryptography;
 using System.Xml.Linq;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.Diagnostics.Tracing;
 
 namespace simcityModel.Model
 {
@@ -121,7 +122,7 @@ namespace simcityModel.Model
         /// </summary>
         public event EventHandler? OneMonthPassed;
 
-        public event EventHandler<(int x, int y)> NumberOfPeopleChanged;
+        public event EventHandler<(int x, int y)>? NumberOfPeopleChanged;
 
 
         #endregion
@@ -162,6 +163,8 @@ namespace simcityModel.Model
             _incomeList  = new List<BudgetRecord>();
             _expenseList = new List<BudgetRecord>();
 
+            OneDayPassed += new EventHandler(MoveIn);
+
             OneMonthPassed += new EventHandler(GetTax);
             OneMonthPassed += new EventHandler(DeductMaintenceCost);
             OneMonthPassed += new EventHandler(CheckGameOver);
@@ -170,6 +173,90 @@ namespace simcityModel.Model
         #endregion
 
         #region Private methods
+        
+        private void MoveIn(object? sender, EventArgs e)
+        {
+            int pendingMoveIns = (int)(_random.NextDouble() * (double)_happiness);
+            var moveInList = new List<FieldStat>();
+            foreach (var field in _fields)
+            {
+                if (field.FieldStats.Count > 0)
+                {
+                    moveInList.AddRange(field.FieldStats);
+                }
+            }
+            moveInList.Sort((x, y) => x.Distance.CompareTo(y.Distance));
+
+            while (pendingMoveIns > 0 && moveInList.Count > 0)
+            {
+                var fieldStat = moveInList[0];
+                moveInList.RemoveAt(0);
+
+                Field sourceField = _fields[fieldStat.ParentCoordinates.x, fieldStat.ParentCoordinates.y];
+                Field targetField = _fields[fieldStat.Coordinates.x, fieldStat.Coordinates.y];
+                if (sourceField.Type == FieldType.GeneralField || targetField.Type == FieldType.GeneralField || sourceField.Type == targetField.Type || (sourceField.Type != FieldType.ResidentalZone && targetField.Type != FieldType.ResidentalZone))
+                {
+                    continue;
+                }
+                Field home = sourceField.Type == FieldType.ResidentalZone ? sourceField : targetField;
+                Field work = targetField.Type == FieldType.ResidentalZone ? sourceField : targetField;
+
+                bool homeBuildNeeded = (home.Building == null);
+                bool workBuildNeeded = (work.Building == null);
+
+                bool homeFull()
+                {
+                    bool full = false;
+                    if (home.Building != null)
+                    {
+                        full = (((PeopleBuilding)(home.Building!)).People.Count == Field.RESIDENTAL_CAPACITY);
+                    }
+                    return full;
+                }
+                bool workFull()
+                {
+                    bool full = false;
+                    if (work.Building != null)
+                    {
+                        switch (work.Building!.Type)
+                        {
+                            case BuildingType.Industry:
+                                full = (((PeopleBuilding)(work.Building!)).People.Count == Field.INDUSTRIAL_CAPACITY);
+                                break;
+                            case BuildingType.OfficeBuilding:
+                                full = (((PeopleBuilding)(work.Building!)).People.Count == Field.OFFICE_CAPACITY);
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    return full;
+                }
+
+                if (homeFull() || workFull()) continue;
+                if (homeBuildNeeded)
+                {
+                    MakeBuilding(home.X, home.Y, _zoneBuilding[home.Type]);
+                    homeBuildNeeded = false;
+                }
+                if (workBuildNeeded)
+                {
+                    MakeBuilding(work.X, work.Y, _zoneBuilding[work.Type]);
+                    workBuildNeeded = false;
+                }
+
+                while (!homeFull() && !workFull())
+                {
+                    Person person = new Person(home, work, fieldStat.Distance);
+                    _people.Add(person);
+                    ((PeopleBuilding)home.Building!).People.Add(person);
+                    OnNumberOfPeopleChanged(null, (home.X, home.Y));
+                    ((PeopleBuilding)work.Building!).People.Add(person);
+                    OnNumberOfPeopleChanged(null, (work.X, work.Y));
+                    pendingMoveIns -= 1;
+                }
+            }
+        }
 
         private void GetTax(object? sender, EventArgs e)
         {
@@ -341,58 +428,6 @@ namespace simcityModel.Model
             return connected;
         }
 
-        private void MoveIn()
-        { 
-            int pendingMoveIns = (int)(_random.NextDouble() * (double)_happiness);
-            var moveInList = new List<FieldStat>();
-            foreach (var field in _fields)
-            {
-                if (field.FieldStats.Count > 0)
-                {
-                    moveInList.AddRange(field.FieldStats);
-                }
-            }
-            moveInList.Sort((x, y) => x.Distance.CompareTo(y.Distance));
-            while (pendingMoveIns > 0 && moveInList.Count > 0)
-            {
-                var fieldStat = moveInList[0];
-                moveInList.RemoveAt(0);
-                
-                Field sourceField  = _fields[fieldStat.ParentCoordinates.x, fieldStat.ParentCoordinates.y];
-                Field targetField = _fields[fieldStat.Coordinates.x, fieldStat.Coordinates.y];
-                if (sourceField.Type == FieldType.GeneralField || targetField.Type == FieldType.GeneralField || sourceField.Type == targetField.Type || (sourceField.Type != FieldType.ResidentalZone && targetField.Type != FieldType.ResidentalZone))
-                {
-                    continue;
-                }
-
-                bool sourceBuildNeeded = (sourceField.Building != null);
-                bool sourceFull = false;
-                if (!sourceBuildNeeded) {  }
-                bool targetBuildNeeded = (targetField.Building != null);
-                bool targetFull = false;
-                if (!targetBuildNeeded) { }
-                if (sourceFull || targetFull) continue;
-                if (sourceBuildNeeded)
-                {
-                    MakeBuilding(sourceField.X, sourceField.Y, _zoneBuilding[sourceField.Type]);
-                }
-                if (targetBuildNeeded)
-                {
-                    MakeBuilding(targetField.X, targetField.Y, _zoneBuilding[targetField.Type]);
-                }
-
-                Field home = sourceField.Type == FieldType.ResidentalZone ? sourceField : targetField;
-                Field work = targetField.Type == FieldType.ResidentalZone ? sourceField : targetField;
-                while (true)
-                {
-                    Person person = new Person(home, work, fieldStat.Distance);
-                    _people.Add(person);
-                    ((PeopleBuilding)home.Building!).People.Add(person);
-                    ((PeopleBuilding)work.Building!).People.Add(person);
-                }
-
-            }
-        }
 
 
         #endregion
@@ -528,6 +563,11 @@ namespace simcityModel.Model
 
                 _money -= _zonePrices[newFieldType].price;
                 _expenseList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} - Zónalerakás", _zonePrices[newFieldType].price));
+                foreach (var field in _fields)
+                {
+                    field.updateFieldStats(this);
+                }
+
                 OnExpenseListChanged();
                 OnGameInfoChanged();
             }
@@ -550,6 +590,10 @@ namespace simcityModel.Model
                     _buildings.Add(_fields[x, y].Building!);
                     _numberOfBuildings[newBuildingType]++;
                     OnMatrixChanged((x, y));
+                    foreach (var field in _fields)
+                    {
+                        field.updateFieldStats(this);
+                    }
 
                     break;
                 case BuildingType.Road:
@@ -567,6 +611,10 @@ namespace simcityModel.Model
                         _buildings.Add(_fields[x, y].Building!);
                         _numberOfBuildings[newBuildingType]++;
                         OnMatrixChanged((x, y));
+                        foreach (var field in _fields)
+                        {
+                            field.updateFieldStats(this);
+                        }
 
                         _money -= _buildingPrices[newBuildingType].price;
                         _expenseList.Add(new BudgetRecord($"{_gameTime.ToString("yyyy. MM. dd.")} - Útlerakás", _buildingPrices[newBuildingType].price));
@@ -595,6 +643,10 @@ namespace simcityModel.Model
                     {
                         _fields[coords.x, coords.y].Building = building;
                         OnMatrixChanged((coords.x, coords.y));
+                    }
+                    foreach (var field in _fields)
+                    {
+                        field.updateFieldStats(this);
                     }
 
                     AddServiceBuildingEffects((ServiceBuilding)building);
@@ -625,6 +677,10 @@ namespace simcityModel.Model
 
                         _fields[x, y].Type = FieldType.GeneralField;
                         OnMatrixChanged((x, y));
+                        foreach (var field in _fields)
+                        {
+                            field.updateFieldStats(this);
+                        }
                     }
                     if ((_fields[x, y].Building != null && ((PeopleBuilding)_fields[x, y].Building!).People.Count == 0))
                     {
@@ -632,6 +688,10 @@ namespace simcityModel.Model
                         _numberOfBuildings[_fields[x, y].Building!.Type]--;
                         _fields[x, y].Building = null;
                         OnMatrixChanged((x, y));
+                        foreach (var field in _fields)
+                        {
+                            field.updateFieldStats(this);
+                        }
                     }
                     break;
                 case FieldType.GeneralField:
@@ -651,6 +711,10 @@ namespace simcityModel.Model
                                 _buildings.Remove(_fields[x, y].Building!);
                                 _fields[x, y].Building = null;
                                 OnMatrixChanged((x, y));
+                                foreach (var field in _fields)
+                                {
+                                    field.updateFieldStats(this);
+                                }
                             }
 
                             break;
@@ -668,6 +732,10 @@ namespace simcityModel.Model
                             {
                                 _fields[coords.x, coords.y].Building = null;
                                 OnMatrixChanged((coords.x, coords.y));
+                            }
+                            foreach (var field in _fields)
+                            {
+                                field.updateFieldStats(this);
                             }
 
                             break;
