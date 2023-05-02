@@ -105,7 +105,7 @@
                 </Style>
             </StackPanel.Resources>
             <ItemsControl>
-                <RadioButton Content="STOP" Style="{StaticResource Time}" CommandParameter="0" IsChecked="True"/>
+                <RadioButton Content="STOP" Style="{StaticResource Time}" CommandParameter="0" IsChecked="{Binding TimeReset, Mode=TwoWay}"/>
                 <RadioButton Content="▶"    Style="{StaticResource Time}" CommandParameter="1000"/>
                 <RadioButton Content="▶▶"   Style="{StaticResource Time}" CommandParameter="500"/>
                 <RadioButton Content="▶▶▶"  Style="{StaticResource Time}" CommandParameter="250"/>
