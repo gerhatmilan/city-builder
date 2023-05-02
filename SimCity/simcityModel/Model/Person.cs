@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -8,19 +9,53 @@ namespace simcityModel.Model
 {
     public class Person
     {
-        private const int INITIAL_HAPPYNESS = 50;
-        private const int MAX_HAPPYNESS = 100;
+        #region Private fields
 
-        public Person()
+        private const int INITIAL_HAPPINESS = 50;
+        private int _happiness;
+        private Field _home;
+        private Field _work;
+        private int _distanceToWork;
+
+        #endregion
+
+        #region Events
+
+        public event EventHandler? HappinessChanged;
+
+        #endregion
+
+        #region Properties
+
+        public int Happiness { get => _happiness; set { _happiness = value; OnHappinessChanged(); } }
+        public Field Home { get => _home; set => _home = value; }
+        public Field Work { get => _work; set => _work = value; }
+        public int DistanceToWork { get => _distanceToWork; set => _distanceToWork = value; }
+
+        #endregion
+
+        #region Constructor
+
+        public Person(Field home, Field work, int distanceToWork)
         {
-            happyness = INITIAL_HAPPYNESS;
-            distanceToWork = 0;
+            _happiness = INITIAL_HAPPINESS;
+            _distanceToWork = distanceToWork;
+            _home = home;
+            _work = work;
+
+            HappinessChanged += new EventHandler(_home.OnPeopleHappinessChanged);
+            HappinessChanged += new EventHandler(_work.OnPeopleHappinessChanged);
         }
 
-        public int happyness;
-        public Field? home;
-        public Field? work;
-        public int distanceToWork;
+        #endregion
 
+        #region Private event triggers
+
+        private void OnHappinessChanged()
+        {
+            HappinessChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        #endregion
     }
 }

@@ -8,11 +8,11 @@ before_script:
   - dotnet --version
 
 # Build
-build_project:
+build_model:
   stage: build
-  tags: [windows]
   script:
-    - dotnet build SimCity/simcityView/simcity.sln
+    - dotnet build SimCity/simcityModel
+    - dotnet build SimCity/simcityPersistance
 
 # Test
 test_model:
