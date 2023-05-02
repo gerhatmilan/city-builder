@@ -549,7 +549,8 @@ namespace simcityModel.Model
             if (_buildings.Count > 0)
             {
                 var source = _buildings[0].TopLeftCoordinate;
-                var (_, allBuildingsFound, _, _) = BreadthFirst(source); 
+                var (_, allBuildingsFound, _, _) = BreadthFirst(source);
+                connected = allBuildingsFound;
             }
             return connected;
         }
