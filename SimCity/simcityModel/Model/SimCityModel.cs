@@ -60,8 +60,6 @@ namespace simcityModel.Model
         private int _happiness;
         private Field[,] _fields;
         private List<Person> _people;
-        private List<Person> _homeless;
-        private List<Person> _unemployed;
         private List<Building> _buildings;
         private List<BudgetRecord> _incomeList;
         private List<BudgetRecord> _expenseList;
@@ -117,6 +115,7 @@ namespace simcityModel.Model
         /// </summary>
         public event EventHandler? OneMonthPassed;
 
+        public event EventHandler<(int x, int y)> NumberOfPeopleChanged;
 
 
         #endregion
@@ -148,12 +147,11 @@ namespace simcityModel.Model
                 for (int j = 0; j < GAMESIZE; j++)
                 {
                     _fields[i, j] = new Field(i, j);
+                    _fields[i, j].NumberOfPeopleChanged += new EventHandler<(int x, int y)>(OnNumberOfPeopleChanged);
                 }
             }
 
             _people      = new List<Person>();
-            _homeless    = new List<Person>();
-            _unemployed  = new List<Person>();
             _buildings = new List<Building>();
             _incomeList  = new List<BudgetRecord>();
             _expenseList = new List<BudgetRecord>();
@@ -337,57 +335,6 @@ namespace simcityModel.Model
             return connected;
         }
 
-        private bool NewWorkplaceNeeded()
-        {
-            bool needed = false;
-            if (_unemployed.Count < Field.OFFICE_CAPACITY)
-            {
-                needed = true;
-            }
-            return needed;
-        }
-        private bool NewHomeNeeded()
-        {
-            bool needed = false;
-            if (_homeless.Count > Field.RESIDENTAL_CAPACITY)
-            {
-                needed = true;
-            }
-            return needed;
-        }
-        private bool NewPeopleNeeded()
-        {
-            return false;
-        }
-        private bool NewCarSampleNeeded()
-        {
-            return false;
-        }
-        private void SampleNewCars()
-        { 
-        }
-        private void MoveCars()
-        { 
-        }
-        private bool TaxDay()
-        {
-            return false;
-        }
-
-        private void MoveIn()
-        { 
-            int pendingMoveIns = (int)(_random.NextDouble() * (double)_happiness);
-            foreach (var building in _buildings)
-            {
-                if (building.Type == BuildingType.Home && ((PeopleBuilding)building).People.Count < Field.RESIDENTAL_CAPACITY)
-                { 
-                    // összegyűjtjük a listát
-                }
-            }
-
-        }
-
-
         #endregion
 
         #region Public methods
@@ -423,72 +370,6 @@ namespace simcityModel.Model
 
             if (_gameTime.Day == 1) OnOneMonthPassed();
 
-            OnGameInfoChanged();
-        }
-    
-        public void AdvanceTime1()
-        {
- 
-            {
-                foreach (Field field in Fields)
-                {
-                    if (field.Type == FieldType.ResidentalZone && field.Building == null)
-                    {
-                        MakeBuilding(field.X, field.Y, BuildingType.Home);
-                        while (_homeless.Count > 0 && field.Capacity > field.NumberOfPeople)
-                        {
-                            Person person = _homeless[0];
-                            _homeless.RemoveAt(0);
-                            person.home = field;
-                            ((PeopleBuilding)(person.home!.Building!)).People.Add(person);                            
-                        }
-                        break;
-                    }
-                }
-            }
-            if(NewWorkplaceNeeded())
-            {
-                foreach (Field field in Fields)
-                {
-                    if ((field.Type == FieldType.IndustrialZone || field.Type == FieldType.OfficeZone) && field.Building == null)
-                    {
-                        if (field.Type == FieldType.IndustrialZone)
-                        {
-                            MakeBuilding(field.X, field.Y, BuildingType.Industry);
-                        }
-                        else
-                        {
-                            MakeBuilding(field.X, field.Y, BuildingType.OfficeBuilding);
-                        }
-
-                        while (_unemployed.Count > 0 && field.Capacity > field.NumberOfPeople)
-                        {
-                            Person person = _unemployed[0];
-                            _unemployed.RemoveAt(0);
-                            person.work = field;
-                            ((PeopleBuilding)(person.work!.Building!)).People.Add(person); ;
-                        }
-                        break;
-                    }
-                }
-            }
-            while(NewPeopleNeeded())
-            {
-                var person = new Person();
-                _people.Add(person);
-                _homeless.Add(person);
-                _unemployed.Add(person);
-            }
-            if(TaxDay())
-            {
-                // TODO
-            }
-
-            MoveCars();
-            if (NewCarSampleNeeded())
-            {
-                SampleNewCars();
-            }
             OnGameInfoChanged();
         }
 
@@ -666,11 +547,6 @@ namespace simcityModel.Model
 
                     break;
             }
-
-            foreach(Building building in _buildings)
-            {
-                building.updateBuildingStats(this);
-            }
         }
 
         public void Destroy(int x, int y)
@@ -738,11 +614,6 @@ namespace simcityModel.Model
                     }
                     break;
             }
-
-            foreach (Building building in _buildings)
-            {
-                building.updateBuildingStats(this);
-            }
         }
 
         #endregion
@@ -804,6 +675,11 @@ namespace simcityModel.Model
         private void OnOneMonthPassed()
         {
             OneMonthPassed?.Invoke(this, new EventArgs());
+        }
+
+        private void OnNumberOfPeopleChanged(object? sender, (int x, int y) coords)
+        {
+            NumberOfPeopleChanged?.Invoke(this, (coords.x, coords.y));
         }
 
         #endregion
