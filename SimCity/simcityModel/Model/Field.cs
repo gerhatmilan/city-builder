@@ -59,12 +59,14 @@ namespace simcityModel.Model
         protected List<FieldStat> _stats;
         public void updateFieldStats(SimCityModel model)
         {
+            if (_type == FieldType.GeneralField && (_building == null || _building!.Type == BuildingType.Road)) { _stats.Clear(); return; }
+
             (bool[,] routeExists, bool allBuildingsFound, (int, int)[,] parents, int[,] distance) = model.BreadthFirst((_x,_y), true);
             for (int i = 0; i < model.GameSize; i++)
             {
                 for (int j = 0; j < model.GameSize; j++)
                 {
-                    if (!(model.Fields[i,j].Type == FieldType.GeneralField && (model.Fields[i,j].Building == null || model.Fields[i,j].Building!.Type == BuildingType.Road)))
+                    if (routeExists[i,j] && !(model.Fields[i,j].Type == FieldType.GeneralField && (model.Fields[i,j].Building == null || model.Fields[i,j].Building!.Type == BuildingType.Road)))
                     {
                         var fType = model.Fields[i, j].Type;
                         bool hasBuilding = (model.Fields[i, j].Building != null);
@@ -80,8 +82,8 @@ namespace simcityModel.Model
 
         #region Events
 
-        public event EventHandler<(int x, int y)> NumberOfPeopleChanged;
-        public event EventHandler<(int x, int y)> PeopleHappinessChanged;
+        public event EventHandler<(int x, int y)>? NumberOfPeopleChanged;
+        public event EventHandler<(int x, int y)>? PeopleHappinessChanged;
 
         #endregion
 
@@ -140,6 +142,7 @@ namespace simcityModel.Model
             _x = x;
             _y = y;
             _type = FieldType.GeneralField;
+            _stats = new List<FieldStat>();
             _building = null;
             _fieldHappiness = 0;
         }
@@ -155,13 +158,15 @@ namespace simcityModel.Model
                 if (_building.GetType() == typeof(PeopleBuilding))
                 {
                     int sum = 0;
+                    int people = ((PeopleBuilding)_building).People.Count;
 
                     foreach (Person person in ((PeopleBuilding)_building).People)
                     {
                         sum += person.Happiness;
                     }
 
-                    return sum / ((PeopleBuilding)_building).People.Count;
+
+                    return  people != 0 ? sum / ((PeopleBuilding)_building).People.Count : 0;
                 }
                 else
                 {
