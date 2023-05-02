@@ -187,7 +187,7 @@ namespace simcityModel.Model
         
         private void MoveIn(object? sender, EventArgs e)
         {
-            int pendingMoveIns = (int)(_random.NextDouble() * (double)_happiness);
+            int pendingMoveIns = 1; // (int)(_random.NextDouble() * (double)_happiness);
             var moveInList = new List<FieldStat>();
             foreach (var field in _fields)
             {
@@ -256,7 +256,7 @@ namespace simcityModel.Model
                     workBuildNeeded = false;
                 }
 
-                while (!homeFull() && !workFull())
+                while (!homeFull() && !workFull() && pendingMoveIns > 0)
                 {
                     Person person = new Person(home, work, fieldStat.Distance);
                     _people.Add(person);
@@ -489,6 +489,10 @@ namespace simcityModel.Model
             bool allBuildingsFound = true;
             var numberOfVisitedBuildings = new Dictionary<BuildingType, int>(_numberOfBuildings);
             if (!ValidCoordinates(source)) return (found, allBuildingsFound, parents, distance);
+            foreach (var key in numberOfVisitedBuildings.Keys)
+            {
+                numberOfVisitedBuildings[key] = 0;
+            }
 
             //breadth first search
             q.Enqueue(source);

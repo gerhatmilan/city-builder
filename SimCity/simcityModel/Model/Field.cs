@@ -66,7 +66,7 @@ namespace simcityModel.Model
             {
                 for (int j = 0; j < model.GameSize; j++)
                 {
-                    if (!(model.Fields[i,j].Type == FieldType.GeneralField && (model.Fields[i,j].Building == null || model.Fields[i,j].Building!.Type == BuildingType.Road)))
+                    if (routeExists[i,j] && !(model.Fields[i,j].Type == FieldType.GeneralField && (model.Fields[i,j].Building == null || model.Fields[i,j].Building!.Type == BuildingType.Road)))
                     {
                         var fType = model.Fields[i, j].Type;
                         bool hasBuilding = (model.Fields[i, j].Building != null);
