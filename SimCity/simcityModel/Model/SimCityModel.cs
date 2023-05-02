@@ -19,7 +19,7 @@ namespace simcityModel.Model
 
         private const int GAMESIZE = 15;
         private const float PRICERETURN_MULTIPLIER = 2f / 3;
-        private const int TAX_PER_PERSON = 5; 
+        private const int TAX_PER_PERSON = 5;
 
 
         private Dictionary<FieldType, (int price, int returnPrice)> _zonePrices = new Dictionary<FieldType, (int, int)>()
@@ -28,6 +28,12 @@ namespace simcityModel.Model
             { FieldType.OfficeZone, (150, CalculateReturnPrice(150)) },
             { FieldType.ResidentalZone, (150, CalculateReturnPrice(150)) },
             { FieldType.GeneralField, (0, CalculateReturnPrice(0)) }
+        };
+        private Dictionary<FieldType, BuildingType> _zoneBuilding = new Dictionary<FieldType, BuildingType>()
+        {
+            {FieldType.IndustrialZone,BuildingType.Industry},
+            {FieldType.OfficeZone,BuildingType.OfficeBuilding},
+            {FieldType.ResidentalZone,BuildingType.Home}
         };
 
         private Dictionary<BuildingType, (int price, int returnPrice, int maintenceCost)> _buildingPrices = new Dictionary<BuildingType, (int, int, int)>()
@@ -374,14 +380,54 @@ namespace simcityModel.Model
         private void MoveIn()
         { 
             int pendingMoveIns = (int)(_random.NextDouble() * (double)_happiness);
-            foreach (var building in _buildings)
+            var moveInList = new List<FieldStat>();
+            foreach (var field in _fields)
             {
-                if (building.Type == BuildingType.Home && ((PeopleBuilding)building).People.Count < Field.RESIDENTAL_CAPACITY)
-                { 
-                    // összegyűjtjük a listát
+                if (field.FieldStats.Count > 0)
+                {
+                    moveInList.AddRange(field.FieldStats);
                 }
             }
+            moveInList.Sort((x, y) => x.Distance.CompareTo(y.Distance));
+            while (pendingMoveIns > 0 && moveInList.Count > 0)
+            {
+                var fieldStat = moveInList[0];
+                moveInList.RemoveAt(0);
+                
+                Field sourceField  = _fields[fieldStat.ParentCoordinates.x, fieldStat.ParentCoordinates.y];
+                Field targetField = _fields[fieldStat.Coordinates.x, fieldStat.Coordinates.y];
+                if (sourceField.Type == FieldType.GeneralField || targetField.Type == FieldType.GeneralField || sourceField.Type == targetField.Type || (sourceField.Type != FieldType.ResidentalZone && targetField.Type != FieldType.ResidentalZone))
+                {
+                    continue;
+                }
 
+                bool sourceBuildNeeded = (sourceField.Building != null);
+                bool sourceFull = false;
+                if (!sourceBuildNeeded) {  }
+                bool targetBuildNeeded = (targetField.Building != null);
+                bool targetFull = false;
+                if (!targetBuildNeeded) { }
+                if (sourceFull || targetFull) continue;
+                if (sourceBuildNeeded)
+                {
+                    MakeBuilding(sourceField.X, sourceField.Y, _zoneBuilding[sourceField.Type]);
+                }
+                if (targetBuildNeeded)
+                {
+                    MakeBuilding(targetField.X, targetField.Y, _zoneBuilding[targetField.Type]);
+                }
+
+                Field home = sourceField.Type == FieldType.ResidentalZone ? sourceField : targetField;
+                Field work = targetField.Type == FieldType.ResidentalZone ? sourceField : targetField;
+                while (true)
+                {
+                    Person person = new Person();
+                    _people.Add(person);
+                    ((PeopleBuilding)home.Building!).People.Add(person);
+                    ((PeopleBuilding)work.Building!).People.Add(person);
+                }
+
+            }
         }
 
 
@@ -555,12 +601,12 @@ namespace simcityModel.Model
             return connected;
         }
 
-        public Queue<(int x, int y)> CalculateRoute((int x, int y) start, (int x, int y) end)
+        public Queue<(int x, int y)> CalculateRoute((int x, int y) start, (int x, int y) end, bool includeFields = false)
         {
             Queue<(int x, int y)> route = new Queue<(int x, int y)>();
             if (!ValidCoordinates(start) || !ValidCoordinates(end))
                 return route;
-            var (used, allBuildingsFound, parents, distance) = BreadthFirst((start.x, start.y));
+            var (used, allBuildingsFound, parents, distance) = BreadthFirst((start.x, start.y), includeFields);
             if (used[start.x, start.y])
             {
                 (int x, int y) v = start;

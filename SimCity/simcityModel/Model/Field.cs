@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,19 +14,28 @@ namespace simcityModel.Model
 
     public class FieldStat
     {
+        private (int x, int y) _parentCoordinates;
         private FieldType _type;
+        private bool _hasBuilding;
         private int _distance;
         private (int x, int y) _coordinates;
+        private Queue<(int x, int y)> _route;
 
-        public FieldStat(FieldType type, int distance, (int x, int y) coordinates)
+        public FieldStat((int x, int y) parentCoordinates, FieldType type, bool hasBuilding, int distance, (int x, int y) coordinates, Queue<(int x, int y)> route)
         {
+            _parentCoordinates = parentCoordinates;
             _type = type;
+            _hasBuilding = hasBuilding;
             _distance = distance;
             _coordinates = coordinates;
+            _route = route;
         }
 
+        public (int x, int y) ParentCoordinates { get => _parentCoordinates; }
         public FieldType Type { get => _type; }
+        public bool HasBuilding { get => _hasBuilding; }
         public int Distance { get => _distance; }
+        public Queue<(int x, int y)> Route { get => _route; }
         public (int x, int y) Coordinates { get => _coordinates; }
     }
 
@@ -52,11 +63,13 @@ namespace simcityModel.Model
             {
                 for (int j = 0; j < model.GameSize; j++)
                 {
-                    if (model.Fields[i, j].Building == null && model.Fields[i,j].Type != FieldType.GeneralField)
+                    if (!(model.Fields[i,j].Type == FieldType.GeneralField && (model.Fields[i,j].Building == null || model.Fields[i,j].Building!.Type == BuildingType.Road)))
                     {
                         var fType = model.Fields[i, j].Type;
-                        int dist = distance[i, j];
-                        var stat = new FieldStat(fType, dist, (i, j));
+                        bool hasBuilding = (model.Fields[i, j].Building != null);
+                        int dist  = distance[i, j];
+                        var route = model.CalculateRoute((_x, _y), (i, j), true);
+                        var stat  = new FieldStat((_x, _y), fType, hasBuilding, dist, (i, j), route);
                         _stats.Add(stat);
                     }
                 }
