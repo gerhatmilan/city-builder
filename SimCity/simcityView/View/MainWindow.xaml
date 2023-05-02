@@ -16,7 +16,7 @@
         </Grid.RowDefinitions>
 
         
-        <ItemsControl HorizontalAlignment="left" VerticalAlignment="top" Margin="0,0" Grid.Row="1" ItemsSource="{Binding Cells}">
+        <ItemsControl IsHitTestVisible="{Binding GameIsNotOver}" HorizontalAlignment="left" VerticalAlignment="top" Margin="0,0" Grid.Row="1" ItemsSource="{Binding Cells}">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                     <UniformGrid Rows="18" Columns="18" FlowDirection="RightToLeft"/>
@@ -60,8 +60,9 @@
                 </ItemsPanelTemplate>
             </Menu.ItemsPanel>
             <MenuItem Header="📁Fájl">
-                <MenuItem Header="💿Betöltés"/>
-                <MenuItem Header="💾Mentés"/>
+                <MenuItem Header="💾Mentés"   Command="{Binding SaveGame}"/>
+                <MenuItem Header="💿Betöltés" Command="{Binding LoadGame}"/>
+                <MenuItem Header="♻Új játék" Command="{Binding NewGame}"/>
             </MenuItem>
             <MenuItem Header="❔Sugó"/>
             <MenuItem Header="{Binding InfoText}" HorizontalAlignment="Right"/>
@@ -91,6 +92,7 @@
                     <Setter Property="Height" Value="30"/>
                     <Setter Property="VerticalContentAlignment" Value="Center"/>
                     <Setter Property="Command" Value="{Binding TimeSet}"/>
+                    <Setter Property="IsHitTestVisible" Value="{Binding GameIsNotOver}"/>
                     <Setter Property="Template">
                         <Setter.Value>
                             <ControlTemplate TargetType="RadioButton">

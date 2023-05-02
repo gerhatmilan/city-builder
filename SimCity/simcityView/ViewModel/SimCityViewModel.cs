@@ -27,10 +27,15 @@ namespace simcityView.ViewModel
         private int _selectedTab = 0;
         private bool _flipBuldozeMode = false;
         private int _time = 0;
+        private bool _gameIsNotOver = true;
 
         #endregion
 
         #region Props
+        #region GameStateProps
+        public bool GameIsNotOver { get { return _gameIsNotOver; } 
+                                    set { _gameIsNotOver = value; OnPropertyChanged(nameof(GameIsNotOver)); } }
+        #endregion
         #region ObservableProps
 
         public ObservableCollection<BudgetItem> Income { get; set; }
@@ -83,9 +88,15 @@ namespace simcityView.ViewModel
         public DelegateCommand SelectedBuildable { get; set; }
         public DelegateCommand FlipBuldozeMode { get; set; }
         public DelegateCommand TimeSet { get; set; }
+        public DelegateCommand SaveGame { get; set; }
+        public DelegateCommand LoadGame { get; set; }
+        public DelegateCommand NewGame { get; set; }
 
         #endregion
         #region Events
+        public event EventHandler? SaveGameEvent;
+        public event EventHandler? LoadGameEvent;
+        public event EventHandler? NewGameEvent;
         public event EventHandler<int>? ChangeTime;
         #endregion
         #endregion
@@ -100,6 +111,10 @@ namespace simcityView.ViewModel
             _model.MatrixChanged += new EventHandler<(int, int)>(model_MatrixChanged);
 
             _textureManager = new TextureManager(_model,this);
+
+            SaveGame = new DelegateCommand(param => SaveGameEvent?.Invoke(this, EventArgs.Empty));
+            LoadGame = new DelegateCommand(param => LoadGameEvent?.Invoke(this, EventArgs.Empty));
+            NewGame = new DelegateCommand(param => NewGameEvent?.Invoke(this, EventArgs.Empty));
 
             Cells = new ObservableCollection<Block>();
             Income = new ObservableCollection<BudgetItem>();
@@ -173,7 +188,8 @@ namespace simcityView.ViewModel
                     {
                         b.ToolTipText = "X: " + b.X + " " +
                                         "Y: " + b.Y + "\n" +
-                                        "Kapacitás: " + _model.Fields[b.X,b.Y].NumberOfPeople + "/" + _model.Fields[b.X, b.Y].Capacity;
+                                        "Kapacitás: " + _model.Fields[b.X,b.Y].NumberOfPeople + "/" + _model.Fields[b.X, b.Y].Capacity + "\n" +
+                                        "Mező boldogsága: " + _model.Fields[b.X,b.Y].PeopleHappiness;
                     });
                     b.UpdateToolTipText.Execute(this);
                     b.ClickCom = new DelegateCommand(param => {
