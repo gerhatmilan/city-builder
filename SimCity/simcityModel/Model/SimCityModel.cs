@@ -17,7 +17,7 @@ namespace simcityModel.Model
     {
         #region Private fields
 
-        private const int GAMESIZE = 15;
+        private const int GAMESIZE = 18;
         private const float PRICERETURN_MULTIPLIER = 2f / 3;
         private const int TAX_PER_PERSON = 5; 
 
@@ -65,6 +65,7 @@ namespace simcityModel.Model
         private List<Building> _buildings;
         private List<BudgetRecord> _incomeList;
         private List<BudgetRecord> _expenseList;
+
 
         #endregion
 
@@ -115,6 +116,8 @@ namespace simcityModel.Model
         /// Gets invoked every time a month passes.
         /// </summary>
         public event EventHandler? OneMonthPassed;
+
+
 
         #endregion
 
