@@ -43,7 +43,7 @@ namespace simcityModel.Model
         private Dictionary<BuildingType, int> _numberOfBuildings = new Dictionary<BuildingType, int>()
         {
             { BuildingType.Home, 0},
-            {BuildingType.OfficeBuilding, 0 },
+            { BuildingType.OfficeBuilding, 0 },
             { BuildingType.Industry, 0 },
             { BuildingType.Stadium, 0 },
             { BuildingType.PoliceStation, 0 },
@@ -272,7 +272,7 @@ namespace simcityModel.Model
             if (ValidCoordinates((origin.x - 1, origin.y)))
                 adjacentCoordinates.Add((origin.x - 1, origin.y));
             if (ValidCoordinates((origin.x, origin.y + 1)))
-                adjacentCoordinates.Add((origin.x, origin.y +1));
+                adjacentCoordinates.Add((origin.x, origin.y + 1));
             if (ValidCoordinates((origin.x, origin.y - 1)))
                 adjacentCoordinates.Add((origin.x, origin.y - 1));
 
@@ -457,14 +457,25 @@ namespace simcityModel.Model
             OnGameInfoChanged();
         }
 
-        public (bool[,] routeExists, (int, int)[,] parents, int[,] distance) BreadthFirst((int x, int y) source)
+        public (bool[,] routeExists, bool allBuildingsFound, (int, int)[,] parents, int[,] distance) BreadthFirst((int x, int y) source)
         {
+            //inits
             Queue<(int, int)> q = new Queue<(int, int)>();
             bool[,] used = new bool[GAMESIZE,GAMESIZE];
             int[,] distance = new int[GAMESIZE, GAMESIZE];
             (int x, int y)[,] parents = new (int,int)[GAMESIZE, GAMESIZE];
-            if (!ValidCoordinates(source)) return (used, parents, distance);
+            bool allBuildingsFound = true;
+            var numberOfVisitedBuildings = new Dictionary<BuildingType, int>(_numberOfBuildings);
+            
+            foreach (var (key, value) in numberOfVisitedBuildings)
+            {
+                if (value != 0) allBuildingsFound = false;
+                numberOfVisitedBuildings[key] = 0;
+            }
 
+            if (!ValidCoordinates(source)) return (used, allBuildingsFound, parents, distance);
+
+            //bfs
             q.Enqueue(source);
             used[source.x, source.y] = true;
             parents[source.x, source.y] = (-1, -1);
@@ -474,22 +485,44 @@ namespace simcityModel.Model
                 foreach ((int x, int y) u in GetAdjacentCoordinates((v.x, v.y)))
                     if (!used[u.x, u.y] && Fields[u.x,u.y].Building != null)
                     {
-                        used[u.x,u.y] = true;
+                        numberOfVisitedBuildings[Fields[u.x, u.y].Building!.Type] += 1;
                         if (Fields[u.x,u.y].Building!.Type == BuildingType.Road)
                             q.Enqueue(u);
-                        distance[u.x, u.y] = distance[v.x, v.y] + 1;
-                        parents[u.x, u.y] = v;
+                        foreach (var c in Fields[u.x, u.y].Building!.Coordinates)
+                        {
+                            used[c.x, c.y] = true;
+                            distance[c.x, c.y] = distance[v.x, v.y] + 1;
+                            parents[c.x, c.y] = v;
+                        }
                     }
-            }   
-            
-            return (used, parents, distance);
+            }
+
+            //check if all buildings have been found
+            foreach (var (key, value) in _numberOfBuildings)
+            {
+                if (_numberOfBuildings[key] != numberOfVisitedBuildings[key]) allBuildingsFound = false;        
+            }
+
+            return (used, allBuildingsFound, parents, distance);
         }
+
+        public bool mapIsConnected()
+        {
+            bool connected = true;
+            if (_buildings.Count > 0)
+            {
+                var source = _buildings[0].TopLeftCoordinate;
+                var (_, allBuildingsFound, _, _) = BreadthFirst(source); 
+            }
+            return connected;
+        }
+
         public Queue<(int x, int y)> CalculateRoute((int x, int y) start, (int x, int y) end)
         {
             Queue<(int x, int y)> route = new Queue<(int x, int y)>();
             if (!ValidCoordinates(start) || !ValidCoordinates(end))
                 return route;
-            var (used, parents, distance) = BreadthFirst((start.x, start.y));
+            var (used, allBuildingsFound, parents, distance) = BreadthFirst((start.x, start.y));
             if (used[start.x, start.y])
             {
                 (int x, int y) v = start;

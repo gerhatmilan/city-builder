@@ -11,6 +11,8 @@ using System.Threading.Tasks;
 
 namespace simcityModel.Model
 {
+    public enum BuildingType { Industry, OfficeBuilding, Home, Stadium, PoliceStation, FireStation, Road }
+
     public class BuildingStat
     {
         private BuildingType _type;
@@ -32,15 +34,14 @@ namespace simcityModel.Model
         public Queue<(int x, int y)> Route { get => _route; }
     }
     
-    public enum BuildingType { Industry, OfficeBuilding, Home, Stadium, PoliceStation, FireStation, Road }
     public abstract class Building
     {
         protected BuildingType _type;
-        protected (int x, int y) _coordinates;
+        protected (int x, int y) _topLeftCoordinate;
         protected List<BuildingStat> _stats;
         public void updateBuildingStats(SimCityModel model)
         {  
-           (bool[,] routeExists, (int, int)[,] parents, int[,] distance)  = model.BreadthFirst(_coordinates);
+           (bool[,] routeExists, bool allBuildingsFound, (int, int)[,] parents, int[,] distance)  = model.BreadthFirst(_topLeftCoordinate);
             for (int i = 0; i < model.GameSize; i++)
             {
                 for (int j = 0; j < model.GameSize; j++)
@@ -49,7 +50,7 @@ namespace simcityModel.Model
                     {
                         var bType = model.Fields[i, j].Building!.Type;
                         int dist  = distance[i, j];
-                        var route = model.CalculateRoute((_coordinates.x, _coordinates.y), (i, j));
+                        var route = model.CalculateRoute((_topLeftCoordinate.x, _topLeftCoordinate.y), (i, j));
                         var stat = new BuildingStat(bType, dist, (i, j), route);
                         _stats.Add(stat);
                     }
@@ -61,12 +62,17 @@ namespace simcityModel.Model
         public List<BuildingStat> BuildingStats { get => _stats; } 
         public BuildingType Type { get => _type; }
 
+        public (int x, int y) TopLeftCoordinate
+        {
+            get => _topLeftCoordinate;
+        }
+
         public virtual List<(int x, int y)> Coordinates
         {
             get
             {
                 List<(int x, int y)> coordinates = new List<(int x, int y)>();
-                coordinates.Add(_coordinates);
+                coordinates.Add(_topLeftCoordinate);
                 return coordinates;
             }
         }
@@ -74,7 +80,7 @@ namespace simcityModel.Model
         public Building((int x, int y) coordinates, BuildingType type)
         {
             _type = type;    
-            _coordinates = coordinates;
+            _topLeftCoordinate = coordinates;
             _stats = new List<BuildingStat>();
         }
 
@@ -126,13 +132,13 @@ namespace simcityModel.Model
                 {
                     case BuildingType.PoliceStation:
                     case BuildingType.FireStation:
-                        returnList.Add((_coordinates.x, _coordinates.y));
+                        returnList.Add((_topLeftCoordinate.x, _topLeftCoordinate.y));
                         break;
                     case BuildingType.Stadium:
-                        returnList.Add((_coordinates.x, _coordinates.y));
-                        returnList.Add((_coordinates.x, _coordinates.y + 1));
-                        returnList.Add((_coordinates.x + 1, _coordinates.y));
-                        returnList.Add((_coordinates.x + 1, _coordinates.y + 1));
+                        returnList.Add((_topLeftCoordinate.x, _topLeftCoordinate.y));
+                        returnList.Add((_topLeftCoordinate.x, _topLeftCoordinate.y + 1));
+                        returnList.Add((_topLeftCoordinate.x + 1, _topLeftCoordinate.y));
+                        returnList.Add((_topLeftCoordinate.x + 1, _topLeftCoordinate.y + 1));
                         break;
                 }
 
@@ -179,7 +185,7 @@ namespace simcityModel.Model
 
         public ServiceBuilding((int x, int y) coordinates, BuildingType type) : base(coordinates, type)
         {
-            _coordinates = coordinates;
+            _topLeftCoordinate = coordinates;
         }
 
         #endregion
