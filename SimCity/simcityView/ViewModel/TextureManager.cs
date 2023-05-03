@@ -165,7 +165,7 @@ namespace simcityView.ViewModel
            
             switch (buildT)
             {
-                case BuildingType.Industry:
+                case BuildingType.OfficeBuilding:
                     if (peopleNum <cap/3)
                     {
                         return 9;
