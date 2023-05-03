@@ -180,6 +180,8 @@ namespace simcityModel.Model
                 }
                 Field home = sourceField.Type == FieldType.ResidentalZone ? sourceField : targetField;
                 Field work = targetField.Type == FieldType.ResidentalZone ? sourceField : targetField;
+                if (!IsAdjacentWithRoad(home) || !IsAdjacentWithRoad(work)) continue;
+
 
                 bool homeBuildNeeded = (home.Building == null);
                 bool workBuildNeeded = (work.Building == null);
@@ -404,6 +406,19 @@ namespace simcityModel.Model
             return false;
         }
 
+        private bool IsAdjacentWithRoad(Field field)
+        {
+            
+            List<(int, int)> adjacentCoordinates = GetAdjacentCoordinates((field.X, field.Y));
+            foreach ((int x, int y) adjacentCoordinate in adjacentCoordinates)
+            {
+                if (isRoad((adjacentCoordinate.x, adjacentCoordinate.y))) return true;
+            }
+
+            return false;
+        }
+
+
         private bool MapConnectedAfterDestruction((int x, int y) coordinates)
         {
             if (!isRoad(coordinates) || _buildings.Count <= 1) return true;
@@ -500,11 +515,15 @@ namespace simcityModel.Model
                         numberOfVisitedBuildings[Fields[u.x, u.y].Building!.Type] += 1;
                         foreach (var c in Fields[u.x, u.y].Building!.Coordinates)
                         {
-                            found[c.x, c.y] = true;
-                            distance[c.x, c.y] = distance[v.x, v.y] + 1;
-                            parents[c.x, c.y] = v;
+                            if (!found[c.x, c.y])
+                            { 
+                                found[c.x, c.y] = true;
+                                distance[c.x, c.y] = distance[v.x, v.y] + 1;
+                                parents[c.x, c.y] = v;
+                            }
                         }
                     }
+
                     if (!found[u.x, u.y] && includeFields)
                     {
                         found[u.x, u.y] = true;

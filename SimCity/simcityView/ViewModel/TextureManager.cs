@@ -249,7 +249,7 @@ namespace simcityView.ViewModel
 
         private int stadiumHelper(int x, int y)
         {
-            return 0;
+            return 11;
         }
 
         #endregion
