@@ -113,7 +113,7 @@ namespace simcityView.ViewModel
             _buildingTextures[9] = UriToBitmapImage(@"~\..\Textures\building_medium_blue_a.png");
             _buildingTextures[10] = UriToBitmapImage(@"~\..\Textures\building_tall_yellow_a.png");
 
-            _buildingTextures[11] = UriToBitmapImage(@"~\..\Textures\building_tall_blue_a.png");
+            _buildingTextures[11] = UriToBitmapImage(@"~\..\Textures\stadium.png");
             _buildingTextures[12] = UriToBitmapImage(@"~\..\Textures\building_tall_blue_a.png");
             _buildingTextures[13] = UriToBitmapImage(@"~\..\Textures\building_tall_blue_a.png");
             _buildingTextures[14] = UriToBitmapImage(@"~\..\Textures\building_tall_blue_a.png");
@@ -249,7 +249,7 @@ namespace simcityView.ViewModel
 
         private int stadiumHelper(int x, int y)
         {
-            return 11;
+            return 0;
         }
 
         #endregion
