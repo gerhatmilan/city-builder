@@ -157,7 +157,7 @@ namespace simcityModel.Model
         public List<BudgetRecord> ExpenseList { get => _expenseList; }
         public int GameSize { get => GAMESIZE; }
         public DateTime GameTime { get => _gameTime; }
-        public int Population { get => _population; }
+        public int Population { get => _population; set => _population = value; }
         public int Money { get => _money; }
         public int Happiness { get => _happiness; }
 
@@ -271,10 +271,9 @@ namespace simcityModel.Model
                 {
                     Person person = new Person(home, work, fieldStat.Distance);
                     _people.Add(person);
+                    Population++;
                     ((PeopleBuilding)home.Building!).People.Add(person);
-                    OnNumberOfPeopleChanged(null, (home.X, home.Y));
                     ((PeopleBuilding)work.Building!).People.Add(person);
-                    OnNumberOfPeopleChanged(null, (work.X, work.Y));
                     pendingMoveIns -= 1;
                 }
             }
