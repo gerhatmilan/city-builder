@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
@@ -45,6 +46,62 @@ namespace simcityModel.Model
 
             HappinessChanged += new EventHandler(_home.OnPeopleHappinessChanged);
             HappinessChanged += new EventHandler(_work.OnPeopleHappinessChanged);
+        }
+
+        #endregion
+
+        #region Public methods
+
+        public void RefreshHappiness(int gameSize)
+        {
+            int distanceToWorkFactor = 0;
+            int industrialBuildingNearbyFactor = 0;
+
+            // calculating distanceToWorkFactor
+            if (distanceToWorkFactor <= gameSize / 2)
+                distanceToWorkFactor = gameSize / 2 - (_distanceToWork + 3); // positive case
+            else
+                distanceToWorkFactor = -1 * (_distanceToWork + 3 - gameSize / 2); // negative case
+
+            // calculating industralBuildingNearbyFactor
+            int distanceToClosestIndustralBuilding = 0;
+            List<FieldStat> homeFieldStats = Home.FieldStats;
+
+            FieldStat closestIndustrialBuildingStat = null;
+            foreach (FieldStat stat in homeFieldStats)
+            {
+                if (stat.Type == FieldType.IndustrialZone && stat.HasBuilding)
+                {
+                    closestIndustrialBuildingStat = stat;
+                    break;
+                }
+            }
+
+            if (closestIndustrialBuildingStat != null)
+            {
+                distanceToClosestIndustralBuilding = closestIndustrialBuildingStat.Distance;
+            }
+            if (distanceToClosestIndustralBuilding != 0)
+            {
+                if (distanceToClosestIndustralBuilding >= gameSize / 2)
+                    industrialBuildingNearbyFactor = distanceToClosestIndustralBuilding - gameSize / 2;
+                else
+                    industrialBuildingNearbyFactor = -1 * (gameSize / 2 - distanceToClosestIndustralBuilding);
+            }              
+
+            Dictionary<String, Int32> factors = new Dictionary<String, Int32>()
+            {
+                { "InitalHappiness", INITIAL_HAPPINESS },
+                { "DistanceToWork", distanceToWorkFactor},
+                { "IndustrialBuildingNearby", industrialBuildingNearbyFactor},
+                { "HomeFieldHappiness", Home.FieldHappiness},
+                { "WorkFieldHappiness", Work.FieldHappiness}
+            };
+
+
+            if (factors.Values.Sum() < 0) Happiness = 0;
+            else if (factors.Values.Sum() > 100) Happiness = 100;
+            else Happiness = factors.Values.Sum();
         }
 
         #endregion
