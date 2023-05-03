@@ -115,7 +115,7 @@ namespace simcityView.ViewModel
             _model.ExpenseListChanged += new EventHandler<List<BudgetRecord>>(model_UpdateExpenseList);
             _model.GameInfoChanged += new EventHandler<GameEventArgs>(model_UpdateInfoText);
             _model.MatrixChanged += new EventHandler<(int, int)>(model_MatrixChanged);
-            
+            _model.NumberOfPeopleChanged += new EventHandler<(int, int)>(model_MatrixChanged);
 
             _textureManager = new TextureManager(_model,this);
 
@@ -339,7 +339,7 @@ namespace simcityView.ViewModel
 
         private void model_UpdateInfoText(object? s, GameEventArgs e )
         {
-            InfoText = "Dátum: " + e.GameTime.ToString("yyyy. MM. dd.") + "\t|\tPénz: " + e.Money + "💸\t|\tLakosság: " + e.Population + " fő";
+            InfoText = "Dátum: " + e.GameTime.ToString("yyyy. MM. dd.") + "\t|\tPénz: " + e.Money + "💸\t|\tLakosság: " + e.Population + " fő\t|\tBoldogság: " + _model.Happiness + " 😁";
         }
 
         private void model_MatrixChanged(object? s, (int X, int Y) e)
