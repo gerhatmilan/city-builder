@@ -56,10 +56,18 @@ namespace simcityModel.Model
 
         #endregion
 
+        #region Events
+
+        public event EventHandler<(int x, int y)>? NumberOfPeopleChanged;
+        public event EventHandler<(int x, int y)>? PeopleHappinessChanged;
+
+        #endregion
+
         protected List<FieldStat> _stats;
         public void updateFieldStats(SimCityModel model)
         {
-            if (_type == FieldType.GeneralField && (_building == null || _building!.Type == BuildingType.Road)) { _stats.Clear(); return; }
+            _stats.Clear();
+            if (_type == FieldType.GeneralField && (_building == null || _building!.Type == BuildingType.Road)) { return; }
 
             (bool[,] routeExists, bool allBuildingsFound, (int, int)[,] parents, int[,] distance) = model.BreadthFirst((_x,_y), true);
             for (int i = 0; i < model.GameSize; i++)
@@ -79,13 +87,6 @@ namespace simcityModel.Model
             }
             _stats.Sort((x, y) => x.Distance.CompareTo(y.Distance));
         }
-
-        #region Events
-
-        public event EventHandler<(int x, int y)>? NumberOfPeopleChanged;
-        public event EventHandler<(int x, int y)>? PeopleHappinessChanged;
-
-        #endregion
 
         #region Properties
 
@@ -157,7 +158,7 @@ namespace simcityModel.Model
             {
                 if (_building.GetType() == typeof(PeopleBuilding))
                 {
-                    int sum = 0;
+                    double sum = 0;
                     int people = ((PeopleBuilding)_building).People.Count;
 
                     foreach (Person person in ((PeopleBuilding)_building).People)
@@ -166,7 +167,7 @@ namespace simcityModel.Model
                     }
 
 
-                    return  people != 0 ? sum / ((PeopleBuilding)_building).People.Count : 0;
+                    return (int)Math.Floor(sum / people);
                 }
                 else
                 {

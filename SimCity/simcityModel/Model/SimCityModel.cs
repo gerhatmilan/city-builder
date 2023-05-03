@@ -82,67 +82,24 @@ namespace simcityModel.Model
 
         #region Events
 
-        /// <summary>
-        /// Game matrix change event.
-        /// Gets invoked when an element's type in the game matrix changes.
-        /// As a parameter, it passes the changed element's coordinates to the subscriber.
-        /// </summary>
-        public event EventHandler<(int, int)>? MatrixChanged;
-
-        /// <summary>
-        /// Game info changed event.
-        /// Gets invoked every time date, money or population count changes in the model.
-        /// As a parameter, it passes GameEventArgs to the subscriber, which holds data of the game.
-        /// </summary>
+        public event EventHandler<(int, int)>? MatrixChanged
+            ;
         public event EventHandler<GameEventArgs>? GameInfoChanged;
 
-        /// <summary>
-        /// Income list change event.
-        /// Gets invoked when the income list changes.
-        /// As a parameter, it passes a list of BudgetRecord, which holds the data of every single income.
-        /// </summary>
         public event EventHandler<List<BudgetRecord>>? IncomeListChanged;
 
-        /// <summary>
-        /// Expense list change event.
-        /// Gets invoked when the expense list changes.
-        /// As a parameter, it passes a list of BudgetRecord, which holds the data of every single expense.
-        /// </summary>
         public event EventHandler<List<BudgetRecord>>? ExpenseListChanged;
 
-        /// <summary>
-        /// Game over event.
-        /// Gets invoked when the game is over.
-        /// </summary>
         public event EventHandler? GameOver;
 
-        /// <summary>
-        /// One day passed event.
-        /// Gets invoked every time a day passes.
-        /// </summary>
         public event EventHandler? OneDayPassed;
 
-        /// <summary>
-        /// One month passed event.
-        /// Gets invoked every time a month passes.
-        /// </summary>
         public event EventHandler? OneMonthPassed;
 
-        /// <summary>
-        /// Number of people changed event.
-        /// Gets invoked every time when the number of people changes on the Field with (x, y) coordinates
-        /// </summary>
         public event EventHandler<(int x, int y)>? NumberOfPeopleChanged;
 
-        /// <summary>
-        /// People happiness changed event.
-        /// Gets invoked every time when a person's happiness changes on the Field with (x, y) coordinates
-        /// </summary>
         public event EventHandler<(int x, int y)>? PeopleHappinessChanged;
 
-        /// <summary>
-        /// Gets invoked when LoadGameAsync function returns a value.
-        /// </summary>
         public event EventHandler<SimCityModel>? GameLoaded;
 
 
@@ -157,7 +114,7 @@ namespace simcityModel.Model
         public List<BudgetRecord> ExpenseList { get => _expenseList; }
         public int GameSize { get => GAMESIZE; }
         public DateTime GameTime { get => _gameTime; }
-        public int Population { get => _population; set => _population = value; }
+        public int Population { get => _population; }
         public int Money { get => _money; }
         public int Happiness { get => _happiness; }
 
@@ -186,6 +143,7 @@ namespace simcityModel.Model
             _expenseList = new List<BudgetRecord>();
 
             OneDayPassed += new EventHandler(MoveIn);
+            OneDayPassed += new EventHandler(RefreshPeopleHappiness);
 
             OneMonthPassed += new EventHandler(GetTax);
             OneMonthPassed += new EventHandler(DeductMaintenceCost);
@@ -271,12 +229,33 @@ namespace simcityModel.Model
                 {
                     Person person = new Person(home, work, fieldStat.Distance);
                     _people.Add(person);
-                    Population++;
                     ((PeopleBuilding)home.Building!).People.Add(person);
+                    OnNumberOfPeopleChanged(null, (home.X, home.Y));
                     ((PeopleBuilding)work.Building!).People.Add(person);
+                    OnNumberOfPeopleChanged(null, (work.X, work.Y));
                     pendingMoveIns -= 1;
                 }
             }
+        }
+
+        private void RefreshPeopleHappiness(object? sender, EventArgs e)
+        {
+            foreach (Person person in _people)
+            {
+                person.RefreshHappiness(GameSize);
+            }
+        }
+
+        private void RefreshCityHappiness()
+        {
+            int happinessSum = 0;
+
+            foreach (Person person in People)
+            {
+                happinessSum += person.Happiness;
+            }
+
+           _happiness = happinessSum / People.Count;
         }
 
         private void GetTax(object? sender, EventArgs e)
@@ -448,8 +427,6 @@ namespace simcityModel.Model
 
             return connected;
         }
-
-
 
         #endregion
 
@@ -833,6 +810,7 @@ namespace simcityModel.Model
         private void OnNumberOfPeopleChanged(object? sender, (int x, int y) coords)
         {
             NumberOfPeopleChanged?.Invoke(this, (coords.x, coords.y));
+            RefreshCityHappiness();
         }
 
         private void OnPeopleHappinessChanged(object? sender, (int x, int y) coords)
