@@ -155,7 +155,7 @@
                     <Border BorderThickness="1" BorderBrush="DeepPink">
                         <StackPanel Orientation="Vertical">
                             <RadioButton GroupName="buildable2" Width="140" Command="{Binding SelectedBuildable}" CommandParameter="S">Stadion</RadioButton>
-                            <Image Source="Textures/missing_texture.png" Width="64"/>
+                            <Image Source="Textures/stadium.png" Width="64"/>
                         </StackPanel>
                     </Border>
                     <Border BorderThickness="1" BorderBrush="DeepPink">
