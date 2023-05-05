@@ -18,6 +18,7 @@ namespace simcityModel.Model
     public abstract class Building
     {
         #region Fields
+
         protected BuildingType _type;
         protected (int x, int y) _topLeftCoordinate;
 
@@ -31,8 +32,6 @@ namespace simcityModel.Model
         {
             get => _topLeftCoordinate;
         }
-
-
         public virtual List<(int x, int y)> Coordinates
         {
             get
@@ -54,12 +53,12 @@ namespace simcityModel.Model
         }
 
         #endregion
-
     }
 
     public class PeopleBuilding : Building
     {
         #region Fields
+
         private ObservableCollection<Person> _people;
         private bool _onFire;
         private float _fireProb;
@@ -100,12 +99,10 @@ namespace simcityModel.Model
     public class ServiceBuilding : Building
     {
         #region Fields
-        private const int POLICESTATION_EFFECT_VALUE = 20;
+        private const int POLICESTATION_EFFECT_VALUE = 5;
         private const float FIRESTATION_EFFECT_VALUE = 0.1f;
         private const int STADIUM_EFFECT_VALUE = 30;
 
-        private int _price;
-        private int _maintenanceCost;
         private bool _onFire;
         private float _fireProb;
 
@@ -113,8 +110,6 @@ namespace simcityModel.Model
 
         #region Properties
 
-        public int Price { get => _price; }
-        public int MaintenceCost { get => _maintenanceCost; }
         public bool Onfire { get => _onFire; }
         public override List<(int, int)> Coordinates
         {
@@ -145,8 +140,8 @@ namespace simcityModel.Model
             {
                 switch (_type)
                 {
-                    case BuildingType.PoliceStation: return 1;
-                    case BuildingType.FireStation: return 2;
+                    case BuildingType.PoliceStation: return 4;
+                    case BuildingType.FireStation: return 5;
                     case BuildingType.Stadium: return 2;
                     default: return 0;
                 }
@@ -164,12 +159,13 @@ namespace simcityModel.Model
                     {
                         for (int j = -1 * EffectSugar; j <= EffectSugar; j++)
                         {
-                            returnList.Add((coordinates.x + i, coordinates.y + j));
+                            if (!returnList.Contains((coordinates.x + i, coordinates.y + j)))
+                                returnList.Add((coordinates.x + i, coordinates.y + j));
                         }
                     }
                 }
 
-                return returnList.Distinct().ToList();
+                return returnList;
             }
         }
 
@@ -194,7 +190,7 @@ namespace simcityModel.Model
                 switch (_type)
                 {
                     case BuildingType.PoliceStation:
-                        fields[coordinates.x, coordinates.y].FieldHappiness += POLICESTATION_EFFECT_VALUE;
+                        fields[coordinates.x, coordinates.y].FieldSafety += POLICESTATION_EFFECT_VALUE;
                         break;
                     case BuildingType.FireStation:
                         /* TODO */
@@ -213,7 +209,7 @@ namespace simcityModel.Model
                 switch (_type)
                 {
                     case BuildingType.PoliceStation:
-                        fields[coordinates.x, coordinates.y].FieldHappiness -= POLICESTATION_EFFECT_VALUE;
+                        fields[coordinates.x, coordinates.y].FieldSafety -= POLICESTATION_EFFECT_VALUE;
                         break;
                     case BuildingType.FireStation:
                         /* TODO */
@@ -231,12 +227,7 @@ namespace simcityModel.Model
     public class Road : Building
     {
         private VehicleType _vehicle;
-        private int _price;
-        private int _maintenanceCost;
-
         public VehicleType Vehicle { get => _vehicle; }
-        public int Price { get => _price; }
-        public int MaintenceCost { get => _maintenanceCost; }
 
         public Road((int x, int y) coordinates) : base(coordinates, BuildingType.Road)
         {  
