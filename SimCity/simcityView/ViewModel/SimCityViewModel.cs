@@ -164,10 +164,10 @@ namespace simcityView.ViewModel
             
 
             UpdateMouseStateText();
+            model_UpdateInfoText(this, EventArgs.Empty);
             fillCells();
             fillIncome();
-            fillExpense();
-                
+            fillExpense();               
         }
 
         #endregion

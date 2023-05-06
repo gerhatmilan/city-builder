@@ -1,6 +1,9 @@
-﻿namespace simcityModel.Model
-{
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
+namespace simcityModel.Model
+{
+    [JsonConverter(typeof(StringEnumConverter))]
     public enum FieldType { IndustrialZone, OfficeZone, ResidentalZone, GeneralField }
 
     public class FieldStat
@@ -17,12 +20,12 @@
         #endregion
 
         #region Properties
-        public (int x, int y) ParentCoordinates { get => _parentCoordinates; }
-        public FieldType Type { get => _type; }
-        public bool HasBuilding { get => _hasBuilding; }
-        public int Distance { get => _distance; }
-        public Queue<(int x, int y)> Route { get => _route; }
-        public (int x, int y) Coordinates { get => _coordinates; }
+        public (int x, int y) ParentCoordinates { get => _parentCoordinates; set => _parentCoordinates = value; }
+        public FieldType Type { get => _type; set => _type = value; }
+        public bool HasBuilding { get => _hasBuilding; set => _hasBuilding = value; }
+        public int Distance { get => _distance; set => _distance = value; }
+        public Queue<(int x, int y)> Route { get => _route; set => _route = value; }
+        public (int x, int y) Coordinates { get => _coordinates; set => _coordinates = value; }
 
         #endregion
 
@@ -62,22 +65,24 @@
 
         public event EventHandler<(int x, int y)>? NumberOfPeopleChanged;
         public event EventHandler<(int x, int y)>? PeopleHappinessChanged;
+        public event EventHandler<(int x, int y)>? FieldChanged;
 
         #endregion
 
         #region Properties
 
-        public int X { get => _x; }
-        public int Y { get => _y; }
+        public int X { get => _x; set => _x = value; }
+        public int Y { get => _y; set => _y = value; }
 
         public FieldType Type
         {
             get { return _type; }
-            set { _type = value; }
+            set { _type = value; OnFieldChanged(); }
         }
 
-        public List<FieldStat> FieldStats { get => _stats; }
+        public List<FieldStat> FieldStats { get => _stats; set => _stats = value; }
 
+        [JsonIgnore]
         public Building? Building
         {
             get { return _building; }
@@ -88,6 +93,8 @@
                 {
                     ((PeopleBuilding)_building).NumberOfPeopleChanged += new EventHandler(OnNumberOfPeopleChanged);
                 }
+
+                OnFieldChanged();
             }
         }
 
@@ -131,7 +138,7 @@
 
         #region Public methods
 
-        public void updateFieldStats(SimCityModel model)
+        public void UpdateFieldStats(SimCityModel model)
         {
             _stats.Clear();
             if (_type == FieldType.GeneralField && (_building == null || _building!.Type == BuildingType.Road)) { return; }
@@ -221,6 +228,11 @@
         private void OnNumberOfPeopleChanged(object? sender, EventArgs e)
         {
             NumberOfPeopleChanged?.Invoke(this, (X, Y));
+        }
+
+        private void OnFieldChanged()
+        {
+            FieldChanged?.Invoke(this, (X, Y));
         }
 
         #endregion

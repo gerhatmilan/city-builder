@@ -1,6 +1,10 @@
 using simcityPersistance.Persistance;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Text.Json.Serialization;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using System;
 
 namespace simcityModel.Model
 {
@@ -12,7 +16,7 @@ namespace simcityModel.Model
         private const float PRICERETURN_MULTIPLIER = 2f / 3;
         private const int TAX_PER_PERSON = 5;
 
-        private Dictionary<FieldType, (int price, int returnPrice)> _zonePrices = new Dictionary<FieldType, (int, int)>()
+        private readonly Dictionary<FieldType, (int price, int returnPrice)> _zonePrices = new Dictionary<FieldType, (int, int)>()
         {
             { FieldType.IndustrialZone, (150, CalculateReturnPrice(150)) },
             { FieldType.OfficeZone, (150, CalculateReturnPrice(150)) },
@@ -20,14 +24,14 @@ namespace simcityModel.Model
             { FieldType.GeneralField, (0, CalculateReturnPrice(0)) }
         };
 
-        private Dictionary<FieldType, BuildingType> _zoneBuilding = new Dictionary<FieldType, BuildingType>()
+        private readonly Dictionary<FieldType, BuildingType> _zoneBuilding = new Dictionary<FieldType, BuildingType>()
         {
             {FieldType.IndustrialZone,BuildingType.Industry},
             {FieldType.OfficeZone,BuildingType.OfficeBuilding},
             {FieldType.ResidentalZone,BuildingType.Home}
         };
 
-        private Dictionary<BuildingType, (int price, int returnPrice, int maintenceCost)> _buildingPrices = new Dictionary<BuildingType, (int, int, int)>()
+        private readonly Dictionary<BuildingType, (int price, int returnPrice, int maintenceCost)> _buildingPrices = new Dictionary<BuildingType, (int, int, int)>()
         {
             { BuildingType.Industry, (0, CalculateReturnPrice(0), 0) },
             { BuildingType.OfficeBuilding, (0, CalculateReturnPrice(0), 0) },
@@ -76,27 +80,79 @@ namespace simcityModel.Model
         public event EventHandler? OneMonthPassed;
         public event EventHandler<(int x, int y)>? NumberOfPeopleChanged;
         public event EventHandler<(int x, int y)>? PeopleHappinessChanged;
-        public event EventHandler<SimCityModel>? GameLoaded;
 
 
         #endregion
 
         #region Properties
 
-        public Field[,] Fields { get => _fields; }
-        public List<Person> People { get => _people; }
-        public List<Building> Buildings { get => _buildings; }
+        public Field[,] Fields
+        {   
+            get => _fields; 
+            set
+            {
+                for (int i = 0; i < GameSize; i++)
+                {
+                    for (int j = 0; j < GameSize; j++)
+                    {
+                        bool shouldUpdateField = (_fields[i, j].Type != FieldType.GeneralField || _fields[i, j].Building != null);
+
+                        _fields[i, j] = value[i, j];
+                        _fields[i, j].NumberOfPeopleChanged += new EventHandler<(int x, int y)>(OnNumberOfPeopleChanged);
+                        _fields[i, j].PeopleHappinessChanged += new EventHandler<(int x, int y)>(OnPeopleHappinessChanged);
+                        _fields[i, j].FieldChanged += new EventHandler<(int x, int y)>(OnMatrixChanged);
+
+                        if (_fields[i, j].Type != FieldType.GeneralField || _fields[i, j].Building != null || shouldUpdateField)
+                           OnMatrixChanged(this, (i, j));
+                    }
+                }
+
+                foreach(Building building in Buildings)
+                {
+                    foreach((int x, int y) coords in building.Coordinates)
+                    {
+                        _fields[coords.x, coords.y].Building = building;
+                    }
+                }
+
+                foreach (Person person in People)
+                {
+                    person.Home = _fields[person.Home.X, person.Home.Y];
+                    person.Work = _fields[person.Work.X, person.Work.Y];
+                    ((PeopleBuilding)_fields[person.Home.X, person.Home.Y].Building!).People.Add(person);
+                    ((PeopleBuilding)_fields[person.Work.X, person.Work.Y].Building!).People.Add(person);
+                }
+            }
+        }
+        public List<Person> People { get => _people; set => _people = value; }
+        public List<Building> Buildings { get => _buildings; set => _buildings = value; }
+        public Dictionary<BuildingType, int> NumberOfBuildings { get => _numberOfBuildings; set => _numberOfBuildings = value; }
         public int NumberOfIndustrialBuildings { get => _numberOfBuildings[BuildingType.Industry]; }
         public int NumberOfOfficeBuildings { get => _numberOfBuildings[BuildingType.OfficeBuilding]; }
-        public ObservableCollection<BudgetRecord> IncomeList { get => _incomeList; }
-        public ObservableCollection<BudgetRecord> ExpenseList { get => _expenseList; }
+        public ObservableCollection<BudgetRecord> IncomeList
+        {
+            get => _incomeList;
+            set
+            {
+                _incomeList = value;
+                _incomeList.CollectionChanged += new NotifyCollectionChangedEventHandler(OnIncomeListChanged);
+            }
+        }
+        public ObservableCollection<BudgetRecord> ExpenseList
+        {
+            get => _expenseList;
+            set
+            {
+                _expenseList = value;
+                _expenseList.CollectionChanged += new NotifyCollectionChangedEventHandler(OnExpenseListChanged);
+            }
+        }
         public int GameSize { get => GAMESIZE; }
         public DateTime GameTime { get => _gameTime; set { _gameTime = value; OnGameInfoChanged(); } }
         public int DaysPassedSinceNegativeBudget { get => _daysPassedSinceNegativeBudget; set => _daysPassedSinceNegativeBudget = value; }
         public int Population { get => _population; set { _population = value; OnGameInfoChanged(); } }
         public int Money { get => _money; set { _money = value; OnGameInfoChanged(); } }
         public double Happiness { get => _happiness; set { _happiness = value; OnGameInfoChanged(); } }
-        public bool IsLoan { get => (_money < 0); }
 
         #endregion
 
@@ -114,8 +170,14 @@ namespace simcityModel.Model
                     _fields[i, j] = new Field(i, j);
                     _fields[i, j].NumberOfPeopleChanged += new EventHandler<(int x, int y)>(OnNumberOfPeopleChanged);
                     _fields[i, j].PeopleHappinessChanged += new EventHandler<(int x, int y)>(OnPeopleHappinessChanged);
+                    _fields[i, j].FieldChanged += new EventHandler<(int x, int y)>(OnMatrixChanged);
                 }
             }
+
+            GameTime = DateTime.Now;
+            Population = 0;
+            Money = 3000;
+            Happiness = 50;
 
             _people = new List<Person>();
             _buildings = new List<Building>();
@@ -129,7 +191,6 @@ namespace simcityModel.Model
             OneDayPassed += new EventHandler(HandleNegativeBudget);
             OneDayPassed += new EventHandler(RefreshPeopleHappiness);
             OneDayPassed += new EventHandler(MovePeopleAwayDependingOnHappiness);
-            OneDayPassed += new EventHandler(RefreshCityHappiness);
 
             OneMonthPassed += new EventHandler(GetTax);
             OneMonthPassed += new EventHandler(DeductMaintenceCost);
@@ -326,11 +387,12 @@ namespace simcityModel.Model
 
         private void AddServiceBuildingEffects(ServiceBuilding building)
         {
-            foreach ((int x, int y) coordinates in building.EffectCoordinates)
+            for (int i = 0; i < building.EffectCoordinates.Count; i++)
             {
-                if (!ValidCoordinates(coordinates))
+                if (!ValidCoordinates(building.EffectCoordinates[i]))
                 {
-                    building.EffectCoordinates.Remove(coordinates);
+                    building.EffectCoordinates.Remove(building.EffectCoordinates[i]);
+                    i--;
                 }
             }
 
@@ -339,14 +401,6 @@ namespace simcityModel.Model
 
         private void RemoveServiceBuildingEffects(ServiceBuilding building)
         {
-            foreach ((int x, int y) coordinates in building.EffectCoordinates)
-            {
-                if (!ValidCoordinates(coordinates))
-                {
-                    building.EffectCoordinates.Remove(coordinates);
-                }
-            }
-
             building.RemoveEffect(_fields);
         }
 
@@ -468,28 +522,43 @@ namespace simcityModel.Model
 
         #region Public methods
 
-        public void InitializeGame()
-        {
-            GameTime = DateTime.Now;
-            Population = 0;
-            Money = 3000;
-            Happiness = 50;
-
-            OnGameInfoChanged();
-        }
-
         public async Task SaveGameAsync(string path)
         {
-            string gameData = Newtonsoft.Json.JsonConvert.SerializeObject(this);
-            await _dataAccess.SaveAsync(path, gameData);
+            Newtonsoft.Json.JsonConverter[] converters = { new BuildingConverter() };
+            JsonSerializerSettings settings = new JsonSerializerSettings
+            {
+                Converters = { new BuildingConverter(), new StringEnumConverter() },
+                NullValueHandling = NullValueHandling.Ignore
+            };
+            string jsonString = JsonConvert.SerializeObject(this, Formatting.Indented, settings);
+
+
+            await _dataAccess.SaveAsync(path, jsonString);
         }
 
         public async Task LoadGameAsync(string path)
         {
             string gameData = await _dataAccess.LoadAsync(path);
 
-            SimCityModel loadedModel = Newtonsoft.Json.JsonConvert.DeserializeObject<SimCityModel>(gameData)!;
-            OnGameLoaded(loadedModel);
+            JsonSerializerSettings settings = new JsonSerializerSettings
+            {
+                Converters = { new BuildingConverter(), new StringEnumConverter() },
+                NullValueHandling = NullValueHandling.Ignore
+            };
+
+            SimCityModel? loadedModel = JsonConvert.DeserializeObject<SimCityModel>(gameData, settings);
+
+            GameTime = loadedModel.GameTime;
+            DaysPassedSinceNegativeBudget = loadedModel.DaysPassedSinceNegativeBudget;
+            Population = loadedModel._population;
+            Money = loadedModel.Money;
+            Happiness = loadedModel.Happiness;
+            NumberOfBuildings = loadedModel.NumberOfBuildings;
+            People = loadedModel.People;
+            Buildings = loadedModel.Buildings;
+            Fields = loadedModel.Fields;
+            IncomeList = loadedModel.IncomeList;
+            ExpenseList = loadedModel.ExpenseList;
         }
 
         public void AdvanceTime()
@@ -587,13 +656,12 @@ namespace simcityModel.Model
             if (_fields[x, y].Type == FieldType.GeneralField && _fields[x, y].Building == null)
             {
                 _fields[x, y].Type = newFieldType;
-                OnMatrixChanged((x, y));
 
                 Money -= _zonePrices[newFieldType].price;
                 _expenseList.Add(new BudgetRecord($"{GameTime.ToString("yyyy. MM. dd.")} - Zónalerakás", _zonePrices[newFieldType].price));
                 foreach (var field in _fields)
                 {
-                    field.updateFieldStats(this);
+                    field.UpdateFieldStats(this);
                 }
             }
             else
@@ -614,10 +682,9 @@ namespace simcityModel.Model
                     _fields[x, y].Building = building;
                     _buildings.Add(_fields[x, y].Building!);
                     _numberOfBuildings[newBuildingType]++;
-                    OnMatrixChanged((x, y));
                     foreach (var field in _fields)
                     {
-                        field.updateFieldStats(this);
+                        field.UpdateFieldStats(this);
                     }
 
                     break;
@@ -635,10 +702,9 @@ namespace simcityModel.Model
 
                         _buildings.Add(_fields[x, y].Building!);
                         _numberOfBuildings[newBuildingType]++;
-                        OnMatrixChanged((x, y));
                         foreach (var field in _fields)
                         {
-                            field.updateFieldStats(this);
+                            field.UpdateFieldStats(this);
                         }
 
                         Money -= _buildingPrices[newBuildingType].price;
@@ -665,11 +731,10 @@ namespace simcityModel.Model
                     foreach ((int x, int y) coords in building.Coordinates)
                     {
                         _fields[coords.x, coords.y].Building = building;
-                        OnMatrixChanged((coords.x, coords.y));
                     }
                     foreach (var field in _fields)
                     {
-                        field.updateFieldStats(this);
+                        field.UpdateFieldStats(this);
                     }
 
                     AddServiceBuildingEffects((ServiceBuilding)building);
@@ -695,21 +760,19 @@ namespace simcityModel.Model
                         _incomeList.Add(new BudgetRecord($"{GameTime.ToString("yyyy. MM. dd.")} - Zónarombolás", _zonePrices[_fields[x, y].Type].returnPrice));
 
                         _fields[x, y].Type = FieldType.GeneralField;
-                        OnMatrixChanged((x, y));
                         foreach (var field in _fields)
                         {
-                            field.updateFieldStats(this);
+                            field.UpdateFieldStats(this);
                         }
                     }
                     if ((_fields[x, y].Building != null && ((PeopleBuilding)_fields[x, y].Building!).People.Count == 0))
                     {
                         _buildings.Remove(_fields[x, y].Building!);
                         _numberOfBuildings[_fields[x, y].Building!.Type]--;
-                        _fields[x, y].Building = null;
-                        OnMatrixChanged((x, y));
+                        _fields[x, y].Building = null;;
                         foreach (var field in _fields)
                         {
-                            field.updateFieldStats(this);
+                            field.UpdateFieldStats(this);
                         }
                     }
                     break;
@@ -727,10 +790,9 @@ namespace simcityModel.Model
                                 _numberOfBuildings[_fields[x, y].Building!.Type]--;
                                 _buildings.Remove(_fields[x, y].Building!);
                                 _fields[x, y].Building = null;
-                                OnMatrixChanged((x, y));
                                 foreach (var field in _fields)
                                 {
-                                    field.updateFieldStats(this);
+                                    field.UpdateFieldStats(this);
                                 }
                             }
 
@@ -746,11 +808,10 @@ namespace simcityModel.Model
                             foreach ((int x, int y) coords in ((ServiceBuilding)_fields[x, y].Building!).Coordinates)
                             {
                                 _fields[coords.x, coords.y].Building = null;
-                                OnMatrixChanged((coords.x, coords.y));
                             }
                             foreach (var field in _fields)
                             {
-                                field.updateFieldStats(this);
+                                field.UpdateFieldStats(this);
                             }
 
                             break;
@@ -763,7 +824,7 @@ namespace simcityModel.Model
 
         #region Private event triggers
 
-        private void OnMatrixChanged((int x, int y) coordinates)
+        private void OnMatrixChanged(object? sender, (int x, int y) coordinates)
         {
             MatrixChanged?.Invoke(this, coordinates);
         }
@@ -808,11 +869,6 @@ namespace simcityModel.Model
         {
             PeopleHappinessChanged?.Invoke(this, (coords.x, coords.y));
             RefreshCityHappiness(sender, EventArgs.Empty);
-        }
-
-        private void OnGameLoaded(SimCityModel loadedModel)
-        {
-            GameLoaded?.Invoke(this, loadedModel);
         }
 
         #endregion

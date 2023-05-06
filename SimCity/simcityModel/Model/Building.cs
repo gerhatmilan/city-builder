@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -13,6 +15,7 @@ using System.Threading.Tasks;
 
 namespace simcityModel.Model
 {
+    [JsonConverter(typeof(StringEnumConverter))]
     public enum BuildingType { Industry, OfficeBuilding, Home, Stadium, PoliceStation, FireStation, Road }
     
     public abstract class Building
@@ -26,20 +29,17 @@ namespace simcityModel.Model
 
         #region Properties
 
-        public BuildingType Type { get => _type; }
-        public virtual bool Full { get => true; }
+        public BuildingType Type { get => _type; set => _type = value; }
         public (int x, int y) TopLeftCoordinate
         {
             get => _topLeftCoordinate;
+            set => _topLeftCoordinate = value;
         }
+
+        [JsonIgnore]
         public virtual List<(int x, int y)> Coordinates
         {
-            get
-            {
-                List<(int x, int y)> coordinates = new List<(int x, int y)>();
-                coordinates.Add(_topLeftCoordinate);
-                return coordinates;
-            }
+            get => new List<(int x, int y)>() { _topLeftCoordinate };
         }
 
         #endregion
@@ -67,8 +67,10 @@ namespace simcityModel.Model
 
         #region Properties
 
-        public ObservableCollection<Person> People { get => _people; }
-        public bool OnFire { get => OnFire; }
+        [JsonIgnore]
+        public ObservableCollection<Person> People { get => _people; set => _people = value; }
+        public bool OnFire { get => _onFire; set => _onFire = value; }
+        public float FireProbability { get => _fireProb; set => _fireProb = value; }
 
         #endregion
 
@@ -105,12 +107,15 @@ namespace simcityModel.Model
 
         private bool _onFire;
         private float _fireProb;
+        private int _effectSugar;
+        private List<(int x, int y)> _effectCoordinates;
 
         #endregion
 
         #region Properties
 
-        public bool Onfire { get => _onFire; }
+        public bool Onfire { get => _onFire; set => _onFire = value; }
+
         public override List<(int, int)> Coordinates
         {
             get
@@ -134,6 +139,7 @@ namespace simcityModel.Model
                 return returnList;
             }
         }
+
         private int EffectSugar
         {
             get
@@ -146,27 +152,13 @@ namespace simcityModel.Model
                     default: return 0;
                 }
             }
+
+            set => _effectSugar = value;
         }
         public List<(int, int)> EffectCoordinates
         {
-            get
-            {
-                List<(int, int)> returnList = new List<(int, int)>();
-
-                foreach ((int x, int y) coordinates in Coordinates)
-                { 
-                    for (int i = -1 * EffectSugar; i <= EffectSugar; i++)
-                    {
-                        for (int j = -1 * EffectSugar; j <= EffectSugar; j++)
-                        {
-                            if (!returnList.Contains((coordinates.x + i, coordinates.y + j)))
-                                returnList.Add((coordinates.x + i, coordinates.y + j));
-                        }
-                    }
-                }
-
-                return returnList;
-            }
+            get => _effectCoordinates;
+            set => _effectCoordinates = value;
         }
 
         #endregion
@@ -175,7 +167,19 @@ namespace simcityModel.Model
 
         public ServiceBuilding((int x, int y) coordinates, BuildingType type) : base(coordinates, type)
         {
-            _topLeftCoordinate = coordinates;
+            _effectCoordinates = new List<(int, int)>();
+
+            foreach ((int x, int y) coords in Coordinates)
+            {
+                for (int i = -1 * EffectSugar; i <= EffectSugar; i++)
+                {
+                    for (int j = -1 * EffectSugar; j <= EffectSugar; j++)
+                    {
+                        if (!_effectCoordinates.Contains((coords.x + i, coords.y + j)))
+                            _effectCoordinates.Add((coords.x + i, coords.y + j));
+                    }
+                }
+            }
         }
 
         #endregion
@@ -227,7 +231,7 @@ namespace simcityModel.Model
     public class Road : Building
     {
         private VehicleType _vehicle;
-        public VehicleType Vehicle { get => _vehicle; }
+        public VehicleType Vehicle { get => _vehicle; set => _vehicle = value;  }
 
         public Road((int x, int y) coordinates) : base(coordinates, BuildingType.Road)
         {  

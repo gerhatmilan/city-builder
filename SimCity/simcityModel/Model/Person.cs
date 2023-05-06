@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 
 namespace simcityModel.Model
 {
@@ -23,8 +24,32 @@ namespace simcityModel.Model
         #region Properties
 
         public double Happiness { get => _happiness; set { _happiness = value; OnHappinessChanged(); } }
-        public Field Home { get => _home; set => _home = value; }
-        public Field Work { get => _work; set => _work = value; }
+
+        public Field Home
+        {
+            get => _home;
+            set
+            {
+                if (value != null)
+                {
+                    _home = value;
+                    HappinessChanged += new EventHandler(_home.OnPeopleHappinessChanged);
+                }
+            }
+        }
+
+        public Field Work
+        {
+            get => _work;
+            set
+            {
+                if (value != null)
+                {
+                    _work = value;
+                    HappinessChanged += new EventHandler(_work.OnPeopleHappinessChanged);
+                }
+            }
+        }
         public int DistanceToWork { get => _distanceToWork; set => _distanceToWork = value; }
 
         #endregion
