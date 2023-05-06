@@ -530,7 +530,7 @@ namespace simcityModel.Model
                 Converters = { new BuildingConverter(), new StringEnumConverter() },
                 NullValueHandling = NullValueHandling.Ignore
             };
-            string jsonString = JsonConvert.SerializeObject(this, Formatting.Indented, settings);
+            string jsonString = JsonConvert.SerializeObject(this, settings);
 
 
             await _dataAccess.SaveAsync(path, jsonString);
