@@ -14,6 +14,14 @@ build_model:
     - dotnet build SimCity/simcityModel
     - dotnet build SimCity/simcityPersistance
 
+build:
+  stage: build
+  script:
+    - dotnet build SimCity/simcityView/simcity.sln
+  tags: [windows]
+  only:
+    - master
+
 # Test
 test_model:
   stage: test
