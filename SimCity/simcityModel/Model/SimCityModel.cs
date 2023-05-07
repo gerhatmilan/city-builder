@@ -76,6 +76,7 @@ namespace simcityModel.Model
         public event EventHandler<ObservableCollection<BudgetRecord>>? IncomeListChanged;
         public event EventHandler<ObservableCollection<BudgetRecord>>? ExpenseListChanged;
         public event EventHandler? GameOver;
+        public event EventHandler<SimCityModel>? GameLoaded;
         public event EventHandler? OneDayPassed;
         public event EventHandler? OneMonthPassed;
         public event EventHandler<(int x, int y)>? NumberOfPeopleChanged;
@@ -546,19 +547,21 @@ namespace simcityModel.Model
                 NullValueHandling = NullValueHandling.Ignore
             };
 
-            SimCityModel? loadedModel = JsonConvert.DeserializeObject<SimCityModel>(gameData, settings);
+            SimCityModel loadedModel = JsonConvert.DeserializeObject<SimCityModel>(gameData, settings)!;
+            SimCityModel newModel = new SimCityModel(new FileDataAccess());
+            OnGameLoaded(newModel);
 
-            GameTime = loadedModel.GameTime;
-            DaysPassedSinceNegativeBudget = loadedModel.DaysPassedSinceNegativeBudget;
-            Population = loadedModel._population;
-            Money = loadedModel.Money;
-            Happiness = loadedModel.Happiness;
-            NumberOfBuildings = loadedModel.NumberOfBuildings;
-            People = loadedModel.People;
-            Buildings = loadedModel.Buildings;
-            Fields = loadedModel.Fields;
-            IncomeList = loadedModel.IncomeList;
-            ExpenseList = loadedModel.ExpenseList;
+            newModel.GameTime = loadedModel.GameTime;
+            newModel.DaysPassedSinceNegativeBudget = loadedModel.DaysPassedSinceNegativeBudget;
+            newModel.Population = loadedModel._population;
+            newModel.Money = loadedModel.Money;
+            newModel.Happiness = loadedModel.Happiness;
+            newModel.NumberOfBuildings = loadedModel.NumberOfBuildings;
+            newModel.People = loadedModel.People;
+            newModel.Buildings = loadedModel.Buildings;
+            newModel.Fields = loadedModel.Fields;
+            newModel.IncomeList = loadedModel.IncomeList;
+            newModel.ExpenseList = loadedModel.ExpenseList;
         }
 
         public void AdvanceTime()
@@ -847,6 +850,11 @@ namespace simcityModel.Model
         private void OnGameOver()
         {
             GameOver?.Invoke(this, new EventArgs());
+        }
+
+        private void OnGameLoaded(SimCityModel newModel)
+        {
+            GameLoaded?.Invoke(this, newModel);
         }
 
         private void OnOneDayPassed()

@@ -49,6 +49,7 @@ namespace simcityView
 
             _model = new SimCityModel(new FileDataAccess());
             _model.GameOver += M_GameOver;
+            _model.GameLoaded += M_GameLoaded;
 
             _vm = new SimCityViewModel(_model);
             
@@ -81,6 +82,7 @@ namespace simcityView
             _vm = new SimCityViewModel(_model);
             
             _model.GameOver += M_GameOver;
+            _model.GameLoaded += M_GameLoaded;
             _vm.ChangeTime += Vm_ChangeTimer;
             _vm.SaveGameEvent += Vm_SaveGame;
             _vm.LoadGameEvent += Vm_LoadGame;
@@ -173,6 +175,32 @@ namespace simcityView
             _vm.GameIsNotOver = false;
             _vm.TimeSet.Execute("0");
             MessageBox.Show("☠ Vége a játéknak! ☠", "SimCity", MessageBoxButton.OK);
+        }
+
+        void M_GameLoaded(object? sender, SimCityModel newModel)
+        {
+            _timer.Stop();
+
+            _model.GameOver -= M_GameOver;
+            _vm.ChangeTime -= Vm_ChangeTimer;
+            _vm.SaveGameEvent -= Vm_SaveGame;
+            _vm.LoadGameEvent -= Vm_LoadGame;
+            _vm.NewGameEvent -= Vm_NewGame;
+
+            _model = newModel;
+            _vm = new SimCityViewModel(_model);
+
+            _model.GameOver += M_GameOver;
+            _model.GameLoaded += M_GameLoaded;
+            _vm.ChangeTime += Vm_ChangeTimer;
+            _vm.SaveGameEvent += Vm_SaveGame;
+            _vm.LoadGameEvent += Vm_LoadGame;
+            _vm.NewGameEvent += Vm_NewGame;
+
+            _view.DataContext = _vm;
+            _view.CamInit();
+
+            GC.Collect();
         }
 
         #endregion
