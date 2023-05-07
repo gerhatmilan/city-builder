@@ -36,6 +36,11 @@ namespace simcityView.ViewModel
         #region GameStateProps
         public bool GameIsNotOver { get { return _gameIsNotOver; } 
                                     set { _gameIsNotOver = value; OnPropertyChanged(nameof(GameIsNotOver)); } }
+        public bool Buldozer
+        {
+            get { return _flipBuldozeMode; }
+            set { _flipBuldozeMode = value; OnPropertyChanged(nameof(Buldozer)); }
+        }
         #endregion
         #region ObservableProps
 
@@ -135,15 +140,15 @@ namespace simcityView.ViewModel
             SelectedBuildable = new DelegateCommand(param => SelectedBuildableSorter((string)param!));
             FlipBuldozeMode = new DelegateCommand(param =>
             {
-                if (_flipBuldozeMode)
+                if (Buldozer)
                 {
-                    _flipBuldozeMode = false;
+                    Buldozer = false;
                     _currentAction = "Build";
                 }
                 else
                 {
                     _currentAction = "Buldoze";
-                    _flipBuldozeMode= true;
+                    Buldozer = true;
                 }
                 UpdateMouseStateText();
 
@@ -202,7 +207,7 @@ namespace simcityView.ViewModel
                     b.ClickCom = new DelegateCommand(param => {
                         try
                         {
-                            if (_flipBuldozeMode)
+                            if (Buldozer)
                             {
                                 _model.Destroy(b.X, b.Y);
                             }
