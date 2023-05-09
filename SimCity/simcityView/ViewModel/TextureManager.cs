@@ -113,7 +113,7 @@ namespace simcityView.ViewModel
             _buildingTextures[9] = UriToBitmapImage(@"~\..\Textures\building_medium_blue_a.png");
             _buildingTextures[10] = UriToBitmapImage(@"~\..\Textures\building_tall_yellow_a.png");
 
-            _buildingTextures[11] = UriToBitmapImage(@"~\..\Textures\building_tall_blue_a.png");
+            _buildingTextures[11] = UriToBitmapImage(@"~\..\Textures\stadium.png");
             _buildingTextures[12] = UriToBitmapImage(@"~\..\Textures\building_tall_blue_a.png");
             _buildingTextures[13] = UriToBitmapImage(@"~\..\Textures\building_tall_blue_a.png");
             _buildingTextures[14] = UriToBitmapImage(@"~\..\Textures\building_tall_blue_a.png");
@@ -165,7 +165,7 @@ namespace simcityView.ViewModel
            
             switch (buildT)
             {
-                case BuildingType.Industry:
+                case BuildingType.OfficeBuilding:
                     if (peopleNum <cap/3)
                     {
                         return 9;
@@ -242,6 +242,8 @@ namespace simcityView.ViewModel
 
         private int carHelper(int x, int y)
         {
+            //Road r = (Road)_model.Fields[x, y].Building;
+            
             return 1;
         }
 

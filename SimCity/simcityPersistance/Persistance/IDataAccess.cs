@@ -8,7 +8,7 @@ namespace simcityPersistance.Persistance
 {
     public interface IDataAccess
     {
-        public Task<SimCityPersistance> LoadAsync(string path);
-        public Task SaveAsync(string path, SimCityPersistance persistance);
+        public Task<String> LoadAsync(string path);
+        public Task SaveAsync(string path, string data);
     }
 }

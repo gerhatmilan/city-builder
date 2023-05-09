@@ -17,8 +17,8 @@ namespace simcityView.ViewModel
         private SimCityModel _model;
         private string _infoText = string.Empty;
         private TextureManager _textureManager;
-        private float _playFieldX = 250f;
-        private float _playFieldY = 250f;
+        private float _playFieldX = 150;
+        private float _playFieldY = 320f;
         private float _playFieldZoom = 1f;
         private string _mouseStateText = "";
         private string _currentAction = "Build";
@@ -27,10 +27,21 @@ namespace simcityView.ViewModel
         private int _selectedTab = 0;
         private bool _flipBuldozeMode = false;
         private int _time = 0;
+        private bool _gameIsNotOver = true;
+        private bool _timeReset = true;
 
         #endregion
 
         #region Props
+        #region GameStateProps
+        public bool GameIsNotOver { get { return _gameIsNotOver; } 
+                                    set { _gameIsNotOver = value; OnPropertyChanged(nameof(GameIsNotOver)); } }
+        public bool Buldozer
+        {
+            get { return _flipBuldozeMode; }
+            set { _flipBuldozeMode = value; OnPropertyChanged(nameof(Buldozer)); }
+        }
+        #endregion
         #region ObservableProps
 
         public ObservableCollection<BudgetItem> Income { get; set; }
@@ -55,6 +66,7 @@ namespace simcityView.ViewModel
             get { return _playFieldZoom; }
             set { _playFieldZoom = Math.Clamp(value,0.1f,10.0f); OnPropertyChanged(nameof(PlayFieldZoom)); }
         }
+        public bool inFocus { get; set; } = true;
 
         #endregion
         #region DebugProps
@@ -74,6 +86,11 @@ namespace simcityView.ViewModel
             get { return _selectedTab; }
             set { _selectedTab = value; OnPropertyChanged(nameof(SelectedTab)); UpdateMouseStateText(); }
         }
+        public bool TimeReset
+        {
+            get { return _timeReset; }
+            set { _timeReset = value; OnPropertyChanged(nameof(_timeReset)); UpdateMouseStateText(); }
+        }
 
         #endregion
         #region DelegateCommands
@@ -83,7 +100,16 @@ namespace simcityView.ViewModel
         public DelegateCommand SelectedBuildable { get; set; }
         public DelegateCommand FlipBuldozeMode { get; set; }
         public DelegateCommand TimeSet { get; set; }
-        
+        public DelegateCommand SaveGame { get; set; }
+        public DelegateCommand LoadGame { get; set; }
+        public DelegateCommand NewGame { get; set; }
+
+        #endregion
+        #region Events
+        public event EventHandler? SaveGameEvent;
+        public event EventHandler? LoadGameEvent;
+        public event EventHandler? NewGameEvent;
+        public event EventHandler<int>? ChangeTime;
         #endregion
         #endregion
 
@@ -91,34 +117,57 @@ namespace simcityView.ViewModel
         public SimCityViewModel(SimCityModel model)
         {
             _model= model;
-            _model.IncomeListChanged += new EventHandler<List<BudgetRecord>>(model_UpdateIncomeList);
-            _model.ExpenseListChanged += new EventHandler<List<BudgetRecord>>(model_UpdateExpenseList);
-            _model.GameInfoChanged += new EventHandler<GameEventArgs>(model_UpdateInfoText);
+            _model.IncomeListChanged += new EventHandler<ObservableCollection<BudgetRecord>>(model_UpdateIncomeList);
+            _model.ExpenseListChanged += new EventHandler<ObservableCollection<BudgetRecord>>(model_UpdateExpenseList);
+            _model.GameInfoChanged += new EventHandler(model_UpdateInfoText);
             _model.MatrixChanged += new EventHandler<(int, int)>(model_MatrixChanged);
+            _model.NumberOfPeopleChanged += new EventHandler<(int, int)>(model_MatrixChanged);
 
             _textureManager = new TextureManager(_model,this);
+
+            SaveGame = new DelegateCommand(param => SaveGameEvent?.Invoke(this, EventArgs.Empty));
+            LoadGame = new DelegateCommand(param => LoadGameEvent?.Invoke(this, EventArgs.Empty));
+            NewGame = new DelegateCommand(param => NewGameEvent?.Invoke(this, EventArgs.Empty));
 
             Cells = new ObservableCollection<Block>();
             Income = new ObservableCollection<BudgetItem>();
             Expense = new ObservableCollection<BudgetItem>();
 
-            MovePlayFieldUpDown = new DelegateCommand(param => PlayFieldY += (float)param! * (1/PlayFieldZoom)); //Up is positive, down is negative param
-            MovePlayFieldLeftRight = new DelegateCommand(param => PlayFieldX += (float)param! * (1 / PlayFieldZoom)); //Right is positive, left is negative param
-            ZoomPlayField = new DelegateCommand(param => PlayFieldZoom += (float)param!);  //Zoom is positive, minimize is negative param
+            MovePlayFieldUpDown = new DelegateCommand(param =>
+            {
+                if (inFocus)
+                {
+                    PlayFieldY += (float)param! * (1 / PlayFieldZoom);
+                }
+            }); //Up is positive, down is negative param
+            MovePlayFieldLeftRight = new DelegateCommand(param =>
+            {
+                if (inFocus)
+                {
+                    PlayFieldX += (float)param! * (1 / PlayFieldZoom);
+                }
+            }); //Right is positive, left is negative param
+            ZoomPlayField = new DelegateCommand(param =>
+            {
+                if (inFocus)
+                {
+                    PlayFieldZoom += (float)param!;
+                }
+            });  //Zoom is positive, minimize is negative param
 
 
             SelectedBuildable = new DelegateCommand(param => SelectedBuildableSorter((string)param!));
             FlipBuldozeMode = new DelegateCommand(param =>
             {
-                if (_flipBuldozeMode)
+                if (Buldozer)
                 {
-                    _flipBuldozeMode = false;
+                    Buldozer = false;
                     _currentAction = "Build";
                 }
                 else
                 {
                     _currentAction = "Buldoze";
-                    _flipBuldozeMode= true;
+                    Buldozer = true;
                 }
                 UpdateMouseStateText();
 
@@ -128,14 +177,9 @@ namespace simcityView.ViewModel
                 int num = int.Parse((string)param!);
                 if (num != _time)
                 {
-                    switch (num)
-                    {
-                        case 0: 
-                        case 1: 
-                        case 2:
-                        case 3: _time = num; UpdateMouseStateText(); break;
-                        default: break;
-                    }
+                    _time = num; 
+                    UpdateMouseStateText();
+                    ChangeTime?.Invoke(this, num);
                 }
             
             });
@@ -144,10 +188,10 @@ namespace simcityView.ViewModel
             
 
             UpdateMouseStateText();
+            model_UpdateInfoText(this, EventArgs.Empty);
             fillCells();
             fillIncome();
-            fillExpense();
-                
+            fillExpense();               
         }
 
         #endregion
@@ -175,13 +219,14 @@ namespace simcityView.ViewModel
                     {
                         b.ToolTipText = "X: " + b.X + " " +
                                         "Y: " + b.Y + "\n" +
-                                        "Kapacitás: " + _model.Fields[b.X,b.Y].NumberOfPeople + "/" + _model.Fields[b.X, b.Y].Capacity;
+                                        "Kapacitás: " + _model.Fields[b.X,b.Y].NumberOfPeople + "/" + _model.Fields[b.X, b.Y].Capacity + "\n" +
+                                        "Mező boldogsága: " + (int)Math.Floor(_model.Fields[b.X,b.Y].PeopleHappiness);
                     });
                     b.UpdateToolTipText.Execute(this);
                     b.ClickCom = new DelegateCommand(param => {
                         try
                         {
-                            if (_flipBuldozeMode)
+                            if (Buldozer)
                             {
                                 _model.Destroy(b.X, b.Y);
                             }
@@ -284,12 +329,13 @@ namespace simcityView.ViewModel
             }
         }
 
+
         #endregion
         #endregion
 
         #region Model functions
 
-        private void model_UpdateIncomeList(object? s, List<BudgetRecord> e)
+        private void model_UpdateIncomeList(object? s, ObservableCollection<BudgetRecord> e)
         {
 
 
@@ -303,7 +349,7 @@ namespace simcityView.ViewModel
             OnPropertyChanged(nameof(Income));
         }
 
-        private void model_UpdateExpenseList(object? s, List<BudgetRecord> e)
+        private void model_UpdateExpenseList(object? s, ObservableCollection<BudgetRecord> e)
         {
             fillExpense();
             for (int i = e.Count() - 1; i > -1; i--)
@@ -315,9 +361,9 @@ namespace simcityView.ViewModel
             OnPropertyChanged(nameof(Expense));
         }
 
-        private void model_UpdateInfoText(object? s, GameEventArgs e )
+        private void model_UpdateInfoText(object? s, EventArgs e)
         {
-            InfoText = "Dátum: " + e.GameTime.ToString() + "\t|\tPénz: " + e.Money + "💸\t|\tLakosság: " + e.Population + " fő";
+            InfoText = "Dátum: " + _model.GameTime.ToString("yyyy. MM. dd.") + "\t|\tPénz: " + _model.Money + "💸\t|\tLakosság: " + _model.Population + " fő\t|\tBoldogság: " + (int)Math.Floor(_model.Happiness) + " 😁";
         }
 
         private void model_MatrixChanged(object? s, (int X, int Y) e)

@@ -30,6 +30,7 @@
     <None Remove="View\Textures\police_station_a.png" />
     <None Remove="View\Textures\road_sign_b.png" />
     <None Remove="View\Textures\rocks.png" />
+    <None Remove="View\Textures\stadium.png" />
     <None Remove="View\Textures\street_corner_leftDown.png" />
     <None Remove="View\Textures\street_corner_leftUp.png" />
     <None Remove="View\Textures\street_corner_rightDown.png" />
@@ -120,6 +121,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="View\Textures\rocks.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="View\Textures\stadium.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="View\Textures\street_corner_leftDown.png">
