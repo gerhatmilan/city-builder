@@ -18,12 +18,13 @@ namespace simcityView.ViewModel
     {
 
         #region variables
-        private ImageBrush[] _floorTextures = new ImageBrush[20];
-        private BitmapImage[] _buildingTextures = new BitmapImage[22];
+        private ImageBrush[] _floorTextures = new ImageBrush[21];
+        private BitmapImage[] _buildingTextures = new BitmapImage[23];
         private SimCityModel _model;
         private SimCityViewModel _view;
         
         private int _modelSize;
+        private int _stadiumOffset = 0;
 
         #endregion
         #region constructor
@@ -86,7 +87,7 @@ namespace simcityView.ViewModel
             //4
             _floorTextures[19] = UriToImageBrush(@"~\..\View\Textures\street_xing.png"); // 1 1 1 1
 
-
+            _floorTextures[20] = UriToImageBrush(@"~\..\View\Textures\ground_grass_dark.png"); // 1 1 1 1
 
 
 
@@ -113,10 +114,10 @@ namespace simcityView.ViewModel
             _buildingTextures[9] = UriToBitmapImage(@"~\..\Textures\building_medium_blue_a.png");
             _buildingTextures[10] = UriToBitmapImage(@"~\..\Textures\building_tall_yellow_a.png");
 
-            _buildingTextures[11] = UriToBitmapImage(@"~\..\Textures\stadium.png");
-            _buildingTextures[12] = UriToBitmapImage(@"~\..\Textures\building_tall_blue_a.png");
-            _buildingTextures[13] = UriToBitmapImage(@"~\..\Textures\building_tall_blue_a.png");
-            _buildingTextures[14] = UriToBitmapImage(@"~\..\Textures\building_tall_blue_a.png");
+            _buildingTextures[11] = UriToBitmapImage(@"~\..\Textures\stadium1.png");
+            _buildingTextures[12] = UriToBitmapImage(@"~\..\Textures\stadium2.png");
+            _buildingTextures[13] = UriToBitmapImage(@"~\..\Textures\stadium3.png");
+            _buildingTextures[14] = UriToBitmapImage(@"~\..\Textures\stadium4.png");
 
             _buildingTextures[15] = UriToBitmapImage(@"~\..\Textures\police_station_a.png");
             _buildingTextures[16] = UriToBitmapImage(@"~\..\Textures\fire_station_a.png");
@@ -127,6 +128,8 @@ namespace simcityView.ViewModel
             _buildingTextures[19] = UriToBitmapImage(@"~\..\Textures\car_white_up.png");
             _buildingTextures[20] = UriToBitmapImage(@"~\..\Textures\car_white_left.png");
             _buildingTextures[21] = UriToBitmapImage(@"~\..\Textures\car_white_right.png");
+
+            _buildingTextures[22] = UriToBitmapImage(@"~\..\Textures\stadium_thumbnail");
 
         }
 
@@ -179,7 +182,7 @@ namespace simcityView.ViewModel
         {
             switch (buildT)
             {
-                case BuildingType.Stadium:
+                case BuildingType.Stadium: return 20;
                 case BuildingType.PoliceStation:
                 case BuildingType.FireStation: return 3;
                 case BuildingType.Road: return roadHelper(x,y,true);
@@ -249,7 +252,13 @@ namespace simcityView.ViewModel
 
         private int stadiumHelper(int x, int y)
         {
-            return 11;
+            if(_stadiumOffset == 4)
+            {
+                _stadiumOffset = 0;
+            }
+            int index = 11 + _stadiumOffset;
+            _stadiumOffset++;
+            return index;
         }
 
         #endregion
