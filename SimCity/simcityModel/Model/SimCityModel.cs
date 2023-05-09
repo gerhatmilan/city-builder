@@ -266,12 +266,12 @@ namespace simcityModel.Model
                 if (homeFull() || workFull()) continue;
                 if (homeBuildNeeded)
                 {
-                    MakeBuilding(home.X, home.Y, _zoneBuilding[home.Type]);
+                    MakeBuildingOnZone((home.X, home.Y));
                     homeBuildNeeded = false;
                 }
                 if (workBuildNeeded)
                 {
-                    MakeBuilding(work.X, work.Y, _zoneBuilding[work.Type]);
+                    MakeBuildingOnZone((work.X, work.Y));
                     workBuildNeeded = false;
                 }
 
@@ -441,23 +441,6 @@ namespace simcityModel.Model
             return adjacentCoordinates;
         }
 
-        private List<Building> GetAdjacentBuildings((int x, int y) origin)
-        {
-            var adjacentBuildings = new List<Building>();
-            if (!ValidCoordinates(origin)) return adjacentBuildings;
-
-            if (ValidCoordinates((origin.x + 1, origin.y)) && _fields[origin.x + 1, origin.y].Building != null)
-                adjacentBuildings.Add(_fields[origin.x + 1, origin.y].Building!);
-            if (ValidCoordinates((origin.x - 1, origin.y)) && _fields[origin.x - 1, origin.y].Building != null)
-                adjacentBuildings.Add(_fields[origin.x - 1, origin.y].Building!);
-            if (ValidCoordinates((origin.x, origin.y + 1)) && _fields[origin.x, origin.y + 1].Building != null)
-                adjacentBuildings.Add(_fields[origin.x, origin.y + 1].Building!);
-            if (ValidCoordinates((origin.x, origin.y - 1)) && _fields[origin.x, origin.y - 1].Building != null)
-                adjacentBuildings.Add(_fields[origin.x, origin.y - 1].Building!);
-
-            return adjacentBuildings;
-        }
-
         private bool IsAdjacentWithRoad(Building building)
         {
             foreach ((int x, int y) coordinates in building.Coordinates)
@@ -482,6 +465,22 @@ namespace simcityModel.Model
             }
 
             return false;
+        }
+
+        private bool AdjacentBuildingsAreStillAccessibleAfterDestruction((int x, int y) coords)
+        {
+            bool returnValue = true;
+
+            List<(int, int)> adjacentCoordinates = GetAdjacentCoordinates((coords.x, coords.y));
+            foreach ((int x, int y) adjacentCoordinate in adjacentCoordinates)
+            {
+                if (_fields[adjacentCoordinate.x, adjacentCoordinate.y].Building != null && _fields[adjacentCoordinate.x, adjacentCoordinate.y].Building!.Type != BuildingType.Road)
+                {
+                    if (!IsAdjacentWithRoad(_fields[adjacentCoordinate.x, adjacentCoordinate.y].Building!)) returnValue = false;
+                }
+            }
+
+            return returnValue;
         }
 
         private bool MapIsConnected()
@@ -511,12 +510,46 @@ namespace simcityModel.Model
             {
                 connected = false;
             }
+            if (!AdjacentBuildingsAreStillAccessibleAfterDestruction((coordinates.x, coordinates.y)))
+            {
+                connected = false;
+            }
 
             _fields[coordinates.x, coordinates.y].Building = saveRoadInstance;
             _buildings.Add(saveRoadInstance);
             _numberOfBuildings[BuildingType.Road] += 1;
 
             return connected;
+        }
+
+        private void MakeBuildingOnZone((int x, int y) coordinates)
+        {
+            PeopleBuilding building;
+
+            switch (_fields[coordinates.x, coordinates.y].Type)
+            {
+                case FieldType.ResidentalZone:
+                    building = new PeopleBuilding((coordinates.x, coordinates.y), BuildingType.Home);
+                    break;
+                case FieldType.OfficeZone:
+                    building = new PeopleBuilding((coordinates.x, coordinates.y), BuildingType.OfficeBuilding);
+                    break;
+                case FieldType.IndustrialZone:
+                    building = new PeopleBuilding((coordinates.x, coordinates.y), BuildingType.Industry);
+                    break;
+                default:
+                    return;
+            }
+
+            if (!IsAdjacentWithRoad(building)) return;
+
+            _fields[coordinates.x, coordinates.y].Building = building;
+            _buildings.Add(_fields[coordinates.x, coordinates.y].Building!);
+            _numberOfBuildings[building.Type]++;
+            foreach (var field in _fields)
+            {
+                field.UpdateFieldStats(this);
+            }
         }
 
         #endregion
@@ -656,6 +689,8 @@ namespace simcityModel.Model
 
         public void MakeZone(int x, int y, FieldType newFieldType)
         {
+            if (!ValidCoordinates((x, y))) throw new CannotBuildException("Pályán kívülre nem építhetsz.");
+
             if (_fields[x, y].Type == FieldType.GeneralField && _fields[x, y].Building == null)
             {
                 _fields[x, y].Type = newFieldType;
@@ -674,33 +709,21 @@ namespace simcityModel.Model
         }
         public void MakeBuilding(int x, int y, BuildingType newBuildingType)
         {
+            if (newBuildingType == BuildingType.Home || newBuildingType == BuildingType.OfficeBuilding || newBuildingType == BuildingType.Industry) throw new CannotBuildException("Ilyen épületet nem építhetsz.");
+            if (!ValidCoordinates((x, y))) throw new CannotBuildException("Pályán kívülre nem építhetsz.");
+
             switch (newBuildingType)
             {
-                case BuildingType.OfficeBuilding:
-                case BuildingType.Industry:
-                case BuildingType.Home:
-                    Building building = new PeopleBuilding((x, y), newBuildingType);
-                    if (!IsAdjacentWithRoad(building)) return;
-
-                    _fields[x, y].Building = building;
-                    _buildings.Add(_fields[x, y].Building!);
-                    _numberOfBuildings[newBuildingType]++;
-                    foreach (var field in _fields)
-                    {
-                        field.UpdateFieldStats(this);
-                    }
-
-                    break;
                 case BuildingType.Road:
 
-                    if (_fields[x, y].Type == FieldType.GeneralField && _fields[x, y].Building == null)
+                    if ( _fields[x, y].Type == FieldType.GeneralField && _fields[x, y].Building == null)
                     {
                         _fields[x, y].Building = new Road((x, y));
 
                         if (!IsAdjacentWithRoad(_fields[x, y].Building!) && _numberOfBuildings[BuildingType.Road] > 0)
                         {
                             _fields[x, y].Building = null;
-                            return;
+                            throw new CannotBuildException("Csak út mellé építhetsz utat.");
                         }
 
                         _buildings.Add(_fields[x, y].Building!);
@@ -720,7 +743,7 @@ namespace simcityModel.Model
 
                     break;
                 default:
-                    building = new ServiceBuilding((x, y), newBuildingType);
+                    ServiceBuilding building = new ServiceBuilding((x, y), newBuildingType);
                     foreach ((int x, int y) coords in building.Coordinates)
                     {
                         if (!ValidCoordinates((coords.x, coords.y)) || _fields[coords.x, coords.y].Type != FieldType.GeneralField || _fields[coords.x, coords.y].Building != null)
@@ -729,7 +752,7 @@ namespace simcityModel.Model
                         }
                     }
 
-                    if (!IsAdjacentWithRoad(building)) return;
+                    if (!IsAdjacentWithRoad(building)) throw new CannotBuildException("Csak út mellé építhetsz épületet.");
 
                     foreach ((int x, int y) coords in building.Coordinates)
                     {
@@ -752,6 +775,8 @@ namespace simcityModel.Model
 
         public void Destroy(int x, int y)
         {
+            if (!ValidCoordinates((x, y))) throw new CannotDestroyException("Pályán kívül nincs mit rombolni.");
+
             switch (_fields[x, y].Type)
             {
                 case FieldType.IndustrialZone:
@@ -768,7 +793,7 @@ namespace simcityModel.Model
                             field.UpdateFieldStats(this);
                         }
                     }
-                    if ((_fields[x, y].Building != null && ((PeopleBuilding)_fields[x, y].Building!).People.Count == 0))
+                    else if ((_fields[x, y].Building != null && ((PeopleBuilding)_fields[x, y].Building!).People.Count == 0))
                     {
                         _buildings.Remove(_fields[x, y].Building!);
                         _numberOfBuildings[_fields[x, y].Building!.Type]--;
@@ -777,6 +802,10 @@ namespace simcityModel.Model
                         {
                             field.UpdateFieldStats(this);
                         }
+                    }
+                    else
+                    {
+                        throw new CannotDestroyException("Ezt a fajta épületet csak akkor rombolhatod le, ha nincsenek benne emberek.");
                     }
                     break;
                 case FieldType.GeneralField:
@@ -797,6 +826,10 @@ namespace simcityModel.Model
                                 {
                                     field.UpdateFieldStats(this);
                                 }
+                            }
+                            else
+                            {
+                                throw new CannotDestroyException("Mivel megszakadna az úthálózat, ezért ezt a mezőt nem rombolhatod le.");
                             }
 
                             break;
