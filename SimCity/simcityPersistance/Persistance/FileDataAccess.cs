@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using System.Security.Cryptography;
 
 namespace simcityPersistance.Persistance
 {
@@ -13,12 +14,28 @@ namespace simcityPersistance.Persistance
         {
             try
             {
-                FileStream stream = new FileStream(path, FileMode.Open);
-                byte[] bytes = new byte[stream.Length];
-                await stream.ReadAsync(bytes, 0, (int)stream.Length);
-                string data = Encoding.UTF8.GetString(bytes);
-                stream.Close();
-                return data;
+                using (FileStream stream = new FileStream(path, FileMode.Open))
+                {
+                    byte[] decryptedBytes = new byte[stream.Length];
+                    await stream.ReadAsync(decryptedBytes, 0, (int)stream.Length);
+
+                    using (Aes aes = Aes.Create())
+                    {
+                        aes.Key = new byte[16] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
+                        aes.IV = new byte[16] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
+
+                        using (MemoryStream memoryStream = new MemoryStream(decryptedBytes))
+                        {
+                            using (CryptoStream cryptoStream = new CryptoStream((Stream)memoryStream, aes.CreateDecryptor(), CryptoStreamMode.Read))
+                            {
+                                using (StreamReader streamReader = new StreamReader((Stream)cryptoStream))
+                                {
+                                    return streamReader.ReadToEnd();
+                                }
+                            }
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {
@@ -29,10 +46,28 @@ namespace simcityPersistance.Persistance
         {
             try
             {
-                FileStream stream = new FileStream(path, FileMode.Create);
-                byte[] bytes = Encoding.UTF8.GetBytes(data);
-                await stream.WriteAsync(bytes, 0, bytes.Length);
-                stream.Close();
+                byte[] jsonBytes = Encoding.UTF8.GetBytes(data);
+
+                using (Aes aes = Aes.Create())
+                {
+                    aes.Key = new byte[16] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 }; ;
+                    aes.IV = new byte[16] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
+
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        using (CryptoStream cs = new CryptoStream(ms, aes.CreateEncryptor(), CryptoStreamMode.Write))
+                        {
+                            await cs.WriteAsync(jsonBytes, 0, jsonBytes.Length);
+                        }
+
+                        byte[] encryptedBytes = ms.ToArray();
+
+                        using (FileStream fs = new FileStream(path, FileMode.Create))
+                        {
+                            await fs.WriteAsync(encryptedBytes, 0, encryptedBytes.Length);
+                        }
+                    }
+                }
             }
             catch(Exception ex)
             {

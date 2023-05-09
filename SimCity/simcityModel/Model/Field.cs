@@ -1,20 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Collections.Specialized;
-using System.Linq;
-using System.Reflection;
-using System.Reflection.Metadata.Ecma335;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace simcityModel.Model
 {
-    
+    [JsonConverter(typeof(StringEnumConverter))]
     public enum FieldType { IndustrialZone, OfficeZone, ResidentalZone, GeneralField }
 
     public class FieldStat
     {
+        #region Private fields
+
         private (int x, int y) _parentCoordinates;
         private FieldType _type;
         private bool _hasBuilding;
@@ -22,6 +17,19 @@ namespace simcityModel.Model
         private (int x, int y) _coordinates;
         private Queue<(int x, int y)> _route;
 
+        #endregion
+
+        #region Properties
+        public (int x, int y) ParentCoordinates { get => _parentCoordinates; set => _parentCoordinates = value; }
+        public FieldType Type { get => _type; set => _type = value; }
+        public bool HasBuilding { get => _hasBuilding; set => _hasBuilding = value; }
+        public int Distance { get => _distance; set => _distance = value; }
+        public Queue<(int x, int y)> Route { get => _route; set => _route = value; }
+        public (int x, int y) Coordinates { get => _coordinates; set => _coordinates = value; }
+
+        #endregion
+
+        #region Constructor
         public FieldStat((int x, int y) parentCoordinates, FieldType type, bool hasBuilding, int distance, (int x, int y) coordinates, Queue<(int x, int y)> route)
         {
             _parentCoordinates = parentCoordinates;
@@ -32,12 +40,7 @@ namespace simcityModel.Model
             _route = route;
         }
 
-        public (int x, int y) ParentCoordinates { get => _parentCoordinates; }
-        public FieldType Type { get => _type; }
-        public bool HasBuilding { get => _hasBuilding; }
-        public int Distance { get => _distance; }
-        public Queue<(int x, int y)> Route { get => _route; }
-        public (int x, int y) Coordinates { get => _coordinates; }
+        #endregion
     }
 
     public class Field
@@ -53,6 +56,8 @@ namespace simcityModel.Model
         private FieldType _type;
         private Building? _building;
         private int _fieldHappiness;
+        private int _fieldSafety;
+        private List<FieldStat> _stats;
 
         #endregion
 
@@ -60,47 +65,24 @@ namespace simcityModel.Model
 
         public event EventHandler<(int x, int y)>? NumberOfPeopleChanged;
         public event EventHandler<(int x, int y)>? PeopleHappinessChanged;
+        public event EventHandler<(int x, int y)>? FieldChanged;
 
         #endregion
 
-        protected List<FieldStat> _stats;
-        public void updateFieldStats(SimCityModel model)
-        {
-            _stats.Clear();
-            if (_type == FieldType.GeneralField && (_building == null || _building!.Type == BuildingType.Road)) { return; }
-
-            (bool[,] routeExists, bool allBuildingsFound, (int, int)[,] parents, int[,] distance) = model.BreadthFirst((_x,_y), true);
-            for (int i = 0; i < model.GameSize; i++)
-            {
-                for (int j = 0; j < model.GameSize; j++)
-                {
-                    if (routeExists[i,j] && !(model.Fields[i,j].Type == FieldType.GeneralField && (model.Fields[i,j].Building == null || model.Fields[i,j].Building!.Type == BuildingType.Road)))
-                    {
-                        var fType = model.Fields[i, j].Type;
-                        bool hasBuilding = (model.Fields[i, j].Building != null);
-                        int dist  = distance[i, j];
-                        var route = model.CalculateRoute((_x, _y), (i, j), true);
-                        var stat  = new FieldStat((_x, _y), fType, hasBuilding, dist, (i, j), route);
-                        _stats.Add(stat);
-                    }
-                }
-            }
-            _stats.Sort((x, y) => x.Distance.CompareTo(y.Distance));
-        }
-
         #region Properties
 
-        public int X { get => _x; }
-        public int Y { get => _y; }
+        public int X { get => _x; set => _x = value; }
+        public int Y { get => _y; set => _y = value; }
 
         public FieldType Type
         {
             get { return _type; }
-            set { _type = value; }
+            set { _type = value; OnFieldChanged(); }
         }
-        
-        public List<FieldStat> FieldStats { get => _stats; }
 
+        public List<FieldStat> FieldStats { get => _stats; set => _stats = value; }
+
+        [JsonIgnore]
         public Building? Building
         {
             get { return _building; }
@@ -111,6 +93,8 @@ namespace simcityModel.Model
                 {
                     ((PeopleBuilding)_building).NumberOfPeopleChanged += new EventHandler(OnNumberOfPeopleChanged);
                 }
+
+                OnFieldChanged();
             }
         }
 
@@ -132,7 +116,9 @@ namespace simcityModel.Model
 
         public int FieldHappiness { get => _fieldHappiness; set => _fieldHappiness = value; }
 
-        public int PeopleHappiness { get => CalculatePeopleHappiness(); }
+        public int FieldSafety { get => _fieldSafety; set => _fieldSafety = value; }
+
+        public double PeopleHappiness { get => CalculatePeopleHappiness(); }
 
         #endregion
 
@@ -150,13 +136,41 @@ namespace simcityModel.Model
 
         #endregion
 
+        #region Public methods
+
+        public void UpdateFieldStats(SimCityModel model)
+        {
+            _stats.Clear();
+            if (_type == FieldType.GeneralField && (_building == null || _building!.Type == BuildingType.Road)) { return; }
+
+            (bool[,] routeExists, bool allBuildingsFound, (int, int)[,] parents, int[,] distance) = model.BreadthFirst((_x, _y), true);
+            for (int i = 0; i < model.GameSize; i++)
+            {
+                for (int j = 0; j < model.GameSize; j++)
+                {
+                    if (routeExists[i, j] && !(model.Fields[i, j].Type == FieldType.GeneralField && (model.Fields[i, j].Building == null || model.Fields[i, j].Building!.Type == BuildingType.Road)))
+                    {
+                        var fType = model.Fields[i, j].Type;
+                        bool hasBuilding = (model.Fields[i, j].Building != null);
+                        int dist = distance[i, j];
+                        var route = model.CalculateRoute((_x, _y), (i, j), true);
+                        var stat = new FieldStat((_x, _y), fType, hasBuilding, dist, (i, j), route);
+                        _stats.Add(stat);
+                    }
+                }
+            }
+            _stats.Sort((x, y) => x.Distance.CompareTo(y.Distance));
+        }
+
+        #endregion
+
         #region Private methods
 
-        private int CalculatePeopleHappiness()
+        private double CalculatePeopleHappiness()
         {
             if (_building != null)
             {
-                if (_building.GetType() == typeof(PeopleBuilding))
+                if (_building.GetType() == typeof(PeopleBuilding) && ((PeopleBuilding)_building).People.Count > 0)
                 {
                     double sum = 0;
                     int people = ((PeopleBuilding)_building).People.Count;
@@ -166,8 +180,7 @@ namespace simcityModel.Model
                         sum += person.Happiness;
                     }
 
-
-                    return (int)Math.Floor(sum / people);
+                    return sum / people;
                 }
                 else
                 {
@@ -215,6 +228,11 @@ namespace simcityModel.Model
         private void OnNumberOfPeopleChanged(object? sender, EventArgs e)
         {
             NumberOfPeopleChanged?.Invoke(this, (X, Y));
+        }
+
+        private void OnFieldChanged()
+        {
+            FieldChanged?.Invoke(this, (X, Y));
         }
 
         #endregion

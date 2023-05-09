@@ -116,9 +116,9 @@ namespace simcityView.ViewModel
         public SimCityViewModel(SimCityModel model)
         {
             _model= model;
-            _model.IncomeListChanged += new EventHandler<List<BudgetRecord>>(model_UpdateIncomeList);
-            _model.ExpenseListChanged += new EventHandler<List<BudgetRecord>>(model_UpdateExpenseList);
-            _model.GameInfoChanged += new EventHandler<GameEventArgs>(model_UpdateInfoText);
+            _model.IncomeListChanged += new EventHandler<ObservableCollection<BudgetRecord>>(model_UpdateIncomeList);
+            _model.ExpenseListChanged += new EventHandler<ObservableCollection<BudgetRecord>>(model_UpdateExpenseList);
+            _model.GameInfoChanged += new EventHandler(model_UpdateInfoText);
             _model.MatrixChanged += new EventHandler<(int, int)>(model_MatrixChanged);
             _model.NumberOfPeopleChanged += new EventHandler<(int, int)>(model_MatrixChanged);
 
@@ -169,10 +169,10 @@ namespace simcityView.ViewModel
             
 
             UpdateMouseStateText();
+            model_UpdateInfoText(this, EventArgs.Empty);
             fillCells();
             fillIncome();
-            fillExpense();
-                
+            fillExpense();               
         }
 
         #endregion
@@ -201,7 +201,7 @@ namespace simcityView.ViewModel
                         b.ToolTipText = "X: " + b.X + " " +
                                         "Y: " + b.Y + "\n" +
                                         "Kapacitás: " + _model.Fields[b.X,b.Y].NumberOfPeople + "/" + _model.Fields[b.X, b.Y].Capacity + "\n" +
-                                        "Mező boldogsága: " + _model.Fields[b.X,b.Y].PeopleHappiness;
+                                        "Mező boldogsága: " + (int)Math.Floor(_model.Fields[b.X,b.Y].PeopleHappiness);
                     });
                     b.UpdateToolTipText.Execute(this);
                     b.ClickCom = new DelegateCommand(param => {
@@ -316,7 +316,7 @@ namespace simcityView.ViewModel
 
         #region Model functions
 
-        private void model_UpdateIncomeList(object? s, List<BudgetRecord> e)
+        private void model_UpdateIncomeList(object? s, ObservableCollection<BudgetRecord> e)
         {
 
 
@@ -330,7 +330,7 @@ namespace simcityView.ViewModel
             OnPropertyChanged(nameof(Income));
         }
 
-        private void model_UpdateExpenseList(object? s, List<BudgetRecord> e)
+        private void model_UpdateExpenseList(object? s, ObservableCollection<BudgetRecord> e)
         {
             fillExpense();
             for (int i = e.Count() - 1; i > -1; i--)
@@ -342,9 +342,9 @@ namespace simcityView.ViewModel
             OnPropertyChanged(nameof(Expense));
         }
 
-        private void model_UpdateInfoText(object? s, GameEventArgs e )
+        private void model_UpdateInfoText(object? s, EventArgs e)
         {
-            InfoText = "Dátum: " + e.GameTime.ToString("yyyy. MM. dd.") + "\t|\tPénz: " + e.Money + "💸\t|\tLakosság: " + _model.Population + " fő\t|\tBoldogság: " + _model.Happiness + " 😁";
+            InfoText = "Dátum: " + _model.GameTime.ToString("yyyy. MM. dd.") + "\t|\tPénz: " + _model.Money + "💸\t|\tLakosság: " + _model.Population + " fő\t|\tBoldogság: " + (int)Math.Floor(_model.Happiness) + " 😁";
         }
 
         private void model_MatrixChanged(object? s, (int X, int Y) e)
