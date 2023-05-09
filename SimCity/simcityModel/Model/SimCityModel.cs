@@ -137,6 +137,7 @@ namespace simcityModel.Model
             {
                 _incomeList = value;
                 _incomeList.CollectionChanged += new NotifyCollectionChangedEventHandler(OnIncomeListChanged);
+                OnIncomeListChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
             }
         }
         public ObservableCollection<BudgetRecord> ExpenseList
@@ -146,6 +147,7 @@ namespace simcityModel.Model
             {
                 _expenseList = value;
                 _expenseList.CollectionChanged += new NotifyCollectionChangedEventHandler(OnExpenseListChanged);
+                OnExpenseListChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
             }
         }
         public int GameSize { get => GAMESIZE; }
