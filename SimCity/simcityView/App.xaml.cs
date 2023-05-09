@@ -11,6 +11,7 @@ using System.Windows;
 using System.Windows.Threading;
 using System.Timers;
 using Microsoft.Win32;
+using System.Diagnostics;
 
 namespace simcityView
 {
@@ -59,6 +60,8 @@ namespace simcityView
             _vm.NewGameEvent += Vm_NewGame;
             
             _view = new MainWindow();
+            _view.Activated += new EventHandler(View_FocusChanged);
+            _view.Deactivated += new EventHandler(View_FocusChanged);
             _view.DataContext = _vm;
             _view.CamInit();
             _view.Show();
@@ -105,7 +108,7 @@ namespace simcityView
             _model.AdvanceTime();
         }
         #endregion
-        #region View events
+        #region Vm events
         void Vm_ChangeTimer(object? s, int status)
         {
             switch (status)
@@ -148,6 +151,7 @@ namespace simcityView
             {
                 MessageBox.Show("A fájl mentése sikertelen!", "SimCity", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+            
         }
         private async void Vm_LoadGame(object? s, EventArgs e)
         {
@@ -168,6 +172,12 @@ namespace simcityView
             }
         }
 
+        #endregion
+        #region View events
+        private void View_FocusChanged(object? s, EventArgs e)
+        {
+            _vm.inFocus = _view.IsActive;
+        }
         #endregion
         #region Model events
         void M_GameOver(object? s, EventArgs e)

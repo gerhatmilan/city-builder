@@ -17,8 +17,8 @@ namespace simcityView.ViewModel
         private SimCityModel _model;
         private string _infoText = string.Empty;
         private TextureManager _textureManager;
-        private float _playFieldX = 250f;
-        private float _playFieldY = 250f;
+        private float _playFieldX = 150;
+        private float _playFieldY = 320f;
         private float _playFieldZoom = 1f;
         private string _mouseStateText = "";
         private string _currentAction = "Build";
@@ -66,6 +66,7 @@ namespace simcityView.ViewModel
             get { return _playFieldZoom; }
             set { _playFieldZoom = Math.Clamp(value,0.1f,10.0f); OnPropertyChanged(nameof(PlayFieldZoom)); }
         }
+        public bool inFocus { get; set; } = true;
 
         #endregion
         #region DebugProps
@@ -132,9 +133,27 @@ namespace simcityView.ViewModel
             Income = new ObservableCollection<BudgetItem>();
             Expense = new ObservableCollection<BudgetItem>();
 
-            MovePlayFieldUpDown = new DelegateCommand(param => PlayFieldY += (float)param! * (1/PlayFieldZoom)); //Up is positive, down is negative param
-            MovePlayFieldLeftRight = new DelegateCommand(param => PlayFieldX += (float)param! * (1 / PlayFieldZoom)); //Right is positive, left is negative param
-            ZoomPlayField = new DelegateCommand(param => PlayFieldZoom += (float)param!);  //Zoom is positive, minimize is negative param
+            MovePlayFieldUpDown = new DelegateCommand(param =>
+            {
+                if (inFocus)
+                {
+                    PlayFieldY += (float)param! * (1 / PlayFieldZoom);
+                }
+            }); //Up is positive, down is negative param
+            MovePlayFieldLeftRight = new DelegateCommand(param =>
+            {
+                if (inFocus)
+                {
+                    PlayFieldX += (float)param! * (1 / PlayFieldZoom);
+                }
+            }); //Right is positive, left is negative param
+            ZoomPlayField = new DelegateCommand(param =>
+            {
+                if (inFocus)
+                {
+                    PlayFieldZoom += (float)param!;
+                }
+            });  //Zoom is positive, minimize is negative param
 
 
             SelectedBuildable = new DelegateCommand(param => SelectedBuildableSorter((string)param!));

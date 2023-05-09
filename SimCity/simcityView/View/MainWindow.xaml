@@ -6,7 +6,7 @@
         xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:local="clr-namespace:simcityView"
         mc:Ignorable="d"
-        Title="MainWindow" Height="740" Width="1280" ResizeMode="NoResize">
+        Title="MainWindow" Height="740" Width="1280" ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
    
     <Grid>
         <Grid.RowDefinitions>
