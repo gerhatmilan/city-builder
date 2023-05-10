@@ -7,23 +7,24 @@ using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace simcityView.ViewModel
+namespace simcityView.ViewModel.TexturingLogics
 {
-    internal interface TextureLogic
+    internal interface ITextureLogic
     {
         //Idea: Use theese classes from the TextureManager, where we give an enum a texturing logic!
         //These classes modify each Block in the ViewModel according to the given logic.
-        
+
         #region Props
-        public ImageBrush[] FloorTextures { get; set;  }
-        public BitmapImage[] BuildingTextures { get; set; }
+        public ImageBrush[] FloorTextures { get;}
+        public BitmapImage[] BuildingTextures { get;}
         public SimCityModel Model { get; set; }
+        public SimCityViewModel ViewModel { get; set; }
         #endregion
         #region Texturing functions
-        public void SetLogicalAllTextures();
-        public void SetLogicalFloorTextures();
-        public void SetLogicalBuildingTextures();
-        public void UpdateWithLogicalTexture();
+        public void SetLogicalAllTextures(int x, int y);
+        public void SetLogicalFloorTextures(int x, int y);
+        public void SetLogicalBuildingTextures(int x, int y);
+        public void UpdateWithLogicalTexture(int x, int y);
         #endregion
     }
 }

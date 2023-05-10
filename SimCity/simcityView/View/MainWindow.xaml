@@ -45,7 +45,8 @@
                                 <TransformGroup>
                                     <RotateTransform CenterX="0.5" CenterY="0.5" Angle="315"/>
                                     <SkewTransform CenterX="0.5" CenterY="0.5" AngleX="20" AngleY="10"/>
-                                    <TranslateTransform X="-6" Y="-6"/>
+                                    <TranslateTransform X="-5" Y="-5"/>
+                                    <ScaleTransform CenterX="0.5" CenterY="0.5" ScaleX="1.2" ScaleY="1.2"/>
                                 </TransformGroup>
                             </Image.RenderTransform>
                         </Image>

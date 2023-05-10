@@ -198,8 +198,14 @@ namespace simcityView.ViewModel
 
         #region ViewModel functions
         #region Cell functions
-        
-
+        public int CoordsToListIndex(int x, int y)
+        {
+            return (x + y * _model.GameSize);
+        }
+        public bool isValidCoord(int x, int y)
+        {
+            return -1 < x && -1 < y && x < _model.GameSize && y < _model.GameSize;
+        }
         private void fillCells()
         {
             Cells.Clear();

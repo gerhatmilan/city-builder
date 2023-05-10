@@ -15,8 +15,8 @@ using System.Threading.Tasks;
 
 namespace simcityModel.Model
 {
-    [JsonConverter(typeof(StringEnumConverter))]
-    public enum BuildingType { Industry, OfficeBuilding, Home, Stadium, PoliceStation, FireStation, Road }
+    //[JsonConverter(typeof(StringEnumConverter))]
+    public enum BuildingType { Industry = 3, OfficeBuilding = 2, Home = 1, Stadium = 7, PoliceStation = 6, FireStation = 5, Road = 4 }
     
     public abstract class Building
     {
