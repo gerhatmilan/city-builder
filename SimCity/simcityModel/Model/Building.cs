@@ -230,8 +230,8 @@ namespace simcityModel.Model
 
     public class Road : Building
     {
-        private VehicleType _vehicle;
-        public VehicleType Vehicle { get => _vehicle; set => _vehicle = value;  }
+        private List<Vehicle> _vehicles;
+        public List<Vehicle> Vehicles { get => _vehicles; set => _vehicles = value;  }
 
         public Road((int x, int y) coordinates) : base(coordinates, BuildingType.Road)
         {  
