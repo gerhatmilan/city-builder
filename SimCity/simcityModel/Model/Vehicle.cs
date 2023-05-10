@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 
 namespace simcityModel.Model
 {
-    [JsonConverter(typeof(StringEnumConverter))]
     public enum VehicleType { Car, Firecar, None }
     public enum Direction {UP, LEFT, RIGHT, DOWN}
     public class Vehicle

@@ -3,7 +3,6 @@ using Newtonsoft.Json.Converters;
 
 namespace simcityModel.Model
 {
-    [JsonConverter(typeof(StringEnumConverter))]
     public enum FieldType { IndustrialZone, OfficeZone, ResidentalZone, GeneralField }
 
     public class FieldStat
@@ -66,6 +65,7 @@ namespace simcityModel.Model
         public event EventHandler<(int x, int y)>? NumberOfPeopleChanged;
         public event EventHandler<(int x, int y)>? PeopleHappinessChanged;
         public event EventHandler<(int x, int y)>? FieldChanged;
+        public event EventHandler<(int x, int y)>? BuildingBurntDown;
 
         #endregion
 
@@ -77,7 +77,7 @@ namespace simcityModel.Model
         public FieldType Type
         {
             get { return _type; }
-            set { _type = value; OnFieldChanged(); }
+            set { _type = value; OnFieldChanged(this, EventArgs.Empty); }
         }
 
         public List<FieldStat> FieldStats { get => _stats; set => _stats = value; }
@@ -89,12 +89,20 @@ namespace simcityModel.Model
             set
             {
                 _building = value;
-                if (_building != null && _building.GetType() == typeof(PeopleBuilding))
+                if (_building != null)
                 {
-                    ((PeopleBuilding)_building).NumberOfPeopleChanged += new EventHandler(OnNumberOfPeopleChanged);
+                    _building.GotOnFire += new EventHandler(OnFieldChanged);
+                    _building.FireWentOut += new EventHandler(OnFieldChanged);
+                    _building.BurntDown += new EventHandler(OnFieldChanged);
+                    _building.BurntDown += new EventHandler(OnBuildingBurntDown);
+
+                    if (_building.GetType() == typeof(PeopleBuilding))
+                    {
+                        ((PeopleBuilding)_building).NumberOfPeopleChanged += new EventHandler(OnNumberOfPeopleChanged);
+                    }
                 }
 
-                OnFieldChanged();
+                OnFieldChanged(this, EventArgs.Empty);
             }
         }
 
@@ -230,9 +238,14 @@ namespace simcityModel.Model
             NumberOfPeopleChanged?.Invoke(this, (X, Y));
         }
 
-        private void OnFieldChanged()
+        private void OnFieldChanged(object? sender, EventArgs e)
         {
             FieldChanged?.Invoke(this, (X, Y));
+        }
+
+        private void OnBuildingBurntDown(object? sender, EventArgs e)
+        {
+            BuildingBurntDown?.Invoke(this, (X, Y));
         }
 
         #endregion

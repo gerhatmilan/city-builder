@@ -102,6 +102,7 @@ namespace simcityModel.Model
                         _fields[i, j].NumberOfPeopleChanged += new EventHandler<(int x, int y)>(OnNumberOfPeopleChanged);
                         _fields[i, j].PeopleHappinessChanged += new EventHandler<(int x, int y)>(OnPeopleHappinessChanged);
                         _fields[i, j].FieldChanged += new EventHandler<(int x, int y)>(OnMatrixChanged);
+                        _fields[i, j].BuildingBurntDown += new EventHandler<(int x, int y)>(OnBuildingBurntDown);
 
                         if (_fields[i, j].Type != FieldType.GeneralField || _fields[i, j].Building != null || shouldUpdateField)
                            OnMatrixChanged(this, (i, j));
@@ -172,6 +173,7 @@ namespace simcityModel.Model
                     _fields[i, j].NumberOfPeopleChanged += new EventHandler<(int x, int y)>(OnNumberOfPeopleChanged);
                     _fields[i, j].PeopleHappinessChanged += new EventHandler<(int x, int y)>(OnPeopleHappinessChanged);
                     _fields[i, j].FieldChanged += new EventHandler<(int x, int y)>(OnMatrixChanged);
+                    _fields[i, j].BuildingBurntDown += new EventHandler<(int x, int y)>(OnBuildingBurntDown);
                 }
             }
 
@@ -192,6 +194,7 @@ namespace simcityModel.Model
             OneDayPassed += new EventHandler(HandleNegativeBudget);
             OneDayPassed += new EventHandler(RefreshPeopleHappiness);
             OneDayPassed += new EventHandler(MovePeopleAwayDependingOnHappiness);
+            OneDayPassed += new EventHandler(TryToSetOnFireARandomBuilding);
 
             OneMonthPassed += new EventHandler(GetTax);
             OneMonthPassed += new EventHandler(DeductMaintenceCost);
@@ -334,6 +337,15 @@ namespace simcityModel.Model
         {
             if (Money < 0) DaysPassedSinceNegativeBudget++;
             else DaysPassedSinceNegativeBudget = 0;
+        }
+
+        private void TryToSetOnFireARandomBuilding(object? sender, EventArgs e)
+        {
+            int randomX = _random.Next(0, GameSize);
+            int randomY = _random.Next(0, GameSize);
+
+            if (Fields[randomX, randomY].Building != null)
+                Fields[randomX, randomY].Building!.TryToSetOnFire();
         }
 
         private void GetTax(object? sender, EventArgs e)
@@ -604,6 +616,14 @@ namespace simcityModel.Model
             OnOneDayPassed();
             if (GameTime.Day == 1) OnOneMonthPassed();
         }
+
+        public void SendFireTruck((int x, int y) coords)
+        {
+            if (Fields[coords.x, coords.y].Building == null || Fields[coords.x, coords.y].Building != null && !Fields[coords.x, coords.y].Building!.OnFire) return;
+
+            /* ... */
+        }
+
 
         public (bool[,] routeExists, bool allBuildingsFound, (int, int)[,] parents, int[,] distance) BreadthFirst((int x, int y) source, bool includeFields = false)
         {
@@ -910,6 +930,35 @@ namespace simcityModel.Model
         {
             PeopleHappinessChanged?.Invoke(this, (coords.x, coords.y));
             RefreshCityHappiness(sender, EventArgs.Empty);
+        }
+
+        private void OnBuildingBurntDown(object? sender, (int x, int y) coords)
+        {
+            if (_fields[coords.x, coords.y].Building!.GetType() == typeof(PeopleBuilding))
+            {
+                foreach (Person person in ((PeopleBuilding)Fields[coords.x, coords.y].Building!).People)
+                {
+                    person.MoveAway(this);
+                }
+            }
+            else
+            {
+                ((ServiceBuilding)Fields[coords.x, coords.y].Building!).RemoveEffect(Fields);
+            }
+
+            _buildings.Remove(_fields[coords.x, coords.y].Building!);
+            _numberOfBuildings[_fields[coords.x, coords.y].Building!.Type]--;
+            foreach ((int x, int y) buildingCoords in Fields[coords.x, coords.y].Building!.Coordinates)
+            {
+                _fields[coords.x, coords.y].Building = null;
+            }
+
+            _fields[coords.x, coords.y].Type = FieldType.GeneralField;
+
+            foreach (var field in _fields)
+            {
+                field.UpdateFieldStats(this);
+            }
         }
 
         #endregion
