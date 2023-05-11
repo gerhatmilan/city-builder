@@ -202,6 +202,12 @@ namespace simcityView.ViewModel
                     b.ClickCom = new DelegateCommand(param => {
                         try
                         {
+                            if (_model.Fields[b.X, b.Y].Building != null && _model.Fields[b.X, b.Y].Building!.OnFire)
+                            {
+                                _model.SendFireTruck((b.X, b.Y));
+                                return;
+                            }
+
                             if (_flipBuldozeMode)
                             {
                                 _model.Destroy(b.X, b.Y);
@@ -344,14 +350,8 @@ namespace simcityView.ViewModel
 
         private void model_MatrixChanged(object? s, (int X, int Y) e)
         {
-            _textureManager.SetTextureFromInformation(e.X, e.Y);
+                _textureManager.SetTextureFromInformation(e.X, e.Y);
         }
-
-
-
-
-
-
 
         #endregion
     }
