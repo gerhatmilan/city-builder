@@ -93,7 +93,6 @@ namespace simcityModel.Model
                 {
                     _building.GotOnFire += new EventHandler(OnFieldChanged);
                     _building.FireWentOut += new EventHandler(OnFieldChanged);
-                    _building.BurntDown += new EventHandler(OnFieldChanged);
                     _building.BurntDown += new EventHandler(OnBuildingBurntDown);
 
                     if (_building.GetType() == typeof(PeopleBuilding))
