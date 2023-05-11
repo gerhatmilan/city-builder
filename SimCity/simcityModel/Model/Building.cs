@@ -24,9 +24,9 @@ namespace simcityModel.Model
         private Dictionary<BuildingType, double> _fireProbabilites = new Dictionary<BuildingType, double>()
         {
             { BuildingType.Home, 0.15 },
-            { BuildingType.OfficeBuilding, 0.2 },
-            { BuildingType.Industry, 0.3 },
-            { BuildingType.Stadium, 0.2 },
+            { BuildingType.OfficeBuilding, 0.25 },
+            { BuildingType.Industry, 0.4 },
+            { BuildingType.Stadium, 0.3 },
             { BuildingType.PoliceStation, 0.2 },
             { BuildingType.FireStation, 0 },
             { BuildingType.Road, 0 }

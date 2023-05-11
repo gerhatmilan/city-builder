@@ -364,9 +364,17 @@ namespace simcityModel.Model
             {
                 for (int j = 0; j < GameSize; j++)
                 {
-                    if (_fields[i, j].Type != FieldType.GeneralField)
+                    switch (_fields[i, j].Type)
                     {
-                        sum += _fields[i, j].NumberOfPeople * TAX_PER_PERSON;
+                        case FieldType.ResidentalZone:
+                            sum += _fields[i, j].NumberOfPeople * TAX_PER_PERSON;
+                            break;
+                        case FieldType.OfficeZone:
+                            sum += (int)Math.Floor(_fields[i, j].NumberOfPeople * TAX_PER_PERSON * 1.2);
+                            break;
+                        case FieldType.IndustrialZone:
+                            sum += (int)Math.Floor(_fields[i, j].NumberOfPeople * TAX_PER_PERSON * 1.5);
+                            break;
                     }
                 }
             }
