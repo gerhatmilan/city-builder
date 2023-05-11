@@ -687,11 +687,11 @@ namespace simcityModel.Model
 
         public void SendFireTruck((int x, int y) coords)
         {
-            if (Fields[coords.x, coords.y].Building == null || (Fields[coords.x, coords.y].Building != null && !Fields[coords.x, coords.y].Building!.OnFire)) return;
+            if (Fields[coords.x, coords.y].Building == null || (Fields[coords.x, coords.y].Building != null && !Fields[coords.x, coords.y].Building!.OnFire) || _numberOfBuildings[BuildingType.FireStation] < 1) return;
 
-            // Closes path needed: look for the closest fire station from coords (if there is no fire station, return), then send a fire truck to coords from the found fire station
+            // Closest path needed: look for the closest fire station from coords, then send a fire truck to coords from the found fire station
 
-            // Before the fire truck starts: make the fire station unavailable until it gets its job done (put out the fire), because a single fire station can only send one unit at the same time
+            // Before the fire truck starts: make the fire station unavailable until it gets its job done (put out the fire), because a fire station can only send a single unit at the same time
 
             // After the fire struck got to the destination: make the fire station available again
 
