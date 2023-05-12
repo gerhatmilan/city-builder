@@ -477,11 +477,11 @@ namespace simcityModel.Model
             {
                 if (ValidCoordinates((buildingCoords.x + 1, buildingCoords.y)) && _fields[buildingCoords.x + 1, buildingCoords.y].Building != null && _fields[buildingCoords.x + 1, buildingCoords.y].Building != building)
                     adjacentBuildings.Add(_fields[buildingCoords.x + 1, buildingCoords.y].Building!);
-                if (ValidCoordinates((buildingCoords.x - 1, buildingCoords.y)) && _fields[buildingCoords.x - 1, buildingCoords.y].Building != null && _fields[buildingCoords.x + 1, buildingCoords.y].Building != building)
+                if (ValidCoordinates((buildingCoords.x - 1, buildingCoords.y)) && _fields[buildingCoords.x - 1, buildingCoords.y].Building != null && _fields[buildingCoords.x - 1, buildingCoords.y].Building != building)
                     adjacentBuildings.Add(_fields[buildingCoords.x - 1, buildingCoords.y].Building!);
-                if (ValidCoordinates((buildingCoords.x, buildingCoords.y + 1)) && _fields[buildingCoords.x, buildingCoords.y + 1].Building != null && _fields[buildingCoords.x + 1, buildingCoords.y].Building != building)
+                if (ValidCoordinates((buildingCoords.x, buildingCoords.y + 1)) && _fields[buildingCoords.x, buildingCoords.y + 1].Building != null && _fields[buildingCoords.x, buildingCoords.y + 1].Building != building)
                     adjacentBuildings.Add(_fields[buildingCoords.x, buildingCoords.y + 1].Building!);
-                if (ValidCoordinates((buildingCoords.x, buildingCoords.y - 1)) && _fields[buildingCoords.x, buildingCoords.y - 1].Building != null && _fields[buildingCoords.x + 1, buildingCoords.y].Building != building)
+                if (ValidCoordinates((buildingCoords.x, buildingCoords.y - 1)) && _fields[buildingCoords.x, buildingCoords.y - 1].Building != null && _fields[buildingCoords.x, buildingCoords.y - 1].Building != building)
                     adjacentBuildings.Add(_fields[buildingCoords.x, buildingCoords.y - 1].Building!);
             }
 
