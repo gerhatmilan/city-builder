@@ -22,13 +22,13 @@ namespace simcityView.ViewModel.TexturingLogics
         {
             this.ViewModel = ViewModel;
             this.Model = Model;
-            if (FloorTextures.Length != 1)
+            if (FloorTextures.Length != 16)
             {
-                throw new ArgumentException("FloorTexture size must be 1!");
+                throw new ArgumentException("FloorTexture size must be 16!");
             }
-            if (BuildingTextures.Length != 16)
+            if (BuildingTextures.Length != 1)
             {
-                throw new ArgumentException("BuildingTexture size must be 16!");
+                throw new ArgumentException("BuildingTexture size must be 1!");
             }
             this.FloorTextures = FloorTextures;
             this.BuildingTextures = BuildingTextures;

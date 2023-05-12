@@ -374,7 +374,7 @@ namespace simcityView.ViewModel
 
         private void model_MatrixChanged(object? s, (int X, int Y) e)
         {
-            _textureManager.SetTextureFromInformation(e.X, e.Y);
+            _textureManager.SetTexture(e.X, e.Y);
         }
 
 

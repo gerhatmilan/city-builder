@@ -23,10 +23,8 @@ namespace simcityView.ViewModel
         private BitmapImage[] _buildingTextures = new BitmapImage[23];
         private SimCityModel _model;
         private SimCityViewModel _vm;
-        private ITextureLogic[] _textureLogics = new ITextureLogic[5];
+        private ITextureLogic[] _textureLogics;
         
-        private int _modelSize;
-        private int _stadiumOffset = 0;
 
         #endregion
         #region constructor
@@ -34,20 +32,29 @@ namespace simcityView.ViewModel
         public TextureManager(SimCityModel model, SimCityViewModel view)
         {
             _model = model;
-            _modelSize = _model.Fields.GetLength(0);
-            fillFloorTextures();
-            fillBuildingTextures();
             _vm = view;
+            int a = Enum.GetNames(typeof(FieldType)).Length;
+            int b = Enum.GetNames(typeof(BuildingType)).Length;
+            int modelEnumMaxsSize;
+            if (a > b)
+            {
+                modelEnumMaxsSize = a;
+            }
+            else
+            {
+                modelEnumMaxsSize = b;
+                modelEnumMaxsSize++;
+            }
+
+            _textureLogics = new ITextureLogic[modelEnumMaxsSize];
+            Init();
         }
 
         #endregion
         #region functions
         #region private functions
 
-        private int CoordsToListIndex(int x, int y)
-        {
-            return (x + y * _model.GameSize);
-        }
+        
         private ImageBrush UriToImageBrush(string s)
         {
             return new ImageBrush(UriToBitmapImage(s));
@@ -135,140 +142,14 @@ namespace simcityView.ViewModel
 
         }
 
-
-
-        private int residentalBuildingHelper(BuildingType? buildT, int peopleNum, int cap)
-        {
-            switch (buildT)
-            {
-                case BuildingType.Home:
-                    if (peopleNum < cap/2)
-                    {
-                        return 3;
-                    }
-                    return 4;
-                case null: return 2;
-                default: return 1;
-            }
-        }
-        private int industrialBuildingHelper(BuildingType? buildT, int peopleNum, int cap)
-        {
-            switch (buildT)
-            {
-                case BuildingType.Industry:
-                    if (peopleNum < cap/4)
-                    {
-                        return 6;
-                    }
-                    return 7;
-                case null:return 5;
-                default: return 1;
-            }
-        }
-        private int officeBuildingHelper(BuildingType? buildT, int peopleNum, int cap)
-        {
-           
-            switch (buildT)
-            {
-                case BuildingType.OfficeBuilding:
-                    if (peopleNum <cap/3)
-                    {
-                        return 9;
-                    }
-                    return 10;
-                case null: return 8;
-                default: return 1;
-            }
-        }
-        private int generalFloorHelper(BuildingType? buildT, int x, int y) 
-        {
-            switch (buildT)
-            {
-                case BuildingType.Stadium: return 20;
-                case BuildingType.PoliceStation:
-                case BuildingType.FireStation: return 3;
-                case BuildingType.Road: return roadHelper(x,y,true);
-                case null: return 1;
-                default: return 0;
-            }  
-        }
-        private bool isValidCoord(int x, int y)
-        {
-            return -1 < x && -1 < y && x < _modelSize && y < _modelSize;
-        }
-
-
-        private int roadHelper(int centerX, int centerY, bool isMiddle)
-        {
-            //              left   down   right  up
-            int[] dirs =    { 0    , 0,     0,    0 }; //(-1,0);(0,-1);(1,0);(0,1)
-            int x = -1;
-            int y = 0;
-            for(int ind = 0; ind<4; ind++)
-            {
-                int cellX = centerX + x;
-                int cellY = centerY + y;
-                if (isValidCoord(cellX,cellY))
-                {
-                    Building? f = _model.Fields[cellX, cellY].Building;
-                    if (f != null && f.Type==BuildingType.Road)
-                    {
-                        dirs[ind] = 1;
-                        if (isMiddle)
-                        {
-                           
-                            int neighbourIndex = roadHelper(cellX, cellY, false);
-                            _vm.Cells[CoordsToListIndex(cellX,cellY)].FloorTexture = _floorTextures[neighbourIndex];
-                        }
-                    }
-                }
-                
-                int z = x;
-                x = y;
-                y = z;
-                x *=-1;
-            }
-            int roadIndex = dirs[0] * 1 + dirs[1] * 2 + dirs[2] * 4 + dirs[3] * 8;
-            return 4 + roadIndex;
-        }
-
-        private int generalBuildingHelper(BuildingType? buildT, int x, int y)
-        {
-            switch (buildT)
-            {
-                case BuildingType.Road: return carHelper(x,y);
-                case BuildingType.Stadium: return stadiumHelper(x,y);
-                case BuildingType.PoliceStation: return 15;
-                case BuildingType.FireStation: return 16;
-                case null: return 1;
-                default: return 0;
-            }
-        }
-
-        private int carHelper(int x, int y)
-        {
-            //Road r = (Road)_model.Fields[x, y].Building;
-            
-            return 1;
-        }
-
-        private int stadiumHelper(int x, int y)
-        {
-            if(_stadiumOffset == 4)
-            {
-                _stadiumOffset = 0;
-            }
-            int index = 11 + _stadiumOffset;
-            _stadiumOffset++;
-            return index;
-        }
-
         #endregion
         #region public functions
 
-        #region updating in progress
+       
         public void Init()
         {
+            fillBuildingTextures();
+            fillFloorTextures();
             //0 -- generalfield
             //1 -- home
             //2 -- office
@@ -279,35 +160,174 @@ namespace simcityView.ViewModel
             //7 -- stadium
             (ImageBrush[] FloorTextures, BitmapImage[] BuildingTextures) textures = generalFieldTextures();
             _textureLogics[0] = new OneByOneTextureLogic(_model, _vm,textures.FloorTextures,textures.BuildingTextures);
-
-
+            textures = homeFieldTextures();
+            _textureLogics[1] = new ZoneTextureLogic(_model, _vm, textures.FloorTextures, textures.BuildingTextures);
+            textures = officeFieldTextures();
+            _textureLogics[2] = new ZoneTextureLogic(_model, _vm, textures.FloorTextures, textures.BuildingTextures);
+            textures = industryFieldTextures();
+            _textureLogics[3] = new ZoneTextureLogic(_model, _vm, textures.FloorTextures, textures.BuildingTextures);
+            textures = roadFieldTextures();
+            _textureLogics[4] = new ConnectedRoadTextureLogic(_model, _vm, textures.FloorTextures, textures.BuildingTextures);
+            textures = fireStationFieldTextures();
+            _textureLogics[5] = new OneByOneTextureLogic(_model, _vm, textures.FloorTextures, textures.BuildingTextures);
+            textures = policeStationFieldTextures();
+            _textureLogics[6] = new OneByOneTextureLogic(_model, _vm, textures.FloorTextures, textures.BuildingTextures);
+            textures = stadiumFieldTextures();
+            _textureLogics[7] = new TwoByTwoTextureLogic(_model, _vm, textures.FloorTextures, textures.BuildingTextures);
+            textures = undefinedFieldTextures();
+            for(int i = 8; i<_textureLogics.Length; i++)
+            {
+                _textureLogics[i] = new OneByOneTextureLogic(_model, _vm, textures.FloorTextures, textures.BuildingTextures);
+            }
+        }
+        private (ImageBrush[] FloorTextures, BitmapImage[] BuildingTextures) undefinedFieldTextures()
+        {
+            (ImageBrush[] FloorTextures, BitmapImage[] BuildingTextures) textures;
+            textures.FloorTextures = new ImageBrush[1];
+            textures.FloorTextures[0] = _floorTextures[0];
+            textures.BuildingTextures = new BitmapImage[1];
+            textures.BuildingTextures[0] = _buildingTextures[0];
+            return textures;
 
         }
         private (ImageBrush[] FloorTextures, BitmapImage[] BuildingTextures) generalFieldTextures()
         {
             (ImageBrush[] FloorTextures, BitmapImage[] BuildingTextures) textures;
             textures.FloorTextures = new ImageBrush[1];
-            textures.FloorTextures[0] = _floorTextures[0];
+            textures.FloorTextures[0] = _floorTextures[1];
             textures.BuildingTextures = new BitmapImage[1];
             textures.BuildingTextures[0] = _buildingTextures[1];
             return textures;
             
         }
-        
+        private (ImageBrush[] FloorTextures, BitmapImage[] BuildingTextures) homeFieldTextures()
+        {
+            (ImageBrush[] FloorTextures, BitmapImage[] BuildingTextures) textures;
+            textures.FloorTextures = new ImageBrush[1];
+            textures.FloorTextures[0] = _floorTextures[1];
+            textures.BuildingTextures = new BitmapImage[3];
+            textures.BuildingTextures[0] = _buildingTextures[2];
+            textures.BuildingTextures[1] = _buildingTextures[3];
+            textures.BuildingTextures[2] = _buildingTextures[4];
+
+            return textures;
+
+        }
+        private (ImageBrush[] FloorTextures, BitmapImage[] BuildingTextures) industryFieldTextures()
+        {
+            (ImageBrush[] FloorTextures, BitmapImage[] BuildingTextures) textures;
+            textures.FloorTextures = new ImageBrush[1];
+            textures.FloorTextures[0] = _floorTextures[2];
+            textures.BuildingTextures = new BitmapImage[3];
+            textures.BuildingTextures[0] = _buildingTextures[5];
+            textures.BuildingTextures[1] = _buildingTextures[6];
+            textures.BuildingTextures[2] = _buildingTextures[7];
+
+            return textures;
+
+        }
+        private (ImageBrush[] FloorTextures, BitmapImage[] BuildingTextures) officeFieldTextures()
+        {
+            (ImageBrush[] FloorTextures, BitmapImage[] BuildingTextures) textures;
+            textures.FloorTextures = new ImageBrush[1];
+            textures.FloorTextures[0] = _floorTextures[3];
+            textures.BuildingTextures = new BitmapImage[3];
+            textures.BuildingTextures[0] = _buildingTextures[8];
+            textures.BuildingTextures[1] = _buildingTextures[9];
+            textures.BuildingTextures[2] = _buildingTextures[10];
+
+            return textures;
+
+        }
+        private (ImageBrush[] FloorTextures, BitmapImage[] BuildingTextures) roadFieldTextures()
+        {
+            (ImageBrush[] FloorTextures, BitmapImage[] BuildingTextures) textures;
+            textures.FloorTextures = new ImageBrush[16];
+            //0
+            textures.FloorTextures[0] = _floorTextures[4];
+            //1
+            textures.FloorTextures[8] = _floorTextures[12];
+            textures.FloorTextures[4] = _floorTextures[8];
+            textures.FloorTextures[2] = _floorTextures[6];
+            textures.FloorTextures[1] = _floorTextures[5];
+            //2
+            textures.FloorTextures[10] = _floorTextures[14];
+            textures.FloorTextures[5] = _floorTextures[9];
+
+            textures.FloorTextures[9] = _floorTextures[13];
+            textures.FloorTextures[12] = _floorTextures[16];
+            textures.FloorTextures[3] = _floorTextures[7];
+            textures.FloorTextures[6] = _floorTextures[10];
+
+            //3
+            textures.FloorTextures[13] = _floorTextures[17];
+            textures.FloorTextures[7] = _floorTextures[11];
+            textures.FloorTextures[11] = _floorTextures[15];
+            textures.FloorTextures[14] = _floorTextures[18];
+
+            //4
+            textures.FloorTextures[15] = _floorTextures[19];
+            
+            textures.BuildingTextures = new BitmapImage[1];
+            textures.BuildingTextures[0] = _buildingTextures[1];
+           
+
+            return textures;
+
+        }
+        private (ImageBrush[] FloorTextures, BitmapImage[] BuildingTextures) fireStationFieldTextures()
+        {
+            (ImageBrush[] FloorTextures, BitmapImage[] BuildingTextures) textures;
+            textures.FloorTextures = new ImageBrush[1];
+            textures.FloorTextures[0] = _floorTextures[3];
+            textures.BuildingTextures = new BitmapImage[1];
+            textures.BuildingTextures[0] = _buildingTextures[16];
+            return textures;
+
+        }
+        private (ImageBrush[] FloorTextures, BitmapImage[] BuildingTextures) policeStationFieldTextures()
+        {
+            (ImageBrush[] FloorTextures, BitmapImage[] BuildingTextures) textures;
+            textures.FloorTextures = new ImageBrush[1];
+            textures.FloorTextures[0] = _floorTextures[3];
+            textures.BuildingTextures = new BitmapImage[1];
+            textures.BuildingTextures[0] = _buildingTextures[15];
+            return textures;
+
+        }
+        private (ImageBrush[] FloorTextures, BitmapImage[] BuildingTextures) stadiumFieldTextures()
+        {
+            (ImageBrush[] FloorTextures, BitmapImage[] BuildingTextures) textures;
+            textures.FloorTextures = new ImageBrush[1];
+            textures.FloorTextures[0] = _floorTextures[3];
+            textures.BuildingTextures = new BitmapImage[4];
+            textures.BuildingTextures[0] = _buildingTextures[11];
+            textures.BuildingTextures[1] = _buildingTextures[12];
+            textures.BuildingTextures[2] = _buildingTextures[13];
+            textures.BuildingTextures[3] = _buildingTextures[14];
+
+
+            return textures;
+
+        }
 
         public void SetTexture(int x, int y)
         {
             Field f = _model.Fields[x, y];
+            int logicNum=0;
             if(f.Building == null)
             {
-                _textureLogics[(int)f.Type].SetLogicalBuildingTextures(x, y);
+                logicNum = (int)f.Type;
+                _textureLogics[logicNum].SetLogicalAllTextures(x, y);
             }
             else
             {
-                _textureLogics[(int)f.Building.Type].SetLogicalBuildingTextures(x, y);
+                logicNum = (int)f.Building.Type;
+                _textureLogics[logicNum].SetLogicalAllTextures(x, y);
             }
+            UpdateTextureAround(x, y);
         }
-        public void UpdteTextureAround(int centerX, int centerY)
+        public void UpdateTextureAround(int centerX, int centerY)
         {
             int x = -1;
             int y = 0;
@@ -315,16 +335,16 @@ namespace simcityView.ViewModel
             {
                 int cellX = centerX + x;
                 int cellY = centerY + y;
-                if (isValidCoord(cellX, cellY))
+                if (_vm.isValidCoord(cellX, cellY))
                 {
-                    Field f = _model.Fields[x, y];
+                    Field f = _model.Fields[cellX, cellY];
                     if (f.Building == null)
                     {
-                        _textureLogics[(int)f.Type].UpdateWithLogicalTexture(x, y);
+                        _textureLogics[(int)f.Type].UpdateWithLogicalTexture(cellX, cellY);
                     }
                     else
                     {
-                        _textureLogics[(int)f.Building.Type].UpdateWithLogicalTexture(x, y);
+                        _textureLogics[(int)f.Building.Type].UpdateWithLogicalTexture(cellX, cellY);
                     }
                 }
                 int z = x;
@@ -333,40 +353,14 @@ namespace simcityView.ViewModel
                 x *= -1;
             }
         }
-        #endregion
+        
         
         public (ImageBrush floor, BitmapImage building) getStarterTextures()
         {
             return (_floorTextures[1], _buildingTextures[17]);
         }
 
-        public void SetTextureFromInformation(int x, int y)
-        {
-            (int floor, int building) whatToSet = (0,0);
-            
-            Field f = _model.Fields[x, y];
-            FieldType zone = f.Type;
-            BuildingType? buildT;
-            if (f.Building == null)
-            {
-                buildT = null;
-            }
-            else
-            {
-                buildT = f.Building.Type;
-            }
-            switch (zone)
-            {
-                case FieldType.ResidentalZone: whatToSet.floor = 1; whatToSet.building    =  residentalBuildingHelper(buildT, f.NumberOfPeople,f.Capacity); break;
-                case FieldType.IndustrialZone: whatToSet.floor = 2; whatToSet.building    =  industrialBuildingHelper(buildT, f.NumberOfPeople,f.Capacity); break;
-                case FieldType.OfficeZone: whatToSet.floor = 3; whatToSet.building        =  officeBuildingHelper(buildT, f.NumberOfPeople,f.Capacity); break;
-                case FieldType.GeneralField: whatToSet.floor = generalFloorHelper(buildT,x,y); whatToSet.building = generalBuildingHelper(buildT, x,y); break;
-            }
-            _vm.Cells[CoordsToListIndex(x,y)].BuildingTexture = _buildingTextures[whatToSet.building];
-            _vm.Cells[CoordsToListIndex(x,y)].FloorTexture = _floorTextures[whatToSet.floor];
-
-
-        }
+       
        
 
 

@@ -47,16 +47,17 @@ namespace simcityView.ViewModel.TexturingLogics
         }
         public void SetLogicalBuildingTextures(int x, int y)
         {
-            if (Model.Fields[x,y].Building == null)
+            if (Model.Fields[x,y].Building is null )
             {
-                ViewModel.Cells[ViewModel.CoordsToListIndex(x, y)].BuildingTexture = BuildingTextures[1];
+                ViewModel.Cells[ViewModel.CoordsToListIndex(x, y)].BuildingTexture = BuildingTextures[0];
+                return;
             }
             if (Model.Fields[x,y].NumberOfPeople == Model.Fields[x,y].Capacity)
             {
-                ViewModel.Cells[ViewModel.CoordsToListIndex(x, y)].BuildingTexture = BuildingTextures[1];
+                ViewModel.Cells[ViewModel.CoordsToListIndex(x, y)].BuildingTexture = BuildingTextures[2];
                 return;
             }
-            ViewModel.Cells[ViewModel.CoordsToListIndex(x, y)].BuildingTexture = BuildingTextures[2];
+            ViewModel.Cells[ViewModel.CoordsToListIndex(x, y)].BuildingTexture = BuildingTextures[1];
         }
         public void UpdateWithLogicalTexture(int x, int y)
         {
