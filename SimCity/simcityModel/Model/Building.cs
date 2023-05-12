@@ -16,14 +16,14 @@ using System.Threading.Tasks;
 namespace simcityModel.Model
 {
     public enum BuildingType { Industry, OfficeBuilding, Home, Stadium, PoliceStation, FireStation, Road }
-    
+
     public abstract class Building
     {
         #region Fields
 
-        private Dictionary<BuildingType, double> _fireProbabilites = new Dictionary<BuildingType, double>()
+        private static readonly Dictionary<BuildingType, double> _fireProbabilities = new Dictionary<BuildingType, double>()
         {
-            { BuildingType.Home, 0.25 },
+            { BuildingType.Home, 0.25},
             { BuildingType.OfficeBuilding, 0.35 },
             { BuildingType.Industry, 0.5 },
             { BuildingType.Stadium, 0.35 },
@@ -32,6 +32,7 @@ namespace simcityModel.Model
             { BuildingType.Road, 0 }
         };
 
+        private double _fireProbability;
         private bool _onFire;
         private int _daysPassedSinceOnFire;
         protected Random _random = new Random();
@@ -76,7 +77,18 @@ namespace simcityModel.Model
             }
         }
 
-        public double FireProbability { get => _fireProbabilites[Type]; set => _fireProbabilites[Type] = value; }
+        public double FireProbability
+        {
+            get => _fireProbability;
+            set
+            {
+                if (_fireProbabilities[Type] == 0) return;
+
+                _fireProbability = value;
+                if (_fireProbability < 0.1) _fireProbability = 0.1;
+                else if (_fireProbability > _fireProbabilities[Type]) _fireProbability = _fireProbabilities[Type];
+            }
+        }
 
         [JsonIgnore]
         public virtual List<(int x, int y)> Coordinates
@@ -91,6 +103,7 @@ namespace simcityModel.Model
         public Building((int x, int y) coordinates, BuildingType type)
         {
             _type = type;
+            _fireProbability = _fireProbabilities[type];
             _onFire = false;
             _daysPassedSinceOnFire = 0;
             _topLeftCoordinate = coordinates;

@@ -46,10 +46,6 @@ namespace simcityModel.Model
     {
         #region Private fields
 
-        public const int RESIDENTAL_CAPACITY = 20;
-        public const int INDUSTRIAL_CAPACITY = 40;
-        public const int OFFICE_CAPACITY = 40;
-
         private int _x;
         private int _y;
         private FieldType _type;
@@ -57,6 +53,14 @@ namespace simcityModel.Model
         private int _fieldHappiness;
         private int _fieldSafety;
         private List<FieldStat> _stats;
+
+        #endregion
+
+        #region Public fields
+
+        public static readonly int RESIDENTAL_CAPACITY = 20;
+        public static readonly int INDUSTRIAL_CAPACITY = 40;
+        public static readonly int OFFICE_CAPACITY = 40;
 
         #endregion
 
@@ -121,7 +125,16 @@ namespace simcityModel.Model
 
         public int NumberOfPeople { get => CalculateNumberOfPeople(); }
 
-        public int FieldHappiness { get => _fieldHappiness; set => _fieldHappiness = value; }
+        public int FieldHappiness
+        {
+            get => _fieldHappiness;
+            set
+            {
+                _fieldHappiness = value;
+                if (_fieldHappiness < 0) _fieldHappiness = 0;
+                else if (_fieldHappiness > 100) _fieldHappiness = 100;
+            }
+        }
 
         public int FieldSafety { get => _fieldSafety; set => _fieldSafety = value; }
 
