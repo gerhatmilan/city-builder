@@ -14,7 +14,7 @@ namespace simcityModel.Model
 
         private const int GAMESIZE = 18;
         private const float PRICERETURN_MULTIPLIER = 2f / 3;
-        private const int TAX_PER_PERSON = 5;
+        private const int TAX_PER_PERSON = 10;
 
         private readonly Dictionary<FieldType, (int price, int returnPrice)> _zonePrices = new Dictionary<FieldType, (int, int)>()
         {
@@ -350,7 +350,7 @@ namespace simcityModel.Model
 
                     foreach (Building adjacentBuilding in adjacentBuildings)
                     {
-                        adjacentBuilding.TryToSpreadFire();
+                        adjacentBuilding.TryToSpreadFire(building);
                     }
                 }
             }
@@ -366,11 +366,8 @@ namespace simcityModel.Model
                 {
                     switch (_fields[i, j].Type)
                     {
-                        case FieldType.ResidentalZone:
-                            sum += _fields[i, j].NumberOfPeople * TAX_PER_PERSON;
-                            break;
                         case FieldType.OfficeZone:
-                            sum += (int)Math.Floor(_fields[i, j].NumberOfPeople * TAX_PER_PERSON * 1.2);
+                            sum += _fields[i, j].NumberOfPeople * TAX_PER_PERSON;
                             break;
                         case FieldType.IndustrialZone:
                             sum += (int)Math.Floor(_fields[i, j].NumberOfPeople * TAX_PER_PERSON * 1.5);

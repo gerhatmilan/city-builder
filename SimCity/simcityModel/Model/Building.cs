@@ -23,11 +23,11 @@ namespace simcityModel.Model
 
         private Dictionary<BuildingType, double> _fireProbabilites = new Dictionary<BuildingType, double>()
         {
-            { BuildingType.Home, 0.15 },
-            { BuildingType.OfficeBuilding, 0.25 },
-            { BuildingType.Industry, 0.4 },
-            { BuildingType.Stadium, 0.3 },
-            { BuildingType.PoliceStation, 0.2 },
+            { BuildingType.Home, 0.25 },
+            { BuildingType.OfficeBuilding, 0.35 },
+            { BuildingType.Industry, 0.5 },
+            { BuildingType.Stadium, 0.35 },
+            { BuildingType.PoliceStation, 0.3 },
             { BuildingType.FireStation, 0 },
             { BuildingType.Road, 0 }
         };
@@ -100,9 +100,9 @@ namespace simcityModel.Model
 
         #region Public methods
 
-        public void TryToSpreadFire()
+        public void TryToSpreadFire(Building adjacentBuildingOnFire)
         {
-            if (FireProbability > 0 && _random.NextDouble() > 0.5)
+            if (FireProbability > 0 && _random.NextDouble() + (adjacentBuildingOnFire.DaysPassedSinceOnFire / 100.0) > 0.7)
             {
                 OnFire = true;
             }
