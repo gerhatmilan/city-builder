@@ -116,7 +116,7 @@ namespace simcityModel.Model
 
         public void TryToSpreadFire(Building adjacentBuildingOnFire)
         {
-            if (FireProbability > 0 && _random.NextDouble() + (adjacentBuildingOnFire.DaysPassedSinceOnFire / 100.0) > 0.7)
+            if (!OnFire && FireProbability > 0 && _random.NextDouble() + (adjacentBuildingOnFire.DaysPassedSinceOnFire / 100.0) > 0.7)
             {
                 OnFire = true;
             }
