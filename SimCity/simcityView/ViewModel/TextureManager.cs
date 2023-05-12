@@ -20,7 +20,7 @@ namespace simcityView.ViewModel
 
         #region variables
         private ImageBrush[] _floorTextures = new ImageBrush[21];
-        private BitmapImage[] _buildingTextures = new BitmapImage[23];
+        private BitmapImage[] _buildingTextures = new BitmapImage[22];
         private SimCityModel _model;
         private SimCityViewModel _vm;
         private ITextureLogic[] _textureLogics;
@@ -125,8 +125,8 @@ namespace simcityView.ViewModel
 
             _buildingTextures[11] = UriToBitmapImage(@"~\..\Textures\stadium1.png");
             _buildingTextures[12] = UriToBitmapImage(@"~\..\Textures\stadium2.png");
-            _buildingTextures[13] = UriToBitmapImage(@"~\..\Textures\stadium3.png");
-            _buildingTextures[14] = UriToBitmapImage(@"~\..\Textures\stadium4.png");
+            _buildingTextures[13] = UriToBitmapImage(@"~\..\Textures\stadium4.png");
+            _buildingTextures[14] = UriToBitmapImage(@"~\..\Textures\stadium3.png");
 
             _buildingTextures[15] = UriToBitmapImage(@"~\..\Textures\police_station_a.png");
             _buildingTextures[16] = UriToBitmapImage(@"~\..\Textures\fire_station_a.png");
@@ -138,7 +138,6 @@ namespace simcityView.ViewModel
             _buildingTextures[20] = UriToBitmapImage(@"~\..\Textures\car_white_left.png");
             _buildingTextures[21] = UriToBitmapImage(@"~\..\Textures\car_white_right.png");
 
-            _buildingTextures[22] = UriToBitmapImage(@"~\..\Textures\stadium_thumbnail");
 
         }
 

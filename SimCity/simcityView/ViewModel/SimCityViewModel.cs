@@ -34,12 +34,18 @@ namespace simcityView.ViewModel
 
         #region Props
         #region GameStateProps
-        public bool GameIsNotOver { get { return _gameIsNotOver; } 
-                                    set { _gameIsNotOver = value; OnPropertyChanged(nameof(GameIsNotOver)); } }
+        public bool GameIsNotOver { 
+            get { return _gameIsNotOver; } 
+            set { _gameIsNotOver = value; OnPropertyChanged(nameof(GameIsNotOver)); } 
+        }
+        public bool AntiBuldozer
+        {
+            get { return !_flipBuldozeMode; }
+        }
         public bool Buldozer
         {
             get { return _flipBuldozeMode; }
-            set { _flipBuldozeMode = value; OnPropertyChanged(nameof(Buldozer)); }
+            set { _flipBuldozeMode = value; OnPropertyChanged(nameof(Buldozer)); OnPropertyChanged(nameof(AntiBuldozer)); }
         }
         #endregion
         #region ObservableProps
@@ -103,12 +109,13 @@ namespace simcityView.ViewModel
         public DelegateCommand SaveGame { get; set; }
         public DelegateCommand LoadGame { get; set; }
         public DelegateCommand NewGame { get; set; }
-
+        public DelegateCommand ShowHelp { get; set; }
         #endregion
         #region Events
         public event EventHandler? SaveGameEvent;
         public event EventHandler? LoadGameEvent;
         public event EventHandler? NewGameEvent;
+        public event EventHandler? ShowHelpEvent;
         public event EventHandler<int>? ChangeTime;
         #endregion
         #endregion
@@ -128,6 +135,7 @@ namespace simcityView.ViewModel
             SaveGame = new DelegateCommand(param => SaveGameEvent?.Invoke(this, EventArgs.Empty));
             LoadGame = new DelegateCommand(param => LoadGameEvent?.Invoke(this, EventArgs.Empty));
             NewGame = new DelegateCommand(param => NewGameEvent?.Invoke(this, EventArgs.Empty));
+            ShowHelp = new DelegateCommand(param => ShowHelpEvent?.Invoke(this, EventArgs.Empty));
 
             Cells = new ObservableCollection<Block>();
             Income = new ObservableCollection<BudgetItem>();
@@ -369,7 +377,18 @@ namespace simcityView.ViewModel
 
         private void model_UpdateInfoText(object? s, EventArgs e)
         {
-            InfoText = "Dátum: " + _model.GameTime.ToString("yyyy. MM. dd.") + "\t|\tPénz: " + _model.Money + "💸\t|\tLakosság: " + _model.Population + " fő\t|\tBoldogság: " + (int)Math.Floor(_model.Happiness) + " 😁";
+            int happines = (int)Math.Floor(_model.Happiness);
+            string emoji = " 😐";
+            if (happines < 25)
+            {
+                emoji = " 🙁";
+            }
+            if(happines > 74)
+            {
+                emoji = " 😁";
+            }
+
+            InfoText = "Dátum: " + _model.GameTime.ToString("yyyy. MM. dd.") + "\t|\tPénz: " + _model.Money + "💸\t|\tLakosság: " + _model.Population + " fő\t|\tBoldogság: " + happines + emoji;
         }
 
         private void model_MatrixChanged(object? s, (int X, int Y) e)

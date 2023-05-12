@@ -58,7 +58,8 @@ namespace simcityView
             _vm.SaveGameEvent += Vm_SaveGame;
             _vm.LoadGameEvent += Vm_LoadGame;
             _vm.NewGameEvent += Vm_NewGame;
-            
+            _vm.ShowHelpEvent += Vm_ShowHelp;
+
             _view = new MainWindow();
             _view.Activated += new EventHandler(View_FocusChanged);
             _view.Deactivated += new EventHandler(View_FocusChanged);
@@ -99,7 +100,7 @@ namespace simcityView
             GC.Collect();
             
         }
-        
+       
         #endregion
         #region events
         #region Timer events
@@ -171,7 +172,14 @@ namespace simcityView
                 MessageBox.Show("A fájl betöltése sikertelen!", "SimCity", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-
+        private void Vm_ShowHelp(object? s, EventArgs e)
+        {
+            MessageBox.Show(
+                "Irányítások:\n" +
+                "W A S D - Mozgás a kamerával\n" +
+                "Q E - Zoomolás a kamerával\n"
+                , "SimCity", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
         #endregion
         #region View events
         private void View_FocusChanged(object? s, EventArgs e)
