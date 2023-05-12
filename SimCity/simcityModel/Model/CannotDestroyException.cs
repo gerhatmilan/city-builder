@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace simcityModel.Model
 {
-    public class CannotBuildException : Exception
+    public class CannotDestroyException : Exception
     {
-        public CannotBuildException(string message) : base(message) { }
+        public CannotDestroyException(string message) : base(message) { }
     }
 }

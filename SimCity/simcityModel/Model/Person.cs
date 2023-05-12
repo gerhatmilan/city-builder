@@ -23,7 +23,17 @@ namespace simcityModel.Model
 
         #region Properties
 
-        public double Happiness { get => _happiness; set { _happiness = value; OnHappinessChanged(); } }
+        public double Happiness
+        {
+            get => _happiness;
+            set
+            {
+                _happiness = value;
+                if (_happiness < 0) _happiness = 0;
+                else if (_happiness > 100) _happiness = 100;
+                OnHappinessChanged();
+            }
+        }
 
         public Field Home
         {
@@ -125,10 +135,7 @@ namespace simcityModel.Model
                 fieldSafetyFactor
             };
 
-
-            if (factors.Sum() < 0) Happiness = 0;
-            else if (factors.Sum() > 100) Happiness = 100;
-            else Happiness = factors.Sum();
+            Happiness = factors.Sum();
         }
 
         public void MoveAway(SimCityModel model)

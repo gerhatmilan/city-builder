@@ -22,8 +22,30 @@ namespace simcityModel.Model
     {
         #region Fields
 
+        private static readonly Dictionary<BuildingType, double> _fireProbabilities = new Dictionary<BuildingType, double>()
+        {
+            { BuildingType.Home, 0.25},
+            { BuildingType.OfficeBuilding, 0.35 },
+            { BuildingType.Industry, 0.5 },
+            { BuildingType.Stadium, 0.35 },
+            { BuildingType.PoliceStation, 0.3 },
+            { BuildingType.FireStation, 0 },
+            { BuildingType.Road, 0 }
+        };
+
+        private double _fireProbability;
+        private bool _onFire;
+        private int _daysPassedSinceOnFire;
+        protected Random _random = new Random();
         protected BuildingType _type;
         protected (int x, int y) _topLeftCoordinate;
+        #endregion
+
+        #region Events
+
+        public event EventHandler? GotOnFire;
+        public event EventHandler? FireWentOut;
+        public event EventHandler? BurntDown;
 
         #endregion
 
@@ -34,6 +56,39 @@ namespace simcityModel.Model
         {
             get => _topLeftCoordinate;
             set => _topLeftCoordinate = value;
+        }
+        public bool OnFire
+        {
+            get => _onFire;
+            set
+            {
+                _onFire = value;
+                if (value) OnGotOnFire();
+                else OnFireWentOut();
+            }
+        }
+
+        public int DaysPassedSinceOnFire
+        {
+            get => _daysPassedSinceOnFire;
+            set
+            {
+                _daysPassedSinceOnFire = value;
+                if (_daysPassedSinceOnFire >= 50) OnBurntDown();
+            }
+        }
+
+        public double FireProbability
+        {
+            get => _fireProbability;
+            set
+            {
+                if (_fireProbabilities[Type] == 0) return;
+
+                _fireProbability = value;
+                if (_fireProbability < 0.1) _fireProbability = 0.1;
+                else if (_fireProbability > _fireProbabilities[Type]) _fireProbability = _fireProbabilities[Type];
+            }
         }
 
         [JsonIgnore]
@@ -48,9 +103,55 @@ namespace simcityModel.Model
 
         public Building((int x, int y) coordinates, BuildingType type)
         {
-            _type = type;    
+            _type = type;
+            _fireProbability = _fireProbabilities[type];
+            _onFire = false;
+            _daysPassedSinceOnFire = 0;
             _topLeftCoordinate = coordinates;
         }
+
+        #endregion
+
+        #region Public methods
+
+        public void TryToSpreadFire(Building adjacentBuildingOnFire)
+        {
+            if (FireProbability > 0 && _random.NextDouble() + (adjacentBuildingOnFire.DaysPassedSinceOnFire / 100.0) > 0.7)
+            {
+                OnFire = true;
+            }
+        }
+
+        public void TryToSetOnFire()
+        {
+            if (_random.NextDouble() <= FireProbability)
+                OnFire = true;
+        }
+
+        public void PutOutFire()
+        {
+            OnFire = false;
+        }
+
+        #region Private event triggers
+
+        private void OnGotOnFire()
+        {
+            GotOnFire?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void OnFireWentOut()
+        {
+            FireWentOut?.Invoke(this, EventArgs.Empty);
+            DaysPassedSinceOnFire = 0;
+        }
+
+        private void OnBurntDown()
+        {
+            BurntDown?.Invoke(this, EventArgs.Empty);
+        }
+
+        #endregion
 
         #endregion
     }
@@ -60,8 +161,6 @@ namespace simcityModel.Model
         #region Fields
 
         private ObservableCollection<Person> _people;
-        private bool _onFire;
-        private float _fireProb;
 
         #endregion
 
@@ -69,8 +168,6 @@ namespace simcityModel.Model
 
         [JsonIgnore]
         public ObservableCollection<Person> People { get => _people; set => _people = value; }
-        public bool OnFire { get => _onFire; set => _onFire = value; }
-        public float FireProbability { get => _fireProb; set => _fireProb = value; }
 
         #endregion
 
@@ -86,8 +183,6 @@ namespace simcityModel.Model
             _people.CollectionChanged += new NotifyCollectionChangedEventHandler(OnNumberOfPeopleChanged);
         }
 
-        public void CalculateFire() { }
-
         #region Private event triggers
 
         private void OnNumberOfPeopleChanged(object? sender, NotifyCollectionChangedEventArgs e)
@@ -102,19 +197,18 @@ namespace simcityModel.Model
     {
         #region Fields
         private const int POLICESTATION_EFFECT_VALUE = 5;
-        private const float FIRESTATION_EFFECT_VALUE = 0.1f;
+        private const double FIRESTATION_EFFECT_VALUE = -0.1;
         private const int STADIUM_EFFECT_VALUE = 30;
 
-        private bool _onFire;
-        private float _fireProb;
-        private int _effectSugar;
+        private const int POLICESTATION_EFFECT_SUGAR = 4;
+        private const int FIRESTATION_EFFECT_SUGAR = 5;
+        private const int STADIUM_EFFECT_SUGAR = 2;
+
         private List<(int x, int y)> _effectCoordinates;
 
         #endregion
 
         #region Properties
-
-        public bool Onfire { get => _onFire; set => _onFire = value; }
 
         public override List<(int, int)> Coordinates
         {
@@ -140,20 +234,19 @@ namespace simcityModel.Model
             }
         }
 
+        [JsonIgnore]
         private int EffectSugar
         {
             get
             {
                 switch (_type)
                 {
-                    case BuildingType.PoliceStation: return 4;
-                    case BuildingType.FireStation: return 5;
-                    case BuildingType.Stadium: return 2;
+                    case BuildingType.PoliceStation: return POLICESTATION_EFFECT_SUGAR;
+                    case BuildingType.FireStation: return FIRESTATION_EFFECT_SUGAR;
+                    case BuildingType.Stadium: return STADIUM_EFFECT_SUGAR;
                     default: return 0;
                 }
             }
-
-            set => _effectSugar = value;
         }
         public List<(int, int)> EffectCoordinates
         {
@@ -185,7 +278,6 @@ namespace simcityModel.Model
         #endregion
 
         #region Public methods
-        public void CalculateFire() { }
 
         public void AddEffect(Field[,] fields)
         {
@@ -197,7 +289,8 @@ namespace simcityModel.Model
                         fields[coordinates.x, coordinates.y].FieldSafety += POLICESTATION_EFFECT_VALUE;
                         break;
                     case BuildingType.FireStation:
-                        /* TODO */
+                        if (fields[coordinates.x, coordinates.y].Building != null)
+                            fields[coordinates.x, coordinates.y].Building!.FireProbability += FIRESTATION_EFFECT_VALUE;
                         break;
                     case BuildingType.Stadium:
                         fields[coordinates.x, coordinates.y].FieldHappiness += STADIUM_EFFECT_VALUE;
@@ -216,7 +309,8 @@ namespace simcityModel.Model
                         fields[coordinates.x, coordinates.y].FieldSafety -= POLICESTATION_EFFECT_VALUE;
                         break;
                     case BuildingType.FireStation:
-                        /* TODO */
+                        if (fields[coordinates.x, coordinates.y].Building != null)
+                            fields[coordinates.x, coordinates.y].Building!.FireProbability -= FIRESTATION_EFFECT_VALUE;
                         break;
                     case BuildingType.Stadium:
                         fields[coordinates.x, coordinates.y].FieldHappiness -= STADIUM_EFFECT_VALUE;
@@ -230,8 +324,8 @@ namespace simcityModel.Model
 
     public class Road : Building
     {
-        private VehicleType _vehicle;
-        public VehicleType Vehicle { get => _vehicle; set => _vehicle = value;  }
+        private List<Vehicle> _vehicles;
+        public List<Vehicle> Vehicles { get => _vehicles; set => _vehicles = value;  }
 
         public Road((int x, int y) coordinates) : base(coordinates, BuildingType.Road)
         {  

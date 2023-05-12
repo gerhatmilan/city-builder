@@ -240,7 +240,13 @@ namespace simcityView.ViewModel
                     b.ClickCom = new DelegateCommand(param => {
                         try
                         {
-                            if (Buldozer)
+                            if (_model.Fields[b.X, b.Y].Building != null && _model.Fields[b.X, b.Y].Building!.OnFire)
+                            {
+                                _model.SendFireTruck((b.X, b.Y));
+                                return;
+                            }
+
+                            if (_flipBuldozeMode)
                             {
                                 _model.Destroy(b.X, b.Y);
                             }
@@ -395,12 +401,6 @@ namespace simcityView.ViewModel
         {
             _textureManager.SetTexture(e.X, e.Y);
         }
-
-
-
-
-
-
 
         #endregion
     }
