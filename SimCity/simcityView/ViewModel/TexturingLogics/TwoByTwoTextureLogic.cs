@@ -29,9 +29,9 @@ namespace simcityView.ViewModel.TexturingLogics
             {
                 throw new ArgumentException("FloorTexture size must be 1!");
             }
-            if (BuildingTextures.Length != 4)
+            if (BuildingTextures.Length != 8)
             {
-                throw new ArgumentException("BuildingTexture size must be 4!");
+                throw new ArgumentException("BuildingTexture size must be 8!");
             }
             this.FloorTextures = FloorTextures;
             this.BuildingTextures = BuildingTextures;
@@ -54,7 +54,12 @@ namespace simcityView.ViewModel.TexturingLogics
             {
                 _stadiumOffset = 0;
             }
-            ViewModel.Cells[ViewModel.CoordsToListIndex(x, y)].BuildingTexture = BuildingTextures[_stadiumOffset];
+            int _fireOffset = 0;
+            if (Model.Fields[x, y].Building.OnFire)
+            {
+                _fireOffset = 4;
+            }
+            ViewModel.Cells[ViewModel.CoordsToListIndex(x, y)].BuildingTexture = BuildingTextures[_stadiumOffset + _fireOffset];
             _stadiumOffset++;
         }
         public void UpdateWithLogicalTexture(int x, int y)

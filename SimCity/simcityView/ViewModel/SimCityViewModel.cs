@@ -246,7 +246,7 @@ namespace simcityView.ViewModel
                                 return;
                             }
 
-                            if (_flipBuldozeMode)
+                            if (Buldozer)
                             {
                                 _model.Destroy(b.X, b.Y);
                             }

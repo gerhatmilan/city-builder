@@ -17,6 +17,18 @@
     <None Remove="View\Textures\car_white_right.png" />
     <None Remove="View\Textures\car_white_up.png" />
     <None Remove="View\Textures\fire_station_a.png" />
+    <None Remove="View\Textures\f_barn_red_a.png" />
+    <None Remove="View\Textures\f_building_medium_blue_a.png" />
+    <None Remove="View\Textures\f_building_tall_yellow_a.png" />
+    <None Remove="View\Textures\f_fire_station_a.png" />
+    <None Remove="View\Textures\f_house_large_green_a.png" />
+    <None Remove="View\Textures\f_house_small_yellow_a.png" />
+    <None Remove="View\Textures\f_police_station_a.png" />
+    <None Remove="View\Textures\f_stadium1.png" />
+    <None Remove="View\Textures\f_stadium2.png" />
+    <None Remove="View\Textures\f_stadium3.png" />
+    <None Remove="View\Textures\f_stadium4.png" />
+    <None Remove="View\Textures\f_warehouse_orange_a.png" />
     <None Remove="View\Textures\ground_asphalt.png" />
     <None Remove="View\Textures\ground_dirt.png" />
     <None Remove="View\Textures\ground_grass.png" />
@@ -88,6 +100,42 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="View\Textures\fire_station_a.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="View\Textures\f_barn_red_a.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="View\Textures\f_building_medium_blue_a.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="View\Textures\f_building_tall_yellow_a.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="View\Textures\f_fire_station_a.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="View\Textures\f_house_large_green_a.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="View\Textures\f_house_small_yellow_a.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="View\Textures\f_police_station_a.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="View\Textures\f_stadium1.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="View\Textures\f_stadium2.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="View\Textures\f_stadium3.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="View\Textures\f_stadium4.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="View\Textures\f_warehouse_orange_a.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="View\Textures\ground_asphalt.png">
