@@ -11,6 +11,7 @@ using System.Windows;
 using System.Windows.Threading;
 using System.Timers;
 using Microsoft.Win32;
+using System.Diagnostics;
 
 namespace simcityView
 {
@@ -57,8 +58,11 @@ namespace simcityView
             _vm.SaveGameEvent += Vm_SaveGame;
             _vm.LoadGameEvent += Vm_LoadGame;
             _vm.NewGameEvent += Vm_NewGame;
-            
+            _vm.ShowHelpEvent += Vm_ShowHelp;
+
             _view = new MainWindow();
+            _view.Activated += new EventHandler(View_FocusChanged);
+            _view.Deactivated += new EventHandler(View_FocusChanged);
             _view.DataContext = _vm;
             _view.CamInit();
             _view.Show();
@@ -96,7 +100,7 @@ namespace simcityView
             GC.Collect();
             
         }
-        
+       
         #endregion
         #region events
         #region Timer events
@@ -105,7 +109,7 @@ namespace simcityView
             _model.AdvanceTime();
         }
         #endregion
-        #region View events
+        #region Vm events
         void Vm_ChangeTimer(object? s, int status)
         {
             switch (status)
@@ -148,6 +152,7 @@ namespace simcityView
             {
                 MessageBox.Show("A fájl mentése sikertelen!", "SimCity", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+            
         }
         private async void Vm_LoadGame(object? s, EventArgs e)
         {
@@ -167,7 +172,20 @@ namespace simcityView
                 MessageBox.Show("A fájl betöltése sikertelen!", "SimCity", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-
+        private void Vm_ShowHelp(object? s, EventArgs e)
+        {
+            MessageBox.Show(
+                "Irányítások:\n" +
+                "W A S D - Mozgás a kamerával\n" +
+                "Q E - Zoomolás a kamerával\n"
+                , "SimCity", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+        #endregion
+        #region View events
+        private void View_FocusChanged(object? s, EventArgs e)
+        {
+            _vm.inFocus = _view.IsActive;
+        }
         #endregion
         #region Model events
         void M_GameOver(object? s, EventArgs e)

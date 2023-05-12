@@ -17,8 +17,8 @@ namespace simcityView.ViewModel
         private SimCityModel _model;
         private string _infoText = string.Empty;
         private TextureManager _textureManager;
-        private float _playFieldX = 250f;
-        private float _playFieldY = 250f;
+        private float _playFieldX = 150;
+        private float _playFieldY = 320f;
         private float _playFieldZoom = 1f;
         private string _mouseStateText = "";
         private string _currentAction = "Build";
@@ -34,8 +34,19 @@ namespace simcityView.ViewModel
 
         #region Props
         #region GameStateProps
-        public bool GameIsNotOver { get { return _gameIsNotOver; } 
-                                    set { _gameIsNotOver = value; OnPropertyChanged(nameof(GameIsNotOver)); } }
+        public bool GameIsNotOver { 
+            get { return _gameIsNotOver; } 
+            set { _gameIsNotOver = value; OnPropertyChanged(nameof(GameIsNotOver)); } 
+        }
+        public bool AntiBuldozer
+        {
+            get { return !_flipBuldozeMode; }
+        }
+        public bool Buldozer
+        {
+            get { return _flipBuldozeMode; }
+            set { _flipBuldozeMode = value; OnPropertyChanged(nameof(Buldozer)); OnPropertyChanged(nameof(AntiBuldozer)); }
+        }
         #endregion
         #region ObservableProps
 
@@ -61,6 +72,7 @@ namespace simcityView.ViewModel
             get { return _playFieldZoom; }
             set { _playFieldZoom = Math.Clamp(value,0.1f,10.0f); OnPropertyChanged(nameof(PlayFieldZoom)); }
         }
+        public bool inFocus { get; set; } = true;
 
         #endregion
         #region DebugProps
@@ -97,12 +109,13 @@ namespace simcityView.ViewModel
         public DelegateCommand SaveGame { get; set; }
         public DelegateCommand LoadGame { get; set; }
         public DelegateCommand NewGame { get; set; }
-
+        public DelegateCommand ShowHelp { get; set; }
         #endregion
         #region Events
         public event EventHandler? SaveGameEvent;
         public event EventHandler? LoadGameEvent;
         public event EventHandler? NewGameEvent;
+        public event EventHandler? ShowHelpEvent;
         public event EventHandler<int>? ChangeTime;
         #endregion
         #endregion
@@ -122,28 +135,47 @@ namespace simcityView.ViewModel
             SaveGame = new DelegateCommand(param => SaveGameEvent?.Invoke(this, EventArgs.Empty));
             LoadGame = new DelegateCommand(param => LoadGameEvent?.Invoke(this, EventArgs.Empty));
             NewGame = new DelegateCommand(param => NewGameEvent?.Invoke(this, EventArgs.Empty));
+            ShowHelp = new DelegateCommand(param => ShowHelpEvent?.Invoke(this, EventArgs.Empty));
 
             Cells = new ObservableCollection<Block>();
             Income = new ObservableCollection<BudgetItem>();
             Expense = new ObservableCollection<BudgetItem>();
 
-            MovePlayFieldUpDown = new DelegateCommand(param => PlayFieldY += (float)param! * (1/PlayFieldZoom)); //Up is positive, down is negative param
-            MovePlayFieldLeftRight = new DelegateCommand(param => PlayFieldX += (float)param! * (1 / PlayFieldZoom)); //Right is positive, left is negative param
-            ZoomPlayField = new DelegateCommand(param => PlayFieldZoom += (float)param!);  //Zoom is positive, minimize is negative param
+            MovePlayFieldUpDown = new DelegateCommand(param =>
+            {
+                if (inFocus)
+                {
+                    PlayFieldY += (float)param! * (1 / PlayFieldZoom);
+                }
+            }); //Up is positive, down is negative param
+            MovePlayFieldLeftRight = new DelegateCommand(param =>
+            {
+                if (inFocus)
+                {
+                    PlayFieldX += (float)param! * (1 / PlayFieldZoom);
+                }
+            }); //Right is positive, left is negative param
+            ZoomPlayField = new DelegateCommand(param =>
+            {
+                if (inFocus)
+                {
+                    PlayFieldZoom += (float)param!;
+                }
+            });  //Zoom is positive, minimize is negative param
 
 
             SelectedBuildable = new DelegateCommand(param => SelectedBuildableSorter((string)param!));
             FlipBuldozeMode = new DelegateCommand(param =>
             {
-                if (_flipBuldozeMode)
+                if (Buldozer)
                 {
-                    _flipBuldozeMode = false;
+                    Buldozer = false;
                     _currentAction = "Build";
                 }
                 else
                 {
                     _currentAction = "Buldoze";
-                    _flipBuldozeMode= true;
+                    Buldozer = true;
                 }
                 UpdateMouseStateText();
 
@@ -174,8 +206,14 @@ namespace simcityView.ViewModel
 
         #region ViewModel functions
         #region Cell functions
-        
-
+        public int CoordsToListIndex(int x, int y)
+        {
+            return (x + y * _model.GameSize);
+        }
+        public bool isValidCoord(int x, int y)
+        {
+            return -1 < x && -1 < y && x < _model.GameSize && y < _model.GameSize;
+        }
         private void fillCells()
         {
             Cells.Clear();
@@ -345,12 +383,23 @@ namespace simcityView.ViewModel
 
         private void model_UpdateInfoText(object? s, EventArgs e)
         {
-            InfoText = "Dátum: " + _model.GameTime.ToString("yyyy. MM. dd.") + "\t|\tPénz: " + _model.Money + "💸\t|\tLakosság: " + _model.Population + " fő\t|\tBoldogság: " + (int)Math.Floor(_model.Happiness) + " 😁";
+            int happines = (int)Math.Floor(_model.Happiness);
+            string emoji = " 😐";
+            if (happines < 25)
+            {
+                emoji = " 🙁";
+            }
+            if(happines > 74)
+            {
+                emoji = " 😁";
+            }
+
+            InfoText = "Dátum: " + _model.GameTime.ToString("yyyy. MM. dd.") + "\t|\tPénz: " + _model.Money + "💸\t|\tLakosság: " + _model.Population + " fő\t|\tBoldogság: " + happines + emoji;
         }
 
         private void model_MatrixChanged(object? s, (int X, int Y) e)
         {
-                _textureManager.SetTextureFromInformation(e.X, e.Y);
+            _textureManager.SetTexture(e.X, e.Y);
         }
 
         #endregion

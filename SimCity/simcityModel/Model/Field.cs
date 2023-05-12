@@ -3,7 +3,8 @@ using Newtonsoft.Json.Converters;
 
 namespace simcityModel.Model
 {
-    public enum FieldType { IndustrialZone, OfficeZone, ResidentalZone, GeneralField }
+    //[JsonConverter(typeof(StringEnumConverter))]
+    public enum FieldType { IndustrialZone = 3, OfficeZone = 2, ResidentalZone = 1, GeneralField = 0 }
 
     public class FieldStat
     {

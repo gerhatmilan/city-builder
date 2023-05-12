@@ -6,13 +6,13 @@
         xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:local="clr-namespace:simcityView"
         mc:Ignorable="d"
-        Title="MainWindow" Height="740" Width="1280" ResizeMode="NoResize">
+        Title="MainWindow" Height="755" Width="1280" ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
    
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="550"/>
-            <RowDefinition Height="130"/>
+            <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
         
@@ -46,6 +46,7 @@
                                     <RotateTransform CenterX="0.5" CenterY="0.5" Angle="315"/>
                                     <SkewTransform CenterX="0.5" CenterY="0.5" AngleX="20" AngleY="10"/>
                                     <TranslateTransform X="-5" Y="-5"/>
+                                    <ScaleTransform CenterX="0.5" CenterY="0.5" ScaleX="1.2" ScaleY="1.2"/>
                                 </TransformGroup>
                             </Image.RenderTransform>
                         </Image>
@@ -64,11 +65,11 @@
                 <MenuItem Header="💿Betöltés" Command="{Binding LoadGame}"/>
                 <MenuItem Header="♻Új játék" Command="{Binding NewGame}"/>
             </MenuItem>
-            <MenuItem Header="❔Sugó"/>
+            <MenuItem Header="❔Sugó" Command="{Binding ShowHelp}"/>
             <MenuItem Header="{Binding InfoText}" HorizontalAlignment="Right"/>
         </Menu>
         <TextBlock Grid.Row="1" Width="300" Height="30" HorizontalAlignment="Right" VerticalAlignment="Top" Text="{Binding MouseStateText}"/>
-        <CheckBox Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Bottom" Content="Buldózer" Margin="10" Command="{Binding FlipBuldozeMode}">
+        <CheckBox Grid.Row="1" HorizontalAlignment="Right" VerticalAlignment="Bottom" Content="Buldózer" Margin="10" Command="{Binding FlipBuldozeMode}" IsChecked="{Binding Buldozer, Mode=OneWay}">
             <CheckBox.LayoutTransform>
                 <ScaleTransform ScaleX="1.5" ScaleY="1.5"/>
             </CheckBox.LayoutTransform>
@@ -110,67 +111,80 @@
                 <RadioButton Content="▶▶"   Style="{StaticResource Time}" CommandParameter="500"/>
                 <RadioButton Content="▶▶▶"  Style="{StaticResource Time}" CommandParameter="250"/>
             </ItemsControl>
-            
-            
-            
+
+
+
         </StackPanel>
-       
-        
-        <TabControl Grid.Row="2" FontSize="15" SelectedIndex="{Binding SelectedTab, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
-            
+        <TabControl Grid.Row="2" FontSize="15" SelectedIndex="{Binding SelectedTab, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" IsEnabled="{Binding AntiBuldozer}">
+            <TabControl.Resources>
+                <Style x:Key="Selector" TargetType="RadioButton">
+                    <Style.Triggers>
+                        <Trigger Property="IsChecked" Value="False">
+                            <Setter Property="Opacity" Value="0.5"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Background" Value="Red"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="True">
+                            <Setter Property="Background" Value="Transparent"/>
+                        </Trigger>
+                    </Style.Triggers>
+                    <Setter Property="BorderThickness" Value="2"/>
+                    <Setter Property="Width" Value="90"/>
+                    <Setter Property="Height" Value="90"/>
+                    <Setter Property="Margin" Value="10,0,10,0"/>
+                    <Setter Property="Command" Value="{Binding SelectedBuildable}"/>
+                    <Setter Property="IsEnabled" Value="{Binding AntiBuldozer}"/>
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="RadioButton">
+                                <Border BorderThickness="{TemplateBinding BorderThickness}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="10">
+                                    <Image Width="80" Height="80"  Source="{Binding Path=Content, RelativeSource={RelativeSource TemplatedParent}}" Opacity="{TemplateBinding Opacity}"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+                
+            </TabControl.Resources>
 
             <TabItem Header="Zónák">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Stretch" HorizontalAlignment="Center">
-                    <Border BorderThickness="1" BorderBrush="DeepPink">
-                        <StackPanel Orientation="Vertical">
-                            <RadioButton GroupName="buildable1" Width="140" Command="{Binding SelectedBuildable}" CommandParameter="Re" IsChecked="True">Lakó</RadioButton>
-                            <Image Source="Textures/house_small_yellow_a.png" Width="64"/>
-                        </StackPanel>
-                    </Border>
-
-                    <Border BorderThickness="1" BorderBrush="DeepPink">
-                        <StackPanel Orientation="Vertical">
-                            <RadioButton GroupName="buildable1" Width="140" Command="{Binding SelectedBuildable}" CommandParameter="I">Ipari</RadioButton>
-                            <Image Source="Textures/warehouse_orange_a.png" Width="64"/>
-                        </StackPanel>
-                    </Border>
-
-                    <Border BorderThickness="1" BorderBrush="DeepPink">
-                        <StackPanel Orientation="Vertical">
-                            <RadioButton GroupName="buildable1" Width="140" Command="{Binding SelectedBuildable}" CommandParameter="O">Szolgáltatási</RadioButton>
-                            <Image Source="Textures/building_tall_yellow_a.png" Width="64"/>
-                        </StackPanel>
-                    </Border>
-
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Stretch" HorizontalAlignment="Center" >
+                    <StackPanel Orientation="Vertical">
+                        <RadioButton GroupName="buildable1" Style="{StaticResource Selector}" CommandParameter="Re" IsChecked="True">Textures/house_large_green_a.png</RadioButton>
+                        <TextBlock TextAlignment="Center">Lakó zóna</TextBlock>
+                    </StackPanel>
+                    <StackPanel Orientation="Vertical">
+                        <RadioButton GroupName="buildable1" Style="{StaticResource Selector}" CommandParameter="I">Textures/warehouse_orange_a.png</RadioButton>
+                        <TextBlock TextAlignment="Center">Ipari zóna</TextBlock>
+                    </StackPanel>
+                    <StackPanel Orientation="Vertical">
+                        <RadioButton GroupName="buildable1" Style="{StaticResource Selector}" CommandParameter="O">Textures/building_tall_yellow_a.png</RadioButton>
+                        <TextBlock TextAlignment="Center">Irodai zóna</TextBlock>
+                    </StackPanel>
                 </StackPanel>
             </TabItem>
             <TabItem Header="Kiszolgáló épületek">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Stretch" HorizontalAlignment="center">
-                    <Border BorderThickness="1" BorderBrush="DeepPink">
-                        <StackPanel Orientation="Vertical">
-                            <RadioButton GroupName="buildable2" Width="140" Command="{Binding SelectedBuildable}" CommandParameter="Ro" IsChecked="True">Út</RadioButton>
-                            <Image Source="Textures/street_straight_upDown.png" Width="64"/>
-                        </StackPanel>
-                    </Border>
-                    <Border BorderThickness="1" BorderBrush="DeepPink">
-                        <StackPanel Orientation="Vertical">
-                            <RadioButton GroupName="buildable2" Width="140" Command="{Binding SelectedBuildable}" CommandParameter="S">Stadion</RadioButton>
-                            <Image Source="Textures/stadium.png" Width="64"/>
-                        </StackPanel>
-                    </Border>
-                    <Border BorderThickness="1" BorderBrush="DeepPink">
-                        <StackPanel Orientation="Vertical">
-                            <RadioButton GroupName="buildable2" Width="140" Command="{Binding SelectedBuildable}" CommandParameter="F" >Tűzoltóság</RadioButton>
-                            <Image Source="Textures/fire_station_a.png" Width="64"/>
-                        </StackPanel>
-                    </Border>
-                    <Border BorderThickness="1" BorderBrush="DeepPink">
-                        <StackPanel Orientation="Vertical">
-                            <RadioButton GroupName="buildable2" Width="140" Command="{Binding SelectedBuildable}" CommandParameter="P" >Rendőrség</RadioButton>
-                            <Image Source="Textures/police_station_a.png" Width="64"/>
-                        </StackPanel>
-                    </Border>
-                    
+                    <StackPanel Orientation="Vertical">
+                        <RadioButton GroupName="buildable2" Style="{StaticResource Selector}" CommandParameter="Ro" IsChecked="True">Textures/street_straight_upDown.png</RadioButton>
+                        <TextBlock TextAlignment="Center">Út</TextBlock>
+                    </StackPanel>
+                    <StackPanel Orientation="Vertical">
+                        <RadioButton GroupName="buildable2" Style="{StaticResource Selector}" CommandParameter="S">Textures/stadium_thumbnail.png</RadioButton>
+                        <TextBlock TextAlignment="Center">Stadion</TextBlock>
+                    </StackPanel>
+                    <StackPanel Orientation="Vertical">
+                        <RadioButton GroupName="buildable2" Style="{StaticResource Selector}" CommandParameter="F" >Textures/fire_station_a.png</RadioButton>
+                        <TextBlock TextAlignment="Center">Tűzoltóság</TextBlock>
+                    </StackPanel>
+                    <StackPanel Orientation="Vertical">
+                        <RadioButton GroupName="buildable2" Style="{StaticResource Selector}" CommandParameter="P" >Textures/police_station_a.png</RadioButton>
+                        <TextBlock TextAlignment="Center">Rendőrség</TextBlock>
+                    </StackPanel>
                 </StackPanel>
             </TabItem>
             <TabItem Header="Költségek" >
