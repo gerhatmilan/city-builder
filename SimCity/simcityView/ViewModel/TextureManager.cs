@@ -141,10 +141,10 @@ namespace simcityView.ViewModel
             _buildingTextures[23] = UriToBitmapImage(@"~\..\Textures\f_warehouse_orange_a.png");
             _buildingTextures[24] = UriToBitmapImage(@"~\..\Textures\f_building_medium_blue_a.png");
             _buildingTextures[25] = UriToBitmapImage(@"~\..\Textures\f_building_tall_yellow_a.png");
-            _buildingTextures[26] = UriToBitmapImage(@"~\..\Textures\stadium1.png");
-            _buildingTextures[27] = UriToBitmapImage(@"~\..\Textures\stadium2.png");
-            _buildingTextures[28] = UriToBitmapImage(@"~\..\Textures\stadium4.png");
-            _buildingTextures[29] = UriToBitmapImage(@"~\..\Textures\stadium3.png");
+            _buildingTextures[26] = UriToBitmapImage(@"~\..\Textures\f_stadium1.png");
+            _buildingTextures[27] = UriToBitmapImage(@"~\..\Textures\f_stadium2.png");
+            _buildingTextures[28] = UriToBitmapImage(@"~\..\Textures\f_stadium4.png");
+            _buildingTextures[29] = UriToBitmapImage(@"~\..\Textures\f_stadium3.png");
 
 
         }
