@@ -178,6 +178,7 @@ namespace simcityModel.Model
         private void HandleFireSituations(object? sender, EventArgs e)
         {
             IncreaseDaysPassedSinceBuildingOnFire();
+            DecreaseDaysUntilBuildingCanGetOnFire();
             TryToSetARandomBuildingOnFire();
             TryToSpreadFire();
         }
@@ -328,6 +329,14 @@ namespace simcityModel.Model
             foreach (Building building in _buildings.ToList())
             {
                 if (building.OnFire) building.DaysPassedSinceOnFire++;
+            }
+        }
+
+        private void DecreaseDaysUntilBuildingCanGetOnFire()
+        {
+            foreach (Building building in _buildings.ToList())
+            {
+                if (!building.OnFire && building.DaysUntilCanGetOnFire > 0) building.DaysUntilCanGetOnFire--;
             }
         }
 
