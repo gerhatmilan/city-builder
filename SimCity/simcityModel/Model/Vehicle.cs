@@ -24,6 +24,7 @@ namespace simcityModel.Model
             _position = position;
             _type = type;
             _route = route;
+            _route.Dequeue();
             _startBuilding = startBuilding;
             _arrived = (_route.Count <= 1);
             _currentDirection = InitDirection();

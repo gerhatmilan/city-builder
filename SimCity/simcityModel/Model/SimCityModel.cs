@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using System;
 using System.ComponentModel;
+using System.Collections.Generic;
 
 namespace simcityModel.Model
 {
@@ -606,49 +607,61 @@ namespace simcityModel.Model
 
         private void MoveVehicles(Object? sender, EventArgs e)
         {
+            var toRemove = new List<Vehicle>();
             foreach (var car in _vehicles)
             {
                 var pos = car.CurrentPosition;
                 var nextPos = car.PeekNextPos();
                 var nextDir = car.NextDirection();
                 Road thisRoad = (Road)(Fields[pos.x, pos.y].Building!);
-                Road nextRoad = (Road)(Fields[nextPos.x, nextPos.y].Building!);
-                // Firecar has priority
-                if (car.Type == VehicleType.Firecar)
-                {
-                    if (nextRoad.Vehicles.Count == 1 && !nextRoad.Vehicles[0].FacingOpposite(nextDir))
-                    {
-                        nextRoad.Vehicles.Remove(nextRoad.Vehicles[0]);
-                        OnMatrixChanged(this, nextPos);
-                    }
-                    thisRoad.Vehicles.Remove(car);
-                    OnMatrixChanged(this, pos);
-                    car.Move();
-                    nextRoad.Vehicles.Add(car);
-                    OnMatrixChanged(this, nextPos);
-                }
-                // other cars move if they can
-                else if (nextRoad.Vehicles.Count == 0 || (nextRoad.Vehicles.Count == 1 && nextRoad.Vehicles[0].FacingOpposite(nextDir)))
-                {
-                    thisRoad.Vehicles.Remove(car);
-                    OnMatrixChanged(this, pos);
-                    car.Move();
-                    nextRoad.Vehicles.Add(car);
-                    OnMatrixChanged(this, nextPos);
-                }
-
                 // If the car arrived, get rid of it / put out the fire
                 if (car.Arrived)
                 {
-                    if (car.Type == VehicleType.Firecar && Fields[nextPos.x, nextPos.y].Building != null)
+                    if (car.Type == VehicleType.Firecar && Fields[pos.x, pos.y].Building != null)
                     {
-                        Fields[nextPos.x, nextPos.y].Building!.PutOutFire();
-                        OnMatrixChanged(this, nextPos);
+                        Fields[pos.x, pos.y].Building!.PutOutFire();
+                        OnMatrixChanged(this, pos);
                         _availableFirestations.Add(car.StartBuilding);
                     }
                     thisRoad.Vehicles.Remove(car);
+                    toRemove.Add(car);
                     OnMatrixChanged(this, pos);
                 }
+                if (!car.Arrived)
+                {
+                    Road nextRoad = (Road)(Fields[nextPos.x, nextPos.y].Building!);
+                    // Firecar has priority
+                    if (car.Type == VehicleType.Firecar)
+                    {
+                        foreach (var vehicle in nextRoad.Vehicles)
+                        {
+                            if (!vehicle.FacingOpposite(nextDir))
+                            {
+                                nextRoad.Vehicles.Remove(vehicle);
+                                toRemove.Add(vehicle);
+                                OnMatrixChanged(this, nextPos);
+                            }
+                        }
+                        thisRoad.Vehicles.Remove(car);
+                        OnMatrixChanged(this, pos);
+                        car.Move();
+                        nextRoad.Vehicles.Add(car);
+                        OnMatrixChanged(this, nextPos);
+                    }
+                    // other cars move if they can
+                    else if (nextRoad.Vehicles.Count == 0 || (nextRoad.Vehicles.Count == 1 && nextRoad.Vehicles[0].FacingOpposite(nextDir)))
+                    {
+                        thisRoad.Vehicles.Remove(car);
+                        OnMatrixChanged(this, pos);
+                        car.Move();
+                        nextRoad.Vehicles.Add(car);
+                        OnMatrixChanged(this, nextPos);
+                    }
+                }
+            }
+            foreach (var car in toRemove)
+            {
+                _vehicles.Remove(car);
             }
         }
 
@@ -699,11 +712,13 @@ namespace simcityModel.Model
                     if (first.Vehicles.Count == 0)
                     {
                         first.Vehicles.Add(vehicle);
+                        _vehicles.Add(vehicle);
                         OnMatrixChanged(this, f);
                     }
                     else if (first.Vehicles.Count == 1 && vehicle.FacingOpposite(first.Vehicles[0].CurrentDirection))
                     {
                         first.Vehicles.Add(vehicle);
+                        _vehicles.Add(vehicle);
                         OnMatrixChanged(this, f);
                     }
                 }
@@ -1052,7 +1067,7 @@ namespace simcityModel.Model
             var (used, allBuildingsFound, parents, distance) = BreadthFirst((start.x, start.y), includeFields);
             if (used[start.x, start.y])
             {
-                (int x, int y) v = start;
+                (int x, int y) v = end;
                 while (v != (-1, -1))
                 {
                     route.Enqueue(v);
@@ -1110,6 +1125,7 @@ namespace simcityModel.Model
                     if (!fireCar.FacingOpposite(car.CurrentDirection))
                     {
                         first.Vehicles.Remove(car);
+                        _vehicles.Remove(car);
                         OnMatrixChanged(this, f);
                     }
                 }
@@ -1118,6 +1134,7 @@ namespace simcityModel.Model
 
                 // Spawn the fire truck
                 first.Vehicles.Add(fireCar);
+                _vehicles.Add(fireCar);
                 OnMatrixChanged(this, f);
             }
         }
