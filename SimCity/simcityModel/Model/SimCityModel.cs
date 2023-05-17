@@ -198,7 +198,7 @@ namespace simcityModel.Model
 
         private void MoveIn()
         {
-            int pendingMoveIns = 1; // (int)(_random.NextDouble() * (double)Happiness);
+            int pendingMoveIns = Math.Max(1, _random.Next(0,(int)Happiness) / 8);
             var moveInList = new List<FieldStat>();
             foreach (var field in _fields)
             {
@@ -211,8 +211,9 @@ namespace simcityModel.Model
 
             while (pendingMoveIns > 0 && moveInList.Count > 0)
             {
-                var fieldStat = moveInList[0];
-                moveInList.RemoveAt(0);
+                int chosen = _random.Next(0, Math.Max(1, moveInList.Count / 2));
+                var fieldStat = moveInList[chosen];
+                moveInList.RemoveAt(chosen);
 
                 Field sourceField = _fields[fieldStat.ParentCoordinates.x, fieldStat.ParentCoordinates.y];
                 Field targetField = _fields[fieldStat.Coordinates.x, fieldStat.Coordinates.y];
@@ -807,146 +808,6 @@ namespace simcityModel.Model
             if (GameTime.Day == 1) OnOneMonthPassed();
         }
 
-        public void SendFireTruck((int x, int y) coords)
-        {
-            if (Fields[coords.x, coords.y].Building == null || (Fields[coords.x, coords.y].Building != null && !Fields[coords.x, coords.y].Building!.OnFire) || _numberOfBuildings[BuildingType.FireStation] < 1) return;
-            if (_availableFirestations.Count == 0) return;
-
-            // Closest path needed: look for the closest available fire station from coords, then send a fire truck to coords from the found fire station
-            Building closestStation = _availableFirestations[0];
-            Queue<(int x, int y)> route = CalculateRoute(closestStation.TopLeftCoordinate, coords);
-            int smallestDistance = route.Count;
-            int currentStationIndex = 1;
-            while(currentStationIndex < _availableFirestations.Count)
-            {
-                Building potential = _availableFirestations[currentStationIndex];
-                Queue<(int x, int y)> potentialRoute = CalculateRoute(potential.TopLeftCoordinate, coords);
-                if (potentialRoute.Count < smallestDistance)
-                {
-                    closestStation = potential;
-                    smallestDistance = potentialRoute.Count;
-                }
-                currentStationIndex++;
-            }
-            // get rid of the building at the beginning, and put out the fire if its next to the station (or on the station)
-            route.Dequeue();
-            if (route.Count <= 1)
-            {
-                Fields[coords.x, coords.y].Building!.PutOutFire();
-            }      
-            else
-            { 
-                // Provisional fire truck
-                (int x, int y) f = route.Peek();
-                Road first = (Road)(_fields[f.x, f.y].Building!);
-                var fireCar = new Vehicle(f, route, closestStation, VehicleType.Firecar);
-
-                // Check if there is a fire truck in the way of spawning - return if there is
-                foreach (var car in first.Vehicles)
-                {
-                    if (car.Type == VehicleType.Firecar && !fireCar.FacingOpposite(car.CurrentDirection)) return;
-                }
-                
-                // Remove the vehicles on the road if they are in the way of the fire truck
-                foreach (var car in first.Vehicles)
-                {
-                    if (!fireCar.FacingOpposite(car.CurrentDirection))
-                    {
-                        first.Vehicles.Remove(car);
-                        OnMatrixChanged(this, f);
-                    }
-                }
-                // Before the fire truck starts: make the fire station unavailable until it gets its job done (put out the fire), because a fire station can only send a single unit at the same time
-                _availableFirestations.Remove(closestStation);
-
-                // Spawn the fire truck
-                first.Vehicles.Add(fireCar);
-                OnMatrixChanged(this, f);
-            }
-        }
-
-        public (bool[,] routeExists, bool allBuildingsFound, (int, int)[,] parents, int[,] distance) BreadthFirst((int x, int y) source, bool includeFields = false)
-        {
-            //inits
-            Queue<(int, int)> q = new Queue<(int, int)>();
-            bool[,] found = new bool[GAMESIZE, GAMESIZE];
-            int[,] distance = new int[GAMESIZE, GAMESIZE];
-            (int x, int y)[,] parents = new (int, int)[GAMESIZE, GAMESIZE];
-            bool allBuildingsFound = true;
-            var numberOfVisitedBuildings = new Dictionary<BuildingType, int>(_numberOfBuildings);
-            if (!ValidCoordinates(source)) return (found, allBuildingsFound, parents, distance);
-            foreach (var key in numberOfVisitedBuildings.Keys)
-            {
-                numberOfVisitedBuildings[key] = 0;
-            }
-
-            //breadth first search
-            q.Enqueue(source);
-            found[source.x, source.y] = true;
-            if (_fields[source.x, source.y].Building != null)
-            {
-                numberOfVisitedBuildings[_fields[source.x, source.y].Building!.Type] = 1;
-            }
-            parents[source.x, source.y] = (-1, -1);
-            while (q.Count != 0)
-            {
-                (int x, int y) v = q.Dequeue();
-                foreach ((int x, int y) u in GetAdjacentCoordinates((v.x, v.y)))
-                {
-                    if (!found[u.x, u.y] && Fields[u.x, u.y].Building != null)
-                    {
-                        if (Fields[u.x, u.y].Building!.Type == BuildingType.Road)
-                            q.Enqueue(u);
-                        numberOfVisitedBuildings[Fields[u.x, u.y].Building!.Type] += 1;
-                        foreach (var c in Fields[u.x, u.y].Building!.Coordinates)
-                        {
-                            if (!found[c.x, c.y])
-                            {
-                                found[c.x, c.y] = true;
-                                distance[c.x, c.y] = distance[v.x, v.y] + 1;
-                                parents[c.x, c.y] = v;
-                            }
-                        }
-                    }
-
-                    if (!found[u.x, u.y] && includeFields)
-                    {
-                        found[u.x, u.y] = true;
-                        distance[u.x, u.y] = distance[v.x, v.y] + 1;
-                        parents[u.x, u.y] = v;
-                    }
-                }
-            }
-
-            //check if all buildings have been found. yes => map is connected.
-            foreach (var (key, value) in _numberOfBuildings)
-            {
-                if (_numberOfBuildings[key] != numberOfVisitedBuildings[key]) allBuildingsFound = false;
-            }
-
-            return (found, allBuildingsFound, parents, distance);
-        }
-
-        public Queue<(int x, int y)> CalculateRoute((int x, int y) start, (int x, int y) end, bool includeFields = false)
-        {
-            Queue<(int x, int y)> route = new Queue<(int x, int y)>();
-            if (!ValidCoordinates(start) || !ValidCoordinates(end))
-                return route;
-            var (used, allBuildingsFound, parents, distance) = BreadthFirst((start.x, start.y), includeFields);
-            if (used[start.x, start.y])
-            {
-                (int x, int y) v = start;
-                while (v != (-1, -1))
-                {
-                    route.Enqueue(v);
-                    v = parents[v.x, v.y];
-                }
-            }
-
-            route = new Queue<(int x, int y)>(route.Reverse());
-            return route;
-        }
-
         public void MakeZone(int x, int y, FieldType newFieldType)
         {
             if (!ValidCoordinates((x, y))) throw new CannotBuildException("Pályán kívülre nem építhetsz.");
@@ -967,6 +828,7 @@ namespace simcityModel.Model
                 throw new CannotBuildException("Ezt a mezőt nem jelölheted ki zóna mezőnek.");
             }
         }
+
         public void MakeBuilding(int x, int y, BuildingType newBuildingType)
         {
             if (newBuildingType == BuildingType.Home || newBuildingType == BuildingType.OfficeBuilding || newBuildingType == BuildingType.Industry) throw new CannotBuildException("Ilyen épületet nem építhetsz.");
@@ -1117,6 +979,146 @@ namespace simcityModel.Model
                             break;
                     }
                     break;
+            }
+        }
+
+        public (bool[,] routeExists, bool allBuildingsFound, (int, int)[,] parents, int[,] distance) BreadthFirst((int x, int y) source, bool includeFields = false)
+        {
+            //inits
+            Queue<(int, int)> q = new Queue<(int, int)>();
+            bool[,] found = new bool[GAMESIZE, GAMESIZE];
+            int[,] distance = new int[GAMESIZE, GAMESIZE];
+            (int x, int y)[,] parents = new (int, int)[GAMESIZE, GAMESIZE];
+            bool allBuildingsFound = true;
+            var numberOfVisitedBuildings = new Dictionary<BuildingType, int>(_numberOfBuildings);
+            if (!ValidCoordinates(source)) return (found, allBuildingsFound, parents, distance);
+            foreach (var key in numberOfVisitedBuildings.Keys)
+            {
+                numberOfVisitedBuildings[key] = 0;
+            }
+
+            //breadth first search
+            q.Enqueue(source);
+            found[source.x, source.y] = true;
+            if (_fields[source.x, source.y].Building != null)
+            {
+                numberOfVisitedBuildings[_fields[source.x, source.y].Building!.Type] = 1;
+            }
+            parents[source.x, source.y] = (-1, -1);
+            while (q.Count != 0)
+            {
+                (int x, int y) v = q.Dequeue();
+                foreach ((int x, int y) u in GetAdjacentCoordinates((v.x, v.y)))
+                {
+                    if (!found[u.x, u.y] && Fields[u.x, u.y].Building != null)
+                    {
+                        if (Fields[u.x, u.y].Building!.Type == BuildingType.Road)
+                            q.Enqueue(u);
+                        numberOfVisitedBuildings[Fields[u.x, u.y].Building!.Type] += 1;
+                        foreach (var c in Fields[u.x, u.y].Building!.Coordinates)
+                        {
+                            if (!found[c.x, c.y])
+                            {
+                                found[c.x, c.y] = true;
+                                distance[c.x, c.y] = distance[v.x, v.y] + 1;
+                                parents[c.x, c.y] = v;
+                            }
+                        }
+                    }
+
+                    if (!found[u.x, u.y] && includeFields)
+                    {
+                        found[u.x, u.y] = true;
+                        distance[u.x, u.y] = distance[v.x, v.y] + 1;
+                        parents[u.x, u.y] = v;
+                    }
+                }
+            }
+
+            //check if all buildings have been found. yes => map is connected.
+            foreach (var (key, value) in _numberOfBuildings)
+            {
+                if (_numberOfBuildings[key] != numberOfVisitedBuildings[key]) allBuildingsFound = false;
+            }
+
+            return (found, allBuildingsFound, parents, distance);
+        }
+
+        public Queue<(int x, int y)> CalculateRoute((int x, int y) start, (int x, int y) end, bool includeFields = false)
+        {
+            Queue<(int x, int y)> route = new Queue<(int x, int y)>();
+            if (!ValidCoordinates(start) || !ValidCoordinates(end))
+                return route;
+            var (used, allBuildingsFound, parents, distance) = BreadthFirst((start.x, start.y), includeFields);
+            if (used[start.x, start.y])
+            {
+                (int x, int y) v = start;
+                while (v != (-1, -1))
+                {
+                    route.Enqueue(v);
+                    v = parents[v.x, v.y];
+                }
+            }
+
+            route = new Queue<(int x, int y)>(route.Reverse());
+            return route;
+        }
+        
+        public void SendFireTruck((int x, int y) coords)
+        {
+            if (Fields[coords.x, coords.y].Building == null || (Fields[coords.x, coords.y].Building != null && !Fields[coords.x, coords.y].Building!.OnFire) || _numberOfBuildings[BuildingType.FireStation] < 1) return;
+            if (_availableFirestations.Count == 0) return;
+
+            // Closest path needed: look for the closest available fire station from coords, then send a fire truck to coords from the found fire station
+            Building closestStation = _availableFirestations[0];
+            Queue<(int x, int y)> route = CalculateRoute(closestStation.TopLeftCoordinate, coords);
+            int smallestDistance = route.Count;
+            int currentStationIndex = 1;
+            while(currentStationIndex < _availableFirestations.Count)
+            {
+                Building potential = _availableFirestations[currentStationIndex];
+                Queue<(int x, int y)> potentialRoute = CalculateRoute(potential.TopLeftCoordinate, coords);
+                if (potentialRoute.Count < smallestDistance)
+                {
+                    closestStation = potential;
+                    smallestDistance = potentialRoute.Count;
+                }
+                currentStationIndex++;
+            }
+            // get rid of the building at the beginning, and put out the fire if its next to the station (or on the station)
+            route.Dequeue();
+            if (route.Count <= 1)
+            {
+                Fields[coords.x, coords.y].Building!.PutOutFire();
+            }      
+            else
+            { 
+                // Provisional fire truck
+                (int x, int y) f = route.Peek();
+                Road first = (Road)(_fields[f.x, f.y].Building!);
+                var fireCar = new Vehicle(f, route, closestStation, VehicleType.Firecar);
+
+                // Check if there is a fire truck in the way of spawning - return if there is
+                foreach (var car in first.Vehicles)
+                {
+                    if (car.Type == VehicleType.Firecar && !fireCar.FacingOpposite(car.CurrentDirection)) return;
+                }
+                
+                // Remove the vehicles on the road if they are in the way of the fire truck
+                foreach (var car in first.Vehicles)
+                {
+                    if (!fireCar.FacingOpposite(car.CurrentDirection))
+                    {
+                        first.Vehicles.Remove(car);
+                        OnMatrixChanged(this, f);
+                    }
+                }
+                // Before the fire truck starts: make the fire station unavailable until it gets its job done (put out the fire), because a fire station can only send a single unit at the same time
+                _availableFirestations.Remove(closestStation);
+
+                // Spawn the fire truck
+                first.Vehicles.Add(fireCar);
+                OnMatrixChanged(this, f);
             }
         }
 
