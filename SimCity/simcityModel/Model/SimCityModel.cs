@@ -1026,6 +1026,10 @@ namespace simcityModel.Model
                     AddServiceBuildingEffects((ServiceBuilding)building);
                     _buildings.Add(building);
                     _numberOfBuildings[newBuildingType]++;
+                    if (newBuildingType == BuildingType.FireStation)
+                    {
+                        _availableFirestations.Add(building);
+                    }
                     Money -= _buildingPrices[newBuildingType].price;
                     _expenseList.Add(new BudgetRecord($"{GameTime.ToString("yyyy. MM. dd.")} - Épületlerakás", _buildingPrices[newBuildingType].price));
 
