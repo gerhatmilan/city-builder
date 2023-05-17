@@ -64,6 +64,7 @@ namespace simcityModel.Model
         private Field[,] _fields;
         private List<Person> _people;
         private List<Building> _buildings;
+        private List<Vehicle> _vehicles;
         private ObservableCollection<BudgetRecord> _incomeList;
         private ObservableCollection<BudgetRecord> _expenseList;
 
@@ -151,6 +152,7 @@ namespace simcityModel.Model
 
             _people = new List<Person>();
             _buildings = new List<Building>();
+            _vehicles = new List<Vehicle>();
             _incomeList = new ObservableCollection<BudgetRecord>();
             _expenseList = new ObservableCollection<BudgetRecord>();
 
@@ -158,6 +160,8 @@ namespace simcityModel.Model
             _expenseList.CollectionChanged += new NotifyCollectionChangedEventHandler(OnExpenseListChanged);
 
             OneDayPassed += new EventHandler(HandlePeople);
+            OneDayPassed += new EventHandler(MoveVehicles);
+            OneDayPassed += new EventHandler(SpawnVehicles);
             OneDayPassed += new EventHandler(HandleFireSituations);
 
             OneMonthPassed += new EventHandler(HandleMonthlySituations);
@@ -593,6 +597,103 @@ namespace simcityModel.Model
             foreach (var field in _fields)
             {
                 field.UpdateFieldStats(this);
+            }
+        }
+
+        private void MoveVehicles(Object? sender, EventArgs e)
+        {
+            foreach (var car in _vehicles)
+            {
+                var pos = car.CurrentPosition;
+                var nextPos = car.PeekNextPos();
+                var nextDir = car.NextDirection();
+                Road thisRoad = (Road)(Fields[pos.x, pos.y].Building!);
+                Road nextRoad = (Road)(Fields[nextPos.x, nextPos.y].Building!);
+                // Firecar has priority
+                if (car.Type == VehicleType.Firecar)
+                {
+                    if (nextRoad.Vehicles.Count == 1 && !nextRoad.Vehicles[0].FacingOpposite(nextDir))
+                    {
+                        nextRoad.Vehicles.Remove(nextRoad.Vehicles[0]);
+                        OnMatrixChanged(this, nextPos);
+                    }
+                    thisRoad.Vehicles.Remove(car);
+                    OnMatrixChanged(this, pos);
+                    car.Move();
+                    nextRoad.Vehicles.Add(car);
+                    OnMatrixChanged(this, nextPos);
+                }
+                // other cars move if they can
+                else if (nextRoad.Vehicles.Count == 0 || (nextRoad.Vehicles.Count == 1 && nextRoad.Vehicles[0].FacingOpposite(nextDir)))
+                {
+                    thisRoad.Vehicles.Remove(car);
+                    OnMatrixChanged(this, pos);
+                    car.Move();
+                    nextRoad.Vehicles.Add(car);
+                    OnMatrixChanged(this, nextPos);
+                }
+            }
+        }
+
+        private void SpawnVehicles(Object? sender, EventArgs e)
+        {
+            var peopleBuildings = new List<PeopleBuilding>();
+            foreach (Building building in _buildings)
+            {
+                if (building.Type == BuildingType.Home || building.Type == BuildingType.Industry || building.Type == BuildingType.OfficeBuilding)
+                {
+                    if (((PeopleBuilding)building).People.Count > 0)
+                    {
+                        peopleBuildings.Add((PeopleBuilding)building);
+                    }
+                }
+            }
+            
+            int spawnCount = _random.Next(0, peopleBuildings.Count);
+            while (spawnCount > 0)
+            {
+                // choose a building and pick a random person in it, get where the person wants to go
+                int spawn = _random.Next(0, spawnCount);
+                PeopleBuilding chosenBuilding = peopleBuildings[spawn];
+                int randomPerson = _random.Next(0, chosenBuilding.People.Count);
+                Field start;
+                Field end;
+                if (chosenBuilding.Type == BuildingType.Home)
+                {
+                    start = chosenBuilding.People[randomPerson].Home;
+                    end = chosenBuilding.People[randomPerson].Work;
+                }
+                else
+                {
+                    start = chosenBuilding.People[randomPerson].Work;
+                    end = chosenBuilding.People[randomPerson].Home;
+                }
+                
+                // calculate the route, get rid of the building at the beginning
+                Queue<(int x, int y)> route = CalculateRoute((start.X, start.Y), (end.X, end.Y));
+                route.Dequeue();
+                
+                // if the route starts on a road, and a vehicle fits there, add a vehicle
+                if (route.Count > 1)
+                {
+                    (int x, int y) f = route.Peek();
+                    Road first = (Road)(_fields[f.x, f.y].Building!);
+                    var vehicle = new Vehicle(f, route);
+                    if (first.Vehicles.Count == 0)
+                    {
+                        first.Vehicles.Add(vehicle);
+                        OnMatrixChanged(this, f);
+                    }
+                    else if (first.Vehicles.Count == 1 && vehicle.FacingOpposite(first.Vehicles[0].CurrentDirection))
+                    {
+                        first.Vehicles.Add(vehicle);
+                        OnMatrixChanged(this, f);
+                    }
+                }
+
+                // discard the Building from pool
+                peopleBuildings.Remove(chosenBuilding);
+                spawnCount--;
             }
         }
 
