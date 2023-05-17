@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using System;
+using System.ComponentModel;
 
 namespace simcityModel.Model
 {
@@ -65,6 +66,7 @@ namespace simcityModel.Model
         private List<Person> _people;
         private List<Building> _buildings;
         private List<Vehicle> _vehicles;
+        private List<Building> _availableFirestations;
         private ObservableCollection<BudgetRecord> _incomeList;
         private ObservableCollection<BudgetRecord> _expenseList;
 
@@ -153,6 +155,7 @@ namespace simcityModel.Model
             _people = new List<Person>();
             _buildings = new List<Building>();
             _vehicles = new List<Vehicle>();
+            _availableFirestations = new List<Building>();
             _incomeList = new ObservableCollection<BudgetRecord>();
             _expenseList = new ObservableCollection<BudgetRecord>();
 
@@ -632,6 +635,19 @@ namespace simcityModel.Model
                     nextRoad.Vehicles.Add(car);
                     OnMatrixChanged(this, nextPos);
                 }
+
+                // If the car arrived, get rid of it / put out the fire
+                if (car.Arrived)
+                {
+                    if (car.Type == VehicleType.Firecar && Fields[nextPos.x, nextPos.y].Building != null)
+                    {
+                        Fields[nextPos.x, nextPos.y].Building!.PutOutFire();
+                        OnMatrixChanged(this, nextPos);
+                        _availableFirestations.Add(car.StartBuilding);
+                    }
+                    thisRoad.Vehicles.Remove(car);
+                    OnMatrixChanged(this, pos);
+                }
             }
         }
 
@@ -678,7 +694,7 @@ namespace simcityModel.Model
                 {
                     (int x, int y) f = route.Peek();
                     Road first = (Road)(_fields[f.x, f.y].Building!);
-                    var vehicle = new Vehicle(f, route);
+                    var vehicle = new Vehicle(f, route, chosenBuilding);
                     if (first.Vehicles.Count == 0)
                     {
                         first.Vehicles.Add(vehicle);
@@ -794,17 +810,60 @@ namespace simcityModel.Model
         public void SendFireTruck((int x, int y) coords)
         {
             if (Fields[coords.x, coords.y].Building == null || (Fields[coords.x, coords.y].Building != null && !Fields[coords.x, coords.y].Building!.OnFire) || _numberOfBuildings[BuildingType.FireStation] < 1) return;
+            if (_availableFirestations.Count == 0) return;
 
-            // Closest path needed: look for the closest fire station from coords, then send a fire truck to coords from the found fire station
+            // Closest path needed: look for the closest available fire station from coords, then send a fire truck to coords from the found fire station
+            Building closestStation = _availableFirestations[0];
+            Queue<(int x, int y)> route = CalculateRoute(closestStation.TopLeftCoordinate, coords);
+            int smallestDistance = route.Count;
+            int currentStationIndex = 1;
+            while(currentStationIndex < _availableFirestations.Count)
+            {
+                Building potential = _availableFirestations[currentStationIndex];
+                Queue<(int x, int y)> potentialRoute = CalculateRoute(potential.TopLeftCoordinate, coords);
+                if (potentialRoute.Count < smallestDistance)
+                {
+                    closestStation = potential;
+                    smallestDistance = potentialRoute.Count;
+                }
+                currentStationIndex++;
+            }
+            // get rid of the building at the beginning, and put out the fire if its next to the station (or on the station)
+            route.Dequeue();
+            if (route.Count <= 1)
+            {
+                Fields[coords.x, coords.y].Building!.PutOutFire();
+            }      
+            else
+            { 
+                // Provisional fire truck
+                (int x, int y) f = route.Peek();
+                Road first = (Road)(_fields[f.x, f.y].Building!);
+                var fireCar = new Vehicle(f, route, closestStation, VehicleType.Firecar);
 
-            // Before the fire truck starts: make the fire station unavailable until it gets its job done (put out the fire), because a fire station can only send a single unit at the same time
+                // Check if there is a fire truck in the way of spawning - return if there is
+                foreach (var car in first.Vehicles)
+                {
+                    if (car.Type == VehicleType.Firecar && !fireCar.FacingOpposite(car.CurrentDirection)) return;
+                }
+                
+                // Remove the vehicles on the road if they are in the way of the fire truck
+                foreach (var car in first.Vehicles)
+                {
+                    if (!fireCar.FacingOpposite(car.CurrentDirection))
+                    {
+                        first.Vehicles.Remove(car);
+                        OnMatrixChanged(this, f);
+                    }
+                }
+                // Before the fire truck starts: make the fire station unavailable until it gets its job done (put out the fire), because a fire station can only send a single unit at the same time
+                _availableFirestations.Remove(closestStation);
 
-            // After the fire struck got to the destination: make the fire station available again
-
-            // After the fire truck got to the destination:
-            Fields[coords.x, coords.y].Building!.PutOutFire();
+                // Spawn the fire truck
+                first.Vehicles.Add(fireCar);
+                OnMatrixChanged(this, f);
+            }
         }
-
 
         public (bool[,] routeExists, bool allBuildingsFound, (int, int)[,] parents, int[,] distance) BreadthFirst((int x, int y) source, bool includeFields = false)
         {

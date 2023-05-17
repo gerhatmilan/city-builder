@@ -15,18 +15,21 @@ namespace simcityModel.Model
         private (int x, int y) _position;
         private VehicleType _type;
         private Direction _currentDirection;
+        private Building _startBuilding;
         private bool _arrived;
         private Queue<(int x, int y)> _route;
 
-        public Vehicle((int x, int y) position, Queue<(int x, int y)> route, VehicleType type = VehicleType.Car)
+        public Vehicle((int x, int y) position, Queue<(int x, int y)> route, Building startBuilding, VehicleType type = VehicleType.Car)
         {
             _position = position;
             _type = type;
             _route = route;
+            _startBuilding = startBuilding;
             _arrived = (_route.Count <= 1);
             _currentDirection = InitDirection();
         }
         public Direction CurrentDirection { get => _currentDirection; }
+        public Building StartBuilding { get => _startBuilding; }
         public VehicleType Type { get => _type; }
         public bool Arrived { get => _arrived; }
         public (int x, int y) CurrentPosition { get => _position; }
