@@ -71,6 +71,44 @@ namespace simcityView.ViewModel.TexturingLogics
         public void SetLogicalBuildingTextures(int x, int y)
         {
             ViewModel.Cells[ViewModel.CoordsToListIndex(x, y)].BuildingTexture = BuildingTextures[0];
+            return;
+            Road r = (Road)Model.Fields[x, y].Building!;
+            
+            if(r.Vehicles.Count == 0)
+            {
+                ViewModel.Cells[ViewModel.CoordsToListIndex(x, y)].BuildingTexture = BuildingTextures[0];
+                return;
+            }
+            int offset = 0; //1 -- car | 2 -- firetruck | 3 -- multiple, but in favour of fireTruck
+            int dir = 1; // 1 - 2 - 3 - 4
+            if(r.Vehicles.Count == 1)
+            {
+                //read out the vehicles dir
+                //get the vehicle type
+            }
+            int fireTruckIndex = -1;
+            for(int i = 0; i< r.Vehicles.Count; i++)
+            {
+                //search for fst fireTruck
+                //get dir
+                //break;
+            }
+            int carIndex = -1;
+            if (fireTruckIndex == 0)
+            {
+                carIndex = 1;
+            }
+            else
+            {
+                carIndex= fireTruckIndex - 1;
+            }
+
+            
+            ViewModel.Cells[ViewModel.CoordsToListIndex(x, y)].BuildingTexture = BuildingTextures[1 + offset*4 + dir];
+            
+
+
+
         }
         public void UpdateWithLogicalTexture(int x, int y)
         {

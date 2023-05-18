@@ -177,7 +177,8 @@ namespace simcityView
             MessageBox.Show(
                 "Irányítások:\n" +
                 "W A S D - Mozgás a kamerával\n" +
-                "Q E - Zoomolás a kamerával\n"
+                "Q E - Zoomolás a kamerával\n" +
+                "Ha ég valami, akkor kattintással kiolthatod!"
                 , "SimCity", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         #endregion

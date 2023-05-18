@@ -186,6 +186,7 @@ namespace simcityModel.Model
         private void HandleFireSituations(object? sender, EventArgs e)
         {
             IncreaseDaysPassedSinceBuildingOnFire();
+            DecreaseDaysUntilBuildingCanGetOnFire();
             TryToSetARandomBuildingOnFire();
             TryToSpreadFire();
         }
@@ -337,6 +338,14 @@ namespace simcityModel.Model
             foreach (Building building in _buildings.ToList())
             {
                 if (building.OnFire) building.DaysPassedSinceOnFire++;
+            }
+        }
+
+        private void DecreaseDaysUntilBuildingCanGetOnFire()
+        {
+            foreach (Building building in _buildings.ToList())
+            {
+                if (!building.OnFire && building.DaysUntilCanGetOnFire > 0) building.DaysUntilCanGetOnFire--;
             }
         }
 
@@ -617,9 +626,9 @@ namespace simcityModel.Model
                 // If the car arrived, get rid of it / put out the fire
                 if (car.Arrived)
                 {
-                    if (car.Type == VehicleType.Firecar && Fields[pos.x, pos.y].Building != null)
+                    if (car.Type == VehicleType.Firecar && Fields[nextPos.x, nextPos.y].Building != null)
                     {
-                        Fields[pos.x, pos.y].Building!.PutOutFire();
+                        Fields[nextPos.x, nextPos.y].Building!.PutOutFire();
                         OnMatrixChanged(this, pos);
                         _availableFirestations.Add(car.StartBuilding);
                     }

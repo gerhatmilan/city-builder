@@ -20,7 +20,7 @@ namespace simcityView.ViewModel
 
         #region variables
         private ImageBrush[] _floorTextures = new ImageBrush[21];
-        private BitmapImage[] _buildingTextures = new BitmapImage[22];
+        private BitmapImage[] _buildingTextures = new BitmapImage[30];
         private SimCityModel _model;
         private SimCityViewModel _vm;
         private ITextureLogic[] _textureLogics;
@@ -133,10 +133,18 @@ namespace simcityView.ViewModel
 
             _buildingTextures[17] = UriToBitmapImage(@"~\..\Textures\tree_pine_02.png");
 
-            _buildingTextures[18] = UriToBitmapImage(@"~\..\Textures\car_white_down.png");
-            _buildingTextures[19] = UriToBitmapImage(@"~\..\Textures\car_white_up.png");
-            _buildingTextures[20] = UriToBitmapImage(@"~\..\Textures\car_white_left.png");
-            _buildingTextures[21] = UriToBitmapImage(@"~\..\Textures\car_white_right.png");
+            _buildingTextures[18] = UriToBitmapImage(@"~\..\Textures\f_police_station_a.png");
+            _buildingTextures[19] = UriToBitmapImage(@"~\..\Textures\f_fire_station_a.png");
+            _buildingTextures[20] = UriToBitmapImage(@"~\..\Textures\f_house_small_yellow_a.png");
+            _buildingTextures[21] = UriToBitmapImage(@"~\..\Textures\f_house_large_green_a.png");
+            _buildingTextures[22] = UriToBitmapImage(@"~\..\Textures\f_barn_red_a.png");
+            _buildingTextures[23] = UriToBitmapImage(@"~\..\Textures\f_warehouse_orange_a.png");
+            _buildingTextures[24] = UriToBitmapImage(@"~\..\Textures\f_building_medium_blue_a.png");
+            _buildingTextures[25] = UriToBitmapImage(@"~\..\Textures\f_building_tall_yellow_a.png");
+            _buildingTextures[26] = UriToBitmapImage(@"~\..\Textures\f_stadium1.png");
+            _buildingTextures[27] = UriToBitmapImage(@"~\..\Textures\f_stadium2.png");
+            _buildingTextures[28] = UriToBitmapImage(@"~\..\Textures\f_stadium4.png");
+            _buildingTextures[29] = UriToBitmapImage(@"~\..\Textures\f_stadium3.png");
 
 
         }
@@ -184,8 +192,9 @@ namespace simcityView.ViewModel
             (ImageBrush[] FloorTextures, BitmapImage[] BuildingTextures) textures;
             textures.FloorTextures = new ImageBrush[1];
             textures.FloorTextures[0] = _floorTextures[0];
-            textures.BuildingTextures = new BitmapImage[1];
+            textures.BuildingTextures = new BitmapImage[2];
             textures.BuildingTextures[0] = _buildingTextures[0];
+            textures.BuildingTextures[1] = _buildingTextures[0];
             return textures;
 
         }
@@ -194,8 +203,9 @@ namespace simcityView.ViewModel
             (ImageBrush[] FloorTextures, BitmapImage[] BuildingTextures) textures;
             textures.FloorTextures = new ImageBrush[1];
             textures.FloorTextures[0] = _floorTextures[1];
-            textures.BuildingTextures = new BitmapImage[1];
+            textures.BuildingTextures = new BitmapImage[2];
             textures.BuildingTextures[0] = _buildingTextures[1];
+            textures.BuildingTextures[1] = _buildingTextures[1];
             return textures;
             
         }
@@ -204,10 +214,13 @@ namespace simcityView.ViewModel
             (ImageBrush[] FloorTextures, BitmapImage[] BuildingTextures) textures;
             textures.FloorTextures = new ImageBrush[1];
             textures.FloorTextures[0] = _floorTextures[1];
-            textures.BuildingTextures = new BitmapImage[3];
+            textures.BuildingTextures = new BitmapImage[5];
             textures.BuildingTextures[0] = _buildingTextures[2];
             textures.BuildingTextures[1] = _buildingTextures[3];
             textures.BuildingTextures[2] = _buildingTextures[4];
+            textures.BuildingTextures[3] = _buildingTextures[20];
+            textures.BuildingTextures[4] = _buildingTextures[21];
+
 
             return textures;
 
@@ -217,10 +230,13 @@ namespace simcityView.ViewModel
             (ImageBrush[] FloorTextures, BitmapImage[] BuildingTextures) textures;
             textures.FloorTextures = new ImageBrush[1];
             textures.FloorTextures[0] = _floorTextures[2];
-            textures.BuildingTextures = new BitmapImage[3];
+            textures.BuildingTextures = new BitmapImage[5];
             textures.BuildingTextures[0] = _buildingTextures[5];
             textures.BuildingTextures[1] = _buildingTextures[6];
             textures.BuildingTextures[2] = _buildingTextures[7];
+            textures.BuildingTextures[3] = _buildingTextures[22];
+            textures.BuildingTextures[4] = _buildingTextures[23];
+
 
             return textures;
 
@@ -230,10 +246,13 @@ namespace simcityView.ViewModel
             (ImageBrush[] FloorTextures, BitmapImage[] BuildingTextures) textures;
             textures.FloorTextures = new ImageBrush[1];
             textures.FloorTextures[0] = _floorTextures[3];
-            textures.BuildingTextures = new BitmapImage[3];
+            textures.BuildingTextures = new BitmapImage[5];
             textures.BuildingTextures[0] = _buildingTextures[8];
             textures.BuildingTextures[1] = _buildingTextures[9];
             textures.BuildingTextures[2] = _buildingTextures[10];
+            textures.BuildingTextures[3] = _buildingTextures[24];
+            textures.BuildingTextures[4] = _buildingTextures[25];
+
 
             return textures;
 
@@ -279,8 +298,10 @@ namespace simcityView.ViewModel
             (ImageBrush[] FloorTextures, BitmapImage[] BuildingTextures) textures;
             textures.FloorTextures = new ImageBrush[1];
             textures.FloorTextures[0] = _floorTextures[3];
-            textures.BuildingTextures = new BitmapImage[1];
+            textures.BuildingTextures = new BitmapImage[2];
             textures.BuildingTextures[0] = _buildingTextures[16];
+            textures.BuildingTextures[1] = _buildingTextures[19];
+
             return textures;
 
         }
@@ -289,8 +310,10 @@ namespace simcityView.ViewModel
             (ImageBrush[] FloorTextures, BitmapImage[] BuildingTextures) textures;
             textures.FloorTextures = new ImageBrush[1];
             textures.FloorTextures[0] = _floorTextures[3];
-            textures.BuildingTextures = new BitmapImage[1];
+            textures.BuildingTextures = new BitmapImage[2];
             textures.BuildingTextures[0] = _buildingTextures[15];
+            textures.BuildingTextures[1] = _buildingTextures[18];
+
             return textures;
 
         }
@@ -299,11 +322,16 @@ namespace simcityView.ViewModel
             (ImageBrush[] FloorTextures, BitmapImage[] BuildingTextures) textures;
             textures.FloorTextures = new ImageBrush[1];
             textures.FloorTextures[0] = _floorTextures[3];
-            textures.BuildingTextures = new BitmapImage[4];
+            textures.BuildingTextures = new BitmapImage[8];
             textures.BuildingTextures[0] = _buildingTextures[11];
             textures.BuildingTextures[1] = _buildingTextures[12];
             textures.BuildingTextures[2] = _buildingTextures[13];
             textures.BuildingTextures[3] = _buildingTextures[14];
+            textures.BuildingTextures[4] = _buildingTextures[26];
+            textures.BuildingTextures[5] = _buildingTextures[27];
+            textures.BuildingTextures[6] = _buildingTextures[28];
+            textures.BuildingTextures[7] = _buildingTextures[29];
+
 
 
             return textures;
@@ -352,17 +380,11 @@ namespace simcityView.ViewModel
                 x *= -1;
             }
         }
-        
-        
         public (ImageBrush floor, BitmapImage building) getStarterTextures()
         {
             return (_floorTextures[1], _buildingTextures[17]);
         }
-
-       
-       
-
-
+        
         #endregion
         #endregion
 

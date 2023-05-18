@@ -26,9 +26,9 @@ namespace simcityView.ViewModel.TexturingLogics
             {
                 throw new ArgumentException("FloorTexture size must be 1!");
             }
-            if(BuildingTextures.Length != 3)
+            if(BuildingTextures.Length != 5)
             {
-                throw new ArgumentException("BuildingTexture size must be 3!");
+                throw new ArgumentException("BuildingTexture size must be 5!");
             }
             this.FloorTextures = FloorTextures;
             this.BuildingTextures = BuildingTextures;
@@ -54,10 +54,27 @@ namespace simcityView.ViewModel.TexturingLogics
             }
             if (Model.Fields[x,y].NumberOfPeople == Model.Fields[x,y].Capacity)
             {
-                ViewModel.Cells[ViewModel.CoordsToListIndex(x, y)].BuildingTexture = BuildingTextures[2];
+                if (Model.Fields[x, y].Building.OnFire)
+                {
+                    ViewModel.Cells[ViewModel.CoordsToListIndex(x, y)].BuildingTexture = BuildingTextures[4];
+                }
+                else
+                {
+                    ViewModel.Cells[ViewModel.CoordsToListIndex(x, y)].BuildingTexture = BuildingTextures[2];
+                }
+                
                 return;
             }
-            ViewModel.Cells[ViewModel.CoordsToListIndex(x, y)].BuildingTexture = BuildingTextures[1];
+            if (Model.Fields[x, y].Building.OnFire)
+            {
+                ViewModel.Cells[ViewModel.CoordsToListIndex(x, y)].BuildingTexture = BuildingTextures[3];
+            }
+            else
+            {
+                ViewModel.Cells[ViewModel.CoordsToListIndex(x, y)].BuildingTexture = BuildingTextures[1];
+            }
+
+            
         }
         public void UpdateWithLogicalTexture(int x, int y)
         {

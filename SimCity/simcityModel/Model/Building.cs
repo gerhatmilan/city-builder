@@ -36,6 +36,7 @@ namespace simcityModel.Model
         private double _fireProbability;
         private bool _onFire;
         private int _daysPassedSinceOnFire;
+        private int _daysUntilCanGetOnFire;
         protected Random _random = new Random();
         protected BuildingType _type;
         protected (int x, int y) _topLeftCoordinate;
@@ -78,6 +79,17 @@ namespace simcityModel.Model
             }
         }
 
+        public int DaysUntilCanGetOnFire
+        {
+            get => _daysUntilCanGetOnFire;
+            set
+            {
+                if (value < 0) return;
+                if (value > 30) return;
+                _daysUntilCanGetOnFire = value;
+            }
+        }
+
         public double FireProbability
         {
             get => _fireProbability;
@@ -116,7 +128,7 @@ namespace simcityModel.Model
 
         public void TryToSpreadFire(Building adjacentBuildingOnFire)
         {
-            if (FireProbability > 0 && _random.NextDouble() + (adjacentBuildingOnFire.DaysPassedSinceOnFire / 100.0) > 0.7)
+            if (!OnFire && DaysUntilCanGetOnFire == 0 && FireProbability > 0 && _random.NextDouble() + (adjacentBuildingOnFire.DaysPassedSinceOnFire / 100.0) > 0.7)
             {
                 OnFire = true;
             }
@@ -131,6 +143,7 @@ namespace simcityModel.Model
         public void PutOutFire()
         {
             OnFire = false;
+            DaysUntilCanGetOnFire = 30;
         }
 
         #region Private event triggers
