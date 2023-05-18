@@ -14,19 +14,52 @@ namespace simcityModel.Model
     public class Vehicle
     {
         private (int x, int y) _position;
+        private VehicleType _type;
         private Direction _currentDirection;
+        private Building _startBuilding;
+        private bool _arrived;
         private Queue<(int x, int y)> _route;
 
-        public Vehicle((int x, int y) position, Queue<(int x, int y)> route)
+        public Vehicle((int x, int y) position, Queue<(int x, int y)> route, Building startBuilding, VehicleType type = VehicleType.Car)
         {
             _position = position;
+            _type = type;
             _route = route;
+            _route.Dequeue();
+            _startBuilding = startBuilding;
+            _arrived = (_route.Count <= 1);
             _currentDirection = InitDirection();
         }
+        public Direction CurrentDirection { get => _currentDirection; }
+        public Building StartBuilding { get => _startBuilding; }
+        public VehicleType Type { get => _type; }
+        public bool Arrived { get => _arrived; }
+        public (int x, int y) CurrentPosition { get => _position; }
 
+        public bool FacingOpposite(Direction otherDir)
+        {
+            bool opposite = false;
+            switch (_currentDirection)
+            {
+                case Direction.UP:
+                    if (otherDir == Direction.DOWN) opposite = true;
+                    break;
+                case Direction.DOWN:
+                    if (otherDir == Direction.UP) opposite = true;
+                    break;
+                case Direction.LEFT:
+                    if (otherDir == Direction.RIGHT) opposite = true;
+                    break;
+                case Direction.RIGHT:
+                    if (otherDir == Direction.LEFT) opposite = true;
+                    break;
+                default:
+                    break;
+            }
 
-        public Direction CurrentDirection {get => _currentDirection;}
-        
+            return opposite;
+        }
+
         private Direction InitDirection()
         {
             var direction = Direction.UP;
@@ -47,7 +80,7 @@ namespace simcityModel.Model
             return direction;    
         }
 
-        private Direction NextDirection()
+        public Direction NextDirection()
         {
             var direction = CurrentDirection;
             (int x, int y) nextPos = PeekNextPos();
@@ -78,12 +111,15 @@ namespace simcityModel.Model
 
         public void Move()
         {
-            if (_route.Count > 0)
+            if (_route.Count > 1)
             {
-                _position = _route.Dequeue();
                 _currentDirection = NextDirection();
+                _position = _route.Dequeue();
+            }
+            if (_route.Count <= 1)
+            {
+                _arrived = true;
             }
         }
-
     }
 }
