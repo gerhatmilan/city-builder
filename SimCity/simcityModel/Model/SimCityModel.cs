@@ -652,12 +652,12 @@ namespace simcityModel.Model
                                 {
                                     switchToWalk.Add(vehicle);
                                     toRemove.Add(vehicle);
-                                    OnMatrixChanged(this, nextPos);
                                 }
                             }
                             foreach (var vehicle in switchToWalk)
                             {
                                 nextRoad.Vehicles.Remove(vehicle);
+                                OnMatrixChanged(this, nextPos);
                             }
                             thisRoad.Vehicles.Remove(car);
                             OnMatrixChanged(this, pos);
@@ -1145,12 +1145,12 @@ namespace simcityModel.Model
                     {
                         switchToWalk.Add(car);
                         _vehicles.Remove(car);
-                        OnMatrixChanged(this, f);
                     }
                 }
                 foreach (var car in switchToWalk)
                 {
                     first.Vehicles.Remove(car);
+                    OnMatrixChanged(this, f);
                 }
                 // Before the fire truck starts: make the fire station unavailable until it gets its job done (put out the fire), because a fire station can only send a single unit at the same time
                 _availableFirestations.Remove(closestStation);
