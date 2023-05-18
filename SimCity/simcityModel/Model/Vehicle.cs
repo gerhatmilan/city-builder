@@ -112,14 +112,13 @@ namespace simcityModel.Model
         {
             if (_route.Count > 1)
             {
-                _position = _route.Dequeue();
                 _currentDirection = NextDirection();
+                _position = _route.Dequeue();
             }
             if (_route.Count <= 1)
             {
                 _arrived = true;
             }
         }
-
     }
 }

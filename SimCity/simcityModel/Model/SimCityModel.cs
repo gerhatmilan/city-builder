@@ -633,20 +633,33 @@ namespace simcityModel.Model
                     // Firecar has priority
                     if (car.Type == VehicleType.Firecar)
                     {
+                        // but it can only move if a Firecar does not block its way
+                        bool noBlockingFirecars = true;
                         foreach (var vehicle in nextRoad.Vehicles)
                         {
-                            if (!vehicle.FacingOpposite(nextDir))
+                            if (vehicle.Type == VehicleType.Firecar && !vehicle.FacingOpposite(nextDir))
                             {
-                                nextRoad.Vehicles.Remove(vehicle);
-                                toRemove.Add(vehicle);
-                                OnMatrixChanged(this, nextPos);
+                                noBlockingFirecars = false;
                             }
                         }
-                        thisRoad.Vehicles.Remove(car);
-                        OnMatrixChanged(this, pos);
-                        car.Move();
-                        nextRoad.Vehicles.Add(car);
-                        OnMatrixChanged(this, nextPos);
+                        // in this case, all other blocking cars stop to make way for the Firecar, and it moves
+                        if (noBlockingFirecars)
+                        { 
+                            foreach (var vehicle in nextRoad.Vehicles)
+                            {
+                                if (!vehicle.FacingOpposite(nextDir))
+                                {
+                                    nextRoad.Vehicles.Remove(vehicle);
+                                    toRemove.Add(vehicle);
+                                    OnMatrixChanged(this, nextPos);
+                                }
+                            }
+                            thisRoad.Vehicles.Remove(car);
+                            OnMatrixChanged(this, pos);
+                            car.Move();
+                            nextRoad.Vehicles.Add(car);
+                            OnMatrixChanged(this, nextPos);
+                        }
                     }
                     // other cars move if they can
                     else if (nextRoad.Vehicles.Count == 0 || (nextRoad.Vehicles.Count == 1 && nextRoad.Vehicles[0].FacingOpposite(nextDir)))
