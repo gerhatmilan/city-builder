@@ -134,7 +134,7 @@ namespace simcityView
         {
             try
             {
-                SaveFileDialog saveFileDialog = new SaveFileDialog(); // dialógablak
+                SaveFileDialog saveFileDialog = new SaveFileDialog();
                 saveFileDialog.Title = "SimCity tábla betöltése";
                 saveFileDialog.Filter = "SimCity tábla|*.sc";
                 if (saveFileDialog.ShowDialog() == true)

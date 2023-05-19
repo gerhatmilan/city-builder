@@ -20,7 +20,7 @@ namespace simcityView.ViewModel
 
         #region variables
         private ImageBrush[] _floorTextures = new ImageBrush[21];
-        private BitmapImage[] _buildingTextures = new BitmapImage[30];
+        private BitmapImage[] _buildingTextures = new BitmapImage[46];
         private SimCityModel _model;
         private SimCityViewModel _vm;
         private ITextureLogic[] _textureLogics;
@@ -146,13 +146,33 @@ namespace simcityView.ViewModel
             _buildingTextures[28] = UriToBitmapImage(@"~\..\Textures\f_stadium4.png");
             _buildingTextures[29] = UriToBitmapImage(@"~\..\Textures\f_stadium3.png");
 
+            _buildingTextures[30] = UriToBitmapImage(@"~\..\Textures\o_car_up.png");
+            _buildingTextures[31] = UriToBitmapImage(@"~\..\Textures\o_car_left.png");
+            _buildingTextures[32] = UriToBitmapImage(@"~\..\Textures\o_car_right.png");
+            _buildingTextures[33] = UriToBitmapImage(@"~\..\Textures\o_car_down.png");
+
+            _buildingTextures[34] = UriToBitmapImage(@"~\..\Textures\o_firetruck_up.png");
+            _buildingTextures[35] = UriToBitmapImage(@"~\..\Textures\o_firetruck_left.png");
+            _buildingTextures[36] = UriToBitmapImage(@"~\..\Textures\o_firetruck_right.png");
+            _buildingTextures[37] = UriToBitmapImage(@"~\..\Textures\o_firetruck_down.png");
+
+            _buildingTextures[38] = UriToBitmapImage(@"~\..\Textures\t_car_down.png");
+            _buildingTextures[39] = UriToBitmapImage(@"~\..\Textures\t_car_left.png");
+            
+            _buildingTextures[40] = UriToBitmapImage(@"~\..\Textures\t_firetruck_down.png");
+            _buildingTextures[41] = UriToBitmapImage(@"~\..\Textures\t_firetruck_left.png");
+            
+            _buildingTextures[42] = UriToBitmapImage(@"~\..\Textures\d_up.png");
+            _buildingTextures[43] = UriToBitmapImage(@"~\..\Textures\d_left.png");
+            _buildingTextures[44] = UriToBitmapImage(@"~\..\Textures\d_right.png");
+            _buildingTextures[45] = UriToBitmapImage(@"~\..\Textures\d_down.png");
 
         }
 
         #endregion
         #region public functions
 
-       
+
         public void Init()
         {
             fillBuildingTextures();
@@ -286,9 +306,28 @@ namespace simcityView.ViewModel
             //4
             textures.FloorTextures[15] = _floorTextures[19];
             
-            textures.BuildingTextures = new BitmapImage[1];
+            textures.BuildingTextures = new BitmapImage[21];
             textures.BuildingTextures[0] = _buildingTextures[1];
-           
+            for(int i = 1; i<9; i++)
+            {
+                textures.BuildingTextures[i] = _buildingTextures[i+29];
+            }
+            textures.BuildingTextures[9] = _buildingTextures[38];
+            textures.BuildingTextures[10] = _buildingTextures[39];
+            textures.BuildingTextures[11] = _buildingTextures[39];
+            textures.BuildingTextures[12] = _buildingTextures[38];
+ 
+            textures.BuildingTextures[13] = _buildingTextures[42];
+            textures.BuildingTextures[14] = _buildingTextures[43];
+            textures.BuildingTextures[15] = _buildingTextures[44];
+            textures.BuildingTextures[16] = _buildingTextures[45];
+
+            textures.BuildingTextures[17] = _buildingTextures[40];
+            textures.BuildingTextures[18] = _buildingTextures[41];
+            textures.BuildingTextures[19] = _buildingTextures[41];
+            textures.BuildingTextures[20] = _buildingTextures[40];
+            
+
 
             return textures;
 
