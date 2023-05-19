@@ -91,8 +91,9 @@ namespace simcityView
             _vm.SaveGameEvent += Vm_SaveGame;
             _vm.LoadGameEvent += Vm_LoadGame;
             _vm.NewGameEvent += Vm_NewGame;
+            _vm.ShowHelpEvent += Vm_ShowHelp;
 
-            
+
             _view.DataContext = _vm;
             _view.CamInit();
             
@@ -141,10 +142,12 @@ namespace simcityView
                     try
                     {
                         await _model.SaveGameAsync(saveFileDialog.FileName);
+                        _vm.ShowHelpEvent += Vm_ShowHelp;
+
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show("Valami félrement mentés közben!", "SimCity", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show("Valami félrement mentés közben!\n" + ex.Message, "SimCity", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
             }
@@ -163,13 +166,16 @@ namespace simcityView
                 openFileDialog.Filter = "SimCity tábla|*.sc";
                 if (openFileDialog.ShowDialog() == true)
                 {
+                    
                     await _model.LoadGameAsync(openFileDialog.FileName);
+                    _vm.ShowHelpEvent += Vm_ShowHelp;
 
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("A fájl betöltése sikertelen!", "SimCity", MessageBoxButton.OK, MessageBoxImage.Error);
+                
+                MessageBox.Show("A fájl betöltése sikertelen!\n" + ex.Message, "SimCity", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
         private void Vm_ShowHelp(object? s, EventArgs e)

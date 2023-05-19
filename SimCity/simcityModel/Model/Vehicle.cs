@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace simcityModel.Model
 {
-    public enum VehicleType { Car = 1, Firecar = 2, None = 0 }
+    public enum VehicleType { Car = 0, Firecar = 1, None = -1 }
     //Added enum nums for easier operation in view. Comment by Levente
     public enum Direction {UP = 0, LEFT = 1, RIGHT = 2, DOWN = 3}
     public class Vehicle

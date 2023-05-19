@@ -154,7 +154,7 @@
             <TabItem Header="Zónák">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Stretch" HorizontalAlignment="Center" >
                     <StackPanel Orientation="Vertical">
-                        <RadioButton GroupName="buildable1" Style="{StaticResource Selector}" CommandParameter="Re" IsChecked="True">Textures/house_large_green_a.png</RadioButton>
+                        <RadioButton GroupName="buildable1" Style="{StaticResource Selector}" CommandParameter="Re" IsChecked="{Binding TimeReset, Mode=TwoWay}">Textures/house_large_green_a.png</RadioButton>
                         <TextBlock TextAlignment="Center">Lakó zóna</TextBlock>
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
@@ -170,7 +170,7 @@
             <TabItem Header="Kiszolgáló épületek">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Stretch" HorizontalAlignment="center">
                     <StackPanel Orientation="Vertical">
-                        <RadioButton GroupName="buildable2" Style="{StaticResource Selector}" CommandParameter="Ro" IsChecked="True">Textures/street_straight_upDown.png</RadioButton>
+                        <RadioButton GroupName="buildable2" Style="{StaticResource Selector}" CommandParameter="Ro" IsChecked="{Binding TimeReset, Mode=TwoWay}">Textures/street_straight_upDown.png</RadioButton>
                         <TextBlock TextAlignment="Center">Út</TextBlock>
                     </StackPanel>
                     <StackPanel Orientation="Vertical">

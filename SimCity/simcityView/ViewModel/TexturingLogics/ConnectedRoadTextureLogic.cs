@@ -73,35 +73,65 @@ namespace simcityView.ViewModel.TexturingLogics
             ViewModel.Cells[ViewModel.CoordsToListIndex(x, y)].BuildingTexture = BuildingTextures[0];
             return;
             Road r = (Road)Model.Fields[x, y].Building!;
-            
+            int offset = -1; //0 -- car | 1 -- firetruck | 2 -- multiple, but in favour of fireTruck (car - firetruck) | 3 -- 2 cars, right lane is favoured (car car) | 4 -- (firetruck - firetruck)
+            int dir = -1; // 0 - 1 - 2 - 3
+            //20 textures needed 21
             if(r.Vehicles.Count == 0)
             {
                 ViewModel.Cells[ViewModel.CoordsToListIndex(x, y)].BuildingTexture = BuildingTextures[0];
                 return;
-            }
-            int offset = 0; //1 -- car | 2 -- firetruck | 3 -- multiple, but in favour of fireTruck
-            int dir = 1; // 1 - 2 - 3 - 4
-            if(r.Vehicles.Count == 1)
+            }else if(r.Vehicles.Count == 1)
             {
-                //read out the vehicles dir
-                //get the vehicle type
+                dir = (int)(r.Vehicles[0].CurrentDirection);
+                offset = (int)(r.Vehicles[0].Type);
             }
-            int fireTruckIndex = -1;
-            for(int i = 0; i< r.Vehicles.Count; i++)
+            else //vehicles count is 2
             {
-                //search for fst fireTruck
-                //get dir
-                //break;
+                
+                for(int i = 0; i< r.Vehicles.Count; i++)
+                {
+                    if (r.Vehicles[i].Type == VehicleType.Firecar)
+                    {
+                        dir = (int)(r.Vehicles[i].CurrentDirection);
+                        break;
+                    }
+                }
+                if (dir != -1) //firetruck found
+                {
+                    offset = 1;
+                    for(int i =0; i<r.Vehicles.Count; i++)
+                    {
+                        if (r.Vehicles[i].Type == VehicleType.Car && (int)(r.Vehicles[i].CurrentDirection) != dir)
+                        {
+                            offset = 2;
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    
+                }
+                
+
+                //vehicles list count max is 2
+                //firetruck direction is strong, other vehicle's dir is always opposite
+                //2 firectruck case!!!!!
+                //two car case: directions are always opposite;
+                /*
+                 * if (fireTruckIndex == 0)
+                {
+                    carIndex = 1;
+                }
+                else
+                {
+                    carIndex= fireTruckIndex - 1;
+                }
+                */
+
             }
-            int carIndex = -1;
-            if (fireTruckIndex == 0)
-            {
-                carIndex = 1;
-            }
-            else
-            {
-                carIndex= fireTruckIndex - 1;
-            }
+            
+            
 
             
             ViewModel.Cells[ViewModel.CoordsToListIndex(x, y)].BuildingTexture = BuildingTextures[1 + offset*4 + dir];
