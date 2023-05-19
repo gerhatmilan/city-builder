@@ -98,6 +98,7 @@ namespace simcityModel.Model
         }
         public List<Person> People { get => _people; set => _people = value; }
         public List<Building> Buildings { get => _buildings; set => _buildings = value; }
+        public List<Building> AvailableFireStations { get => _availableFirestations; set => _availableFirestations = value; }
         public Dictionary<BuildingType, int> NumberOfBuildings { get => _numberOfBuildings; set => _numberOfBuildings = value; }
         public int NumberOfIndustrialBuildings { get => _numberOfBuildings[BuildingType.Industry]; }
         public int NumberOfOfficeBuildings { get => _numberOfBuildings[BuildingType.OfficeBuilding]; }
@@ -782,6 +783,8 @@ namespace simcityModel.Model
                 }
 
                 target.Buildings.Add(building);
+
+                if (building.Type == BuildingType.FireStation) target.AvailableFireStations.Add(building);
             }
 
 
@@ -794,6 +797,7 @@ namespace simcityModel.Model
 
                 target.People.Add(person);
             }
+
 
             target.GameTime = source.GameTime;
             target.DaysPassedSinceNegativeBudget = source.DaysPassedSinceNegativeBudget;
