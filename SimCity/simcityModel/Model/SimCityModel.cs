@@ -17,6 +17,7 @@ namespace simcityModel.Model
         private const int GAMESIZE = 18;
         private const float PRICERETURN_MULTIPLIER = 2f / 3;
         private const int TAX_PER_PERSON = 10;
+        private const int MAXVEHICLES = 35;
 
         private readonly Dictionary<FieldType, (int price, int returnPrice)> _zonePrices = new Dictionary<FieldType, (int, int)>()
         {
@@ -67,6 +68,7 @@ namespace simcityModel.Model
         private List<Person> _people;
         private List<Building> _buildings;
         private List<Vehicle> _vehicles;
+        private bool _spawnVehicles;
         private List<Building> _availableFirestations;
         private ObservableCollection<BudgetRecord> _incomeList;
         private ObservableCollection<BudgetRecord> _expenseList;
@@ -695,6 +697,9 @@ namespace simcityModel.Model
 
         private void SpawnVehicles(Object? sender, EventArgs e)
         {
+            if (_vehicles.Count > MAXVEHICLES) return;
+            if (!_spawnVehicles) { _spawnVehicles = true; return; }
+            _spawnVehicles = false;
             var peopleBuildings = new List<PeopleBuilding>();
             foreach (Building building in _buildings)
             {
@@ -706,8 +711,9 @@ namespace simcityModel.Model
                     }
                 }
             }
-            
             int spawnCount = _random.Next(0, peopleBuildings.Count);
+            if (_vehicles.Count > peopleBuildings.Count / 3) spawnCount = spawnCount / 2;
+            if (_vehicles.Count > 2 * peopleBuildings.Count / 3) spawnCount = spawnCount / 2;
             while (spawnCount > 0)
             {
                 // choose a building and pick a random person in it, get where the person wants to go
