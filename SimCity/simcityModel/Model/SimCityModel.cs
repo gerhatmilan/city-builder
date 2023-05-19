@@ -165,7 +165,6 @@ namespace simcityModel.Model
             _expenseList.CollectionChanged += new NotifyCollectionChangedEventHandler(OnExpenseListChanged);
 
             OneDayPassed += new EventHandler(HandlePeople);
-            OneDayPassed += new EventHandler(MoveVehicles);
             OneDayPassed += new EventHandler(SpawnVehicles);
             OneDayPassed += new EventHandler(HandleFireSituations);
 
@@ -612,84 +611,6 @@ namespace simcityModel.Model
             foreach (var field in _fields)
             {
                 field.UpdateFieldStats(this);
-            }
-        }
-
-        private void MoveVehicles(Object? sender, EventArgs e)
-        {
-            var toRemove = new List<Vehicle>();
-            foreach (var car in _vehicles)
-            {
-                var pos = car.CurrentPosition;
-                var nextPos = car.PeekNextPos();
-                var nextDir = car.NextDirection();
-                Road thisRoad = (Road)(Fields[pos.x, pos.y].Building!);
-                // If the car arrived, get rid of it / put out the fire
-                if (car.Arrived)
-                {
-                    if (car.Type == VehicleType.Firecar && Fields[nextPos.x, nextPos.y].Building != null)
-                    {
-                        Fields[nextPos.x, nextPos.y].Building!.PutOutFire();
-                        OnMatrixChanged(this, pos);
-                        _availableFirestations.Add(car.StartBuilding);
-                    }
-                    thisRoad.Vehicles.Remove(car);
-                    toRemove.Add(car);
-                    OnMatrixChanged(this, pos);
-                }
-                if (!car.Arrived)
-                {
-                    Road nextRoad = (Road)(Fields[nextPos.x, nextPos.y].Building!);
-                    // Firecar has priority
-                    if (car.Type == VehicleType.Firecar)
-                    {
-                        // but it can only move if a Firecar does not block its way
-                        bool noBlockingFirecars = true;
-                        foreach (var vehicle in nextRoad.Vehicles)
-                        {
-                            if (vehicle.Type == VehicleType.Firecar && !vehicle.FacingOpposite(nextDir))
-                            {
-                                noBlockingFirecars = false;
-                            }
-                        }
-                        // in this case, all other blocking cars stop to make way for the Firecar, and it moves
-                        if (noBlockingFirecars)
-                        {
-                            var switchToWalk = new List<Vehicle>();
-                            foreach (var vehicle in nextRoad.Vehicles)
-                            {
-                                if (!vehicle.FacingOpposite(nextDir))
-                                {
-                                    switchToWalk.Add(vehicle);
-                                    toRemove.Add(vehicle);
-                                }
-                            }
-                            foreach (var vehicle in switchToWalk)
-                            {
-                                nextRoad.Vehicles.Remove(vehicle);
-                                OnMatrixChanged(this, nextPos);
-                            }
-                            thisRoad.Vehicles.Remove(car);
-                            OnMatrixChanged(this, pos);
-                            car.Move();
-                            nextRoad.Vehicles.Add(car);
-                            OnMatrixChanged(this, nextPos);
-                        }
-                    }
-                    // other cars move if they can
-                    else if (nextRoad.Vehicles.Count == 0 || (nextRoad.Vehicles.Count == 1 && nextRoad.Vehicles[0].FacingOpposite(nextDir)))
-                    {
-                        thisRoad.Vehicles.Remove(car);
-                        OnMatrixChanged(this, pos);
-                        car.Move();
-                        nextRoad.Vehicles.Add(car);
-                        OnMatrixChanged(this, nextPos);
-                    }
-                }
-            }
-            foreach (var car in toRemove)
-            {
-                _vehicles.Remove(car);
             }
         }
 
@@ -1172,6 +1093,84 @@ namespace simcityModel.Model
                 first.Vehicles.Add(fireCar);
                 _vehicles.Add(fireCar);
                 OnMatrixChanged(this, f);
+            }
+        }
+
+        public void MoveVehicles(Object? sender, EventArgs e)
+        {
+            var toRemove = new List<Vehicle>();
+            foreach (var car in _vehicles)
+            {
+                var pos = car.CurrentPosition;
+                var nextPos = car.PeekNextPos();
+                var nextDir = car.NextDirection();
+                Road thisRoad = (Road)(Fields[pos.x, pos.y].Building!);
+                // If the car arrived, get rid of it / put out the fire
+                if (car.Arrived)
+                {
+                    if (car.Type == VehicleType.Firecar && Fields[nextPos.x, nextPos.y].Building != null)
+                    {
+                        Fields[nextPos.x, nextPos.y].Building!.PutOutFire();
+                        OnMatrixChanged(this, pos);
+                        _availableFirestations.Add(car.StartBuilding);
+                    }
+                    thisRoad.Vehicles.Remove(car);
+                    toRemove.Add(car);
+                    OnMatrixChanged(this, pos);
+                }
+                if (!car.Arrived)
+                {
+                    Road nextRoad = (Road)(Fields[nextPos.x, nextPos.y].Building!);
+                    // Firecar has priority
+                    if (car.Type == VehicleType.Firecar)
+                    {
+                        // but it can only move if a Firecar does not block its way
+                        bool noBlockingFirecars = true;
+                        foreach (var vehicle in nextRoad.Vehicles)
+                        {
+                            if (vehicle.Type == VehicleType.Firecar && !vehicle.FacingOpposite(nextDir))
+                            {
+                                noBlockingFirecars = false;
+                            }
+                        }
+                        // in this case, all other blocking cars stop to make way for the Firecar, and it moves
+                        if (noBlockingFirecars)
+                        {
+                            var switchToWalk = new List<Vehicle>();
+                            foreach (var vehicle in nextRoad.Vehicles)
+                            {
+                                if (!vehicle.FacingOpposite(nextDir))
+                                {
+                                    switchToWalk.Add(vehicle);
+                                    toRemove.Add(vehicle);
+                                }
+                            }
+                            foreach (var vehicle in switchToWalk)
+                            {
+                                nextRoad.Vehicles.Remove(vehicle);
+                                OnMatrixChanged(this, nextPos);
+                            }
+                            thisRoad.Vehicles.Remove(car);
+                            OnMatrixChanged(this, pos);
+                            car.Move();
+                            nextRoad.Vehicles.Add(car);
+                            OnMatrixChanged(this, nextPos);
+                        }
+                    }
+                    // other cars move if they can
+                    else if (nextRoad.Vehicles.Count == 0 || (nextRoad.Vehicles.Count == 1 && nextRoad.Vehicles[0].FacingOpposite(nextDir)))
+                    {
+                        thisRoad.Vehicles.Remove(car);
+                        OnMatrixChanged(this, pos);
+                        car.Move();
+                        nextRoad.Vehicles.Add(car);
+                        OnMatrixChanged(this, nextPos);
+                    }
+                }
+            }
+            foreach (var car in toRemove)
+            {
+                _vehicles.Remove(car);
             }
         }
 
