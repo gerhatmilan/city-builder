@@ -338,6 +338,8 @@ namespace simcityModel.Model
     public class Road : Building
     {
         private List<Vehicle> _vehicles;
+
+        [JsonIgnore]
         public List<Vehicle> Vehicles { get => _vehicles; set => _vehicles = value;  }
 
         public Road((int x, int y) coordinates) : base(coordinates, BuildingType.Road)

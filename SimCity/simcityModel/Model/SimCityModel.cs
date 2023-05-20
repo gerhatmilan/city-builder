@@ -17,6 +17,7 @@ namespace simcityModel.Model
         private const int GAMESIZE = 18;
         private const float PRICERETURN_MULTIPLIER = 2f / 3;
         private const int TAX_PER_PERSON = 10;
+        private const int MAXVEHICLES = 35;
 
         private readonly Dictionary<FieldType, (int price, int returnPrice)> _zonePrices = new Dictionary<FieldType, (int, int)>()
         {
@@ -67,6 +68,7 @@ namespace simcityModel.Model
         private List<Person> _people;
         private List<Building> _buildings;
         private List<Vehicle> _vehicles;
+        private bool _spawnVehicles;
         private List<Building> _availableFirestations;
         private ObservableCollection<BudgetRecord> _incomeList;
         private ObservableCollection<BudgetRecord> _expenseList;
@@ -91,40 +93,56 @@ namespace simcityModel.Model
 
         #region Properties
 
+        [JsonProperty]
         public Field[,] Fields
         {   
             get => _fields; 
-            set => _fields = value;
+            private set => _fields = value;
         }
-        public List<Person> People { get => _people; set => _people = value; }
-        public List<Building> Buildings { get => _buildings; set => _buildings = value; }
-        public Dictionary<BuildingType, int> NumberOfBuildings { get => _numberOfBuildings; set => _numberOfBuildings = value; }
-        public int NumberOfIndustrialBuildings { get => _numberOfBuildings[BuildingType.Industry]; }
-        public int NumberOfOfficeBuildings { get => _numberOfBuildings[BuildingType.OfficeBuilding]; }
+        [JsonProperty]
+        public List<Person> People { get => _people; private set => _people = value; }
+        [JsonProperty]
+        public List<Building> Buildings { get => _buildings; private set => _buildings = value; }
+        [JsonProperty]
+        public List<Building> AvailableFireStations { get => _availableFirestations; private set => _availableFirestations = value; }
+        [JsonProperty]
+        public Dictionary<BuildingType, int> NumberOfBuildings { get => _numberOfBuildings; private set => _numberOfBuildings = value; }
+        [JsonProperty]
         public ObservableCollection<BudgetRecord> IncomeList
         {
             get => _incomeList;
-            set
+            private set
             {
                 _incomeList = value;
                 OnIncomeListChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
             }
         }
+        [JsonProperty]
         public ObservableCollection<BudgetRecord> ExpenseList
         {
             get => _expenseList;
-            set
+            private set
             {
                 _expenseList = value;
                 OnExpenseListChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
             }
         }
+        [JsonProperty]
+        public DateTime GameTime { get => _gameTime; private set { _gameTime = value; OnGameInfoChanged(); } }
+        [JsonProperty]
+        public int DaysPassedSinceNegativeBudget { get => _daysPassedSinceNegativeBudget; private set => _daysPassedSinceNegativeBudget = value; }
+        [JsonProperty]
+        public int Population { get => _population; private set { _population = value; OnGameInfoChanged(); } }
+        [JsonProperty]
+        public int Money { get => _money; private set { _money = value; OnGameInfoChanged(); } }
+        [JsonProperty]
+        public double Happiness { get => _happiness; private set { _happiness = value; OnGameInfoChanged(); } }
         public int GameSize { get => GAMESIZE; }
-        public DateTime GameTime { get => _gameTime; set { _gameTime = value; OnGameInfoChanged(); } }
-        public int DaysPassedSinceNegativeBudget { get => _daysPassedSinceNegativeBudget; set => _daysPassedSinceNegativeBudget = value; }
-        public int Population { get => _population; set { _population = value; OnGameInfoChanged(); } }
-        public int Money { get => _money; set { _money = value; OnGameInfoChanged(); } }
-        public double Happiness { get => _happiness; set { _happiness = value; OnGameInfoChanged(); } }
+        public int NumberOfIndustrialBuildings { get => _numberOfBuildings[BuildingType.Industry]; }
+        public int NumberOfOfficeBuildings { get => _numberOfBuildings[BuildingType.OfficeBuilding]; }
+        public Dictionary<FieldType, (int, int)> ZonePrices { get => _zonePrices; }
+        public Dictionary<BuildingType, (int, int, int)> BuildingPrices { get => _buildingPrices; }
+        
 
         #endregion
 
@@ -164,7 +182,6 @@ namespace simcityModel.Model
             _expenseList.CollectionChanged += new NotifyCollectionChangedEventHandler(OnExpenseListChanged);
 
             OneDayPassed += new EventHandler(HandlePeople);
-            OneDayPassed += new EventHandler(MoveVehicles);
             OneDayPassed += new EventHandler(SpawnVehicles);
             OneDayPassed += new EventHandler(HandleFireSituations);
 
@@ -301,7 +318,10 @@ namespace simcityModel.Model
             }
 
             foreach (Person person in peopleToMoveAway)
+            {
                 person.MoveAway(this);
+                Population--;
+            }
         }
 
         private void RefreshPeopleHappiness()
@@ -614,86 +634,11 @@ namespace simcityModel.Model
             }
         }
 
-        private void MoveVehicles(Object? sender, EventArgs e)
-        {
-            var toRemove = new List<Vehicle>();
-            foreach (var car in _vehicles)
-            {
-                var pos = car.CurrentPosition;
-                var nextPos = car.PeekNextPos();
-                var nextDir = car.NextDirection();
-                Road thisRoad = (Road)(Fields[pos.x, pos.y].Building!);
-                // If the car arrived, get rid of it / put out the fire
-                if (car.Arrived)
-                {
-                    if (car.Type == VehicleType.Firecar && Fields[nextPos.x, nextPos.y].Building != null)
-                    {
-                        Fields[nextPos.x, nextPos.y].Building!.PutOutFire();
-                        OnMatrixChanged(this, pos);
-                        _availableFirestations.Add(car.StartBuilding);
-                    }
-                    thisRoad.Vehicles.Remove(car);
-                    toRemove.Add(car);
-                    OnMatrixChanged(this, pos);
-                }
-                if (!car.Arrived)
-                {
-                    Road nextRoad = (Road)(Fields[nextPos.x, nextPos.y].Building!);
-                    // Firecar has priority
-                    if (car.Type == VehicleType.Firecar)
-                    {
-                        // but it can only move if a Firecar does not block its way
-                        bool noBlockingFirecars = true;
-                        foreach (var vehicle in nextRoad.Vehicles)
-                        {
-                            if (vehicle.Type == VehicleType.Firecar && !vehicle.FacingOpposite(nextDir))
-                            {
-                                noBlockingFirecars = false;
-                            }
-                        }
-                        // in this case, all other blocking cars stop to make way for the Firecar, and it moves
-                        if (noBlockingFirecars)
-                        {
-                            var switchToWalk = new List<Vehicle>();
-                            foreach (var vehicle in nextRoad.Vehicles)
-                            {
-                                if (!vehicle.FacingOpposite(nextDir))
-                                {
-                                    switchToWalk.Add(vehicle);
-                                    toRemove.Add(vehicle);
-                                }
-                            }
-                            foreach (var vehicle in switchToWalk)
-                            {
-                                nextRoad.Vehicles.Remove(vehicle);
-                                OnMatrixChanged(this, nextPos);
-                            }
-                            thisRoad.Vehicles.Remove(car);
-                            OnMatrixChanged(this, pos);
-                            car.Move();
-                            nextRoad.Vehicles.Add(car);
-                            OnMatrixChanged(this, nextPos);
-                        }
-                    }
-                    // other cars move if they can
-                    else if (nextRoad.Vehicles.Count == 0 || (nextRoad.Vehicles.Count == 1 && nextRoad.Vehicles[0].FacingOpposite(nextDir)))
-                    {
-                        thisRoad.Vehicles.Remove(car);
-                        OnMatrixChanged(this, pos);
-                        car.Move();
-                        nextRoad.Vehicles.Add(car);
-                        OnMatrixChanged(this, nextPos);
-                    }
-                }
-            }
-            foreach (var car in toRemove)
-            {
-                _vehicles.Remove(car);
-            }
-        }
-
         private void SpawnVehicles(Object? sender, EventArgs e)
         {
+            if (_vehicles.Count > MAXVEHICLES) return;
+            if (!_spawnVehicles) { _spawnVehicles = true; return; }
+            _spawnVehicles = false;
             var peopleBuildings = new List<PeopleBuilding>();
             foreach (Building building in _buildings)
             {
@@ -705,8 +650,9 @@ namespace simcityModel.Model
                     }
                 }
             }
-            
             int spawnCount = _random.Next(0, peopleBuildings.Count);
+            if (_vehicles.Count > peopleBuildings.Count / 3) spawnCount = spawnCount / 2;
+            if (_vehicles.Count > 2 * peopleBuildings.Count / 3) spawnCount = spawnCount / 2;
             while (spawnCount > 0)
             {
                 // choose a building and pick a random person in it, get where the person wants to go
@@ -782,6 +728,8 @@ namespace simcityModel.Model
                 }
 
                 target.Buildings.Add(building);
+
+                if (building.Type == BuildingType.FireStation) target.AvailableFireStations.Add(building);
             }
 
 
@@ -794,6 +742,7 @@ namespace simcityModel.Model
 
                 target.People.Add(person);
             }
+
 
             target.GameTime = source.GameTime;
             target.DaysPassedSinceNegativeBudget = source.DaysPassedSinceNegativeBudget;
@@ -1168,6 +1117,84 @@ namespace simcityModel.Model
                 first.Vehicles.Add(fireCar);
                 _vehicles.Add(fireCar);
                 OnMatrixChanged(this, f);
+            }
+        }
+
+        public void MoveVehicles(Object? sender, EventArgs e)
+        {
+            var toRemove = new List<Vehicle>();
+            foreach (var car in _vehicles)
+            {
+                var pos = car.CurrentPosition;
+                var nextPos = car.PeekNextPos();
+                var nextDir = car.NextDirection();
+                Road thisRoad = (Road)(Fields[pos.x, pos.y].Building!);
+                // If the car arrived, get rid of it / put out the fire
+                if (car.Arrived)
+                {
+                    if (car.Type == VehicleType.Firecar && Fields[nextPos.x, nextPos.y].Building != null)
+                    {
+                        Fields[nextPos.x, nextPos.y].Building!.PutOutFire();
+                        OnMatrixChanged(this, pos);
+                        _availableFirestations.Add(car.StartBuilding);
+                    }
+                    thisRoad.Vehicles.Remove(car);
+                    toRemove.Add(car);
+                    OnMatrixChanged(this, pos);
+                }
+                if (!car.Arrived)
+                {
+                    Road nextRoad = (Road)(Fields[nextPos.x, nextPos.y].Building!);
+                    // Firecar has priority
+                    if (car.Type == VehicleType.Firecar)
+                    {
+                        // but it can only move if a Firecar does not block its way
+                        bool noBlockingFirecars = true;
+                        foreach (var vehicle in nextRoad.Vehicles)
+                        {
+                            if (vehicle.Type == VehicleType.Firecar && !vehicle.FacingOpposite(nextDir))
+                            {
+                                noBlockingFirecars = false;
+                            }
+                        }
+                        // in this case, all other blocking cars stop to make way for the Firecar, and it moves
+                        if (noBlockingFirecars)
+                        {
+                            var switchToWalk = new List<Vehicle>();
+                            foreach (var vehicle in nextRoad.Vehicles)
+                            {
+                                if (!vehicle.FacingOpposite(nextDir))
+                                {
+                                    switchToWalk.Add(vehicle);
+                                    toRemove.Add(vehicle);
+                                }
+                            }
+                            foreach (var vehicle in switchToWalk)
+                            {
+                                nextRoad.Vehicles.Remove(vehicle);
+                                OnMatrixChanged(this, nextPos);
+                            }
+                            thisRoad.Vehicles.Remove(car);
+                            OnMatrixChanged(this, pos);
+                            car.Move();
+                            nextRoad.Vehicles.Add(car);
+                            OnMatrixChanged(this, nextPos);
+                        }
+                    }
+                    // other cars move if they can
+                    else if (nextRoad.Vehicles.Count == 0 || (nextRoad.Vehicles.Count == 1 && nextRoad.Vehicles[0].FacingOpposite(nextDir)))
+                    {
+                        thisRoad.Vehicles.Remove(car);
+                        OnMatrixChanged(this, pos);
+                        car.Move();
+                        nextRoad.Vehicles.Add(car);
+                        OnMatrixChanged(this, nextPos);
+                    }
+                }
+            }
+            foreach (var car in toRemove)
+            {
+                _vehicles.Remove(car);
             }
         }
 

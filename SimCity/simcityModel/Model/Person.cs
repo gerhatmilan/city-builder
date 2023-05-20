@@ -143,7 +143,6 @@ namespace simcityModel.Model
             ((PeopleBuilding)Home.Building!).People.Remove(this);
             ((PeopleBuilding)Work.Building!).People.Remove(this);
             model.People.Remove(this);
-            model.Population--;
         }
 
         #endregion

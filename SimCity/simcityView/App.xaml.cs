@@ -26,6 +26,7 @@ namespace simcityView
         private MainWindow _view = null!;
         private SimCityModel _model = null!;
         private DispatcherTimer _timer = null!;
+        private DispatcherTimer _vehicleTimer = null!;
         #endregion
 
 
@@ -47,6 +48,9 @@ namespace simcityView
             _timer.Interval = TimeSpan.FromSeconds(1);
             _timer.Tick += Timer_Tick;
 
+            _vehicleTimer = new DispatcherTimer();
+            _vehicleTimer.Interval = TimeSpan.FromMilliseconds(400);
+            _vehicleTimer.Tick += VehicleTimer_Tick;
 
             _model = new SimCityModel(new FileDataAccess());
             _model.GameOver += M_GameOver;
@@ -71,8 +75,7 @@ namespace simcityView
         private void reset()
         {
 
-            _timer.Stop();
-            
+            _timer.Stop();         
 
 
             _model.GameOver -= M_GameOver;
@@ -109,17 +112,25 @@ namespace simcityView
         {
             _model.AdvanceTime();
         }
+        void VehicleTimer_Tick(object? s, EventArgs e)
+        {
+            _model.MoveVehicles(this, e);
+        }
         #endregion
         #region Vm events
         void Vm_ChangeTimer(object? s, int status)
         {
             switch (status)
             {
-                case 0: _timer.Stop(); break;
+                case 0:
+                    _timer.Stop();
+                    _vehicleTimer.Stop();
+                    break;
                 default:
                     if (!_timer.IsEnabled)
                     {
                         _timer.Start();
+                        _vehicleTimer.Start();
                     }
                     _timer.Interval = TimeSpan.FromMilliseconds(status);
                     
@@ -205,6 +216,7 @@ namespace simcityView
         void M_GameLoaded(object? sender, SimCityModel newModel)
         {
             _timer.Stop();
+            _vehicleTimer.Stop();
 
             _model.GameOver -= M_GameOver;
             _vm.ChangeTime -= Vm_ChangeTimer;
