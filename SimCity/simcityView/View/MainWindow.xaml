@@ -6,7 +6,7 @@
         xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
         xmlns:local="clr-namespace:simcityView"
         mc:Ignorable="d"
-        Title="MainWindow" Height="755" Width="1280" ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
+        Title="MainWindow" Height="775" Width="1280" ResizeMode="NoResize" WindowStartupLocation="CenterScreen">
    
     <Grid>
         <Grid.RowDefinitions>
@@ -156,14 +156,20 @@
                     <StackPanel Orientation="Vertical">
                         <RadioButton GroupName="buildable1" Style="{StaticResource Selector}" CommandParameter="Re" IsChecked="{Binding TimeReset, Mode=TwoWay}">Textures/house_large_green_a.png</RadioButton>
                         <TextBlock TextAlignment="Center">Lakó zóna</TextBlock>
+                        <TextBlock TextAlignment="Center" Text="150💸"/>
+
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
                         <RadioButton GroupName="buildable1" Style="{StaticResource Selector}" CommandParameter="I">Textures/warehouse_orange_a.png</RadioButton>
                         <TextBlock TextAlignment="Center">Ipari zóna</TextBlock>
+                        <TextBlock TextAlignment="Center" Text="150💸"/>
+
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
                         <RadioButton GroupName="buildable1" Style="{StaticResource Selector}" CommandParameter="O">Textures/building_tall_yellow_a.png</RadioButton>
                         <TextBlock TextAlignment="Center">Irodai zóna</TextBlock>
+                        <TextBlock TextAlignment="Center" Text="150💸"/>
+
                     </StackPanel>
                 </StackPanel>
             </TabItem>
@@ -172,18 +178,26 @@
                     <StackPanel Orientation="Vertical">
                         <RadioButton GroupName="buildable2" Style="{StaticResource Selector}" CommandParameter="Ro" IsChecked="{Binding TimeReset, Mode=TwoWay}">Textures/street_straight_upDown.png</RadioButton>
                         <TextBlock TextAlignment="Center">Út</TextBlock>
+                        <TextBlock TextAlignment="Center" Text="50💸"/>
+
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
                         <RadioButton GroupName="buildable2" Style="{StaticResource Selector}" CommandParameter="S">Textures/stadium_thumbnail.png</RadioButton>
                         <TextBlock TextAlignment="Center">Stadion</TextBlock>
+                        <TextBlock TextAlignment="Center" Text="500💸"/>
+
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
                         <RadioButton GroupName="buildable2" Style="{StaticResource Selector}" CommandParameter="F" >Textures/fire_station_a.png</RadioButton>
                         <TextBlock TextAlignment="Center">Tűzoltóság</TextBlock>
+                        <TextBlock TextAlignment="Center" Text="400💸"/>
+
                     </StackPanel>
                     <StackPanel Orientation="Vertical">
                         <RadioButton GroupName="buildable2" Style="{StaticResource Selector}" CommandParameter="P" >Textures/police_station_a.png</RadioButton>
                         <TextBlock TextAlignment="Center">Rendőrség</TextBlock>
+                        <TextBlock TextAlignment="Center" Text="300💸"/>
+
                     </StackPanel>
                 </StackPanel>
             </TabItem>
