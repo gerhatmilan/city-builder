@@ -1,7 +1,6 @@
 using simcityPersistance.Persistance;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
-using System.Text.Json.Serialization;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using System;
@@ -140,6 +139,8 @@ namespace simcityModel.Model
         [JsonProperty]
         public double Happiness { get => _happiness; private set { _happiness = value; OnGameInfoChanged(); } }
         public int GameSize { get => GAMESIZE; }
+        [JsonIgnore]
+        public List<Vehicle> Vehicles { get => _vehicles; }
         public int NumberOfIndustrialBuildings { get => _numberOfBuildings[BuildingType.Industry]; }
         public int NumberOfOfficeBuildings { get => _numberOfBuildings[BuildingType.OfficeBuilding]; }
         public Dictionary<FieldType, (int, int)> ZonePrices { get => _zonePrices; }
@@ -1059,8 +1060,7 @@ namespace simcityModel.Model
         
         public void SendFireTruck((int x, int y) coords)
         {
-            if (Fields[coords.x, coords.y].Building == null || (Fields[coords.x, coords.y].Building != null && !Fields[coords.x, coords.y].Building!.OnFire) || _numberOfBuildings[BuildingType.FireStation] < 1) return;
-            if (_availableFirestations.Count == 0) return;
+            if (!ValidCoordinates((coords.x, coords.y)) ||  Fields[coords.x, coords.y].Building == null || (Fields[coords.x, coords.y].Building != null && !Fields[coords.x, coords.y].Building!.OnFire) || _numberOfBuildings[BuildingType.FireStation] < 1 || _availableFirestations.Count == 0) throw new CannotSendFireTruckException();
 
             // Closest path needed: look for the closest available fire station from coords, then send a fire truck to coords from the found fire station
             Building closestStation = _availableFirestations[0];
