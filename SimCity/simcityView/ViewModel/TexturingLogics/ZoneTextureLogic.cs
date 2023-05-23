@@ -54,7 +54,7 @@ namespace simcityView.ViewModel.TexturingLogics
             }
             if (Model.Fields[x,y].NumberOfPeople == Model.Fields[x,y].Capacity)
             {
-                if (Model.Fields[x, y].Building.OnFire)
+                if (Model.Fields[x, y].Building!.OnFire)
                 {
                     ViewModel.Cells[ViewModel.CoordsToListIndex(x, y)].BuildingTexture = BuildingTextures[4];
                 }
@@ -65,7 +65,7 @@ namespace simcityView.ViewModel.TexturingLogics
                 
                 return;
             }
-            if (Model.Fields[x, y].Building.OnFire)
+            if (Model.Fields[x, y].Building!.OnFire)
             {
                 ViewModel.Cells[ViewModel.CoordsToListIndex(x, y)].BuildingTexture = BuildingTextures[3];
             }

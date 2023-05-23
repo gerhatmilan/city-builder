@@ -55,7 +55,7 @@ namespace simcityView.ViewModel.TexturingLogics
                 _stadiumOffset = 0;
             }
             int _fireOffset = 0;
-            if (Model.Fields[x, y].Building.OnFire)
+            if (Model.Fields[x, y].Building!.OnFire)
             {
                 _fireOffset = 4;
             }

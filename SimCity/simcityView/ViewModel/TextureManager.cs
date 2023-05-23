@@ -169,11 +169,10 @@ namespace simcityView.ViewModel
 
         }
 
-        #endregion
-        #region public functions
+       
 
 
-        public void Init()
+        private void Init()
         {
             fillBuildingTextures();
             fillFloorTextures();
@@ -377,23 +376,8 @@ namespace simcityView.ViewModel
 
         }
 
-        public void SetTexture(int x, int y)
-        {
-            Field f = _model.Fields[x, y];
-            int logicNum=0;
-            if(f.Building == null)
-            {
-                logicNum = (int)f.Type;
-                _textureLogics[logicNum].SetLogicalAllTextures(x, y);
-            }
-            else
-            {
-                logicNum = (int)f.Building.Type;
-                _textureLogics[logicNum].SetLogicalAllTextures(x, y);
-            }
-            UpdateTextureAround(x, y);
-        }
-        public void UpdateTextureAround(int centerX, int centerY)
+        
+        private void UpdateTextureAround(int centerX, int centerY)
         {
             int x = -1;
             int y = 0;
@@ -419,12 +403,30 @@ namespace simcityView.ViewModel
                 x *= -1;
             }
         }
+        #endregion
+        #region public functions
+        public void SetTexture(int x, int y)
+        {
+            Field f = _model.Fields[x, y];
+            int logicNum=0;
+            if(f.Building == null)
+            {
+                logicNum = (int)f.Type;
+                _textureLogics[logicNum].SetLogicalAllTextures(x, y);
+            }
+            else
+            {
+                logicNum = (int)f.Building.Type;
+                _textureLogics[logicNum].SetLogicalAllTextures(x, y);
+            }
+            UpdateTextureAround(x, y);
+        }
         public (ImageBrush floor, BitmapImage building) getStarterTextures()
         {
             return (_floorTextures[1], _buildingTextures[17]);
         }
-        
         #endregion
+
         #endregion
 
     }

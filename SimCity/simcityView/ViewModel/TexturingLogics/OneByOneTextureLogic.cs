@@ -48,7 +48,7 @@ namespace simcityView.ViewModel.TexturingLogics
         public void SetLogicalBuildingTextures(int x, int y)
         {
             
-            if (Model.Fields[x, y].Building != null && Model.Fields[x, y].Building.OnFire)
+            if (Model.Fields[x, y].Building != null && Model.Fields[x, y].Building!.OnFire)
             {
                 ViewModel.Cells[ViewModel.CoordsToListIndex(x, y)].BuildingTexture = BuildingTextures[1];
             }
