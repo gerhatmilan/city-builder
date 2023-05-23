@@ -114,6 +114,7 @@ namespace simcityModel.Model
             private set
             {
                 _incomeList = value;
+                _incomeList.CollectionChanged += new NotifyCollectionChangedEventHandler(OnIncomeListChanged);
                 OnIncomeListChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
             }
         }
@@ -124,6 +125,7 @@ namespace simcityModel.Model
             private set
             {
                 _expenseList = value;
+                _expenseList.CollectionChanged += new NotifyCollectionChangedEventHandler(OnExpenseListChanged);
                 OnExpenseListChanged(this, new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
             }
         }
