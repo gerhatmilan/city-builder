@@ -209,13 +209,13 @@ namespace simcityModel.Model
     public class ServiceBuilding : Building
     {
         #region Fields
-        private const int POLICESTATION_EFFECT_VALUE = 5;
-        private const double FIRESTATION_EFFECT_VALUE = -0.1;
-        private const int STADIUM_EFFECT_VALUE = 30;
+        public static readonly int POLICESTATION_EFFECT_VALUE = 5;
+        public static readonly double FIRESTATION_EFFECT_VALUE = -0.1;
+        public static readonly int STADIUM_EFFECT_VALUE = 30;
 
-        private const int POLICESTATION_EFFECT_SUGAR = 4;
-        private const int FIRESTATION_EFFECT_SUGAR = 5;
-        private const int STADIUM_EFFECT_SUGAR = 2;
+        public static readonly int POLICESTATION_EFFECT_SUGAR = 4;
+        public static readonly int FIRESTATION_EFFECT_SUGAR = 5;
+        public static readonly int STADIUM_EFFECT_SUGAR = 2;
 
         private List<(int x, int y)> _effectCoordinates;
 
