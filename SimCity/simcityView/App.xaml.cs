@@ -26,6 +26,7 @@ namespace simcityView
         private MainWindow _view = null!;
         private SimCityModel _model = null!;
         private DispatcherTimer _timer = null!;
+        private DispatcherTimer _vehicleTimer = null!;
         #endregion
 
 
@@ -47,6 +48,9 @@ namespace simcityView
             _timer.Interval = TimeSpan.FromSeconds(1);
             _timer.Tick += Timer_Tick;
 
+            _vehicleTimer = new DispatcherTimer();
+            _vehicleTimer.Interval = TimeSpan.FromMilliseconds(400);
+            _vehicleTimer.Tick += VehicleTimer_Tick;
 
             _model = new SimCityModel(new FileDataAccess());
             _model.GameOver += M_GameOver;
@@ -58,7 +62,8 @@ namespace simcityView
             _vm.SaveGameEvent += Vm_SaveGame;
             _vm.LoadGameEvent += Vm_LoadGame;
             _vm.NewGameEvent += Vm_NewGame;
-            
+            _vm.ShowHelpEvent += Vm_ShowHelp;
+
             _view = new MainWindow();
             _view.Activated += new EventHandler(View_FocusChanged);
             _view.Deactivated += new EventHandler(View_FocusChanged);
@@ -70,8 +75,7 @@ namespace simcityView
         private void reset()
         {
 
-            _timer.Stop();
-            
+            _timer.Stop();         
 
 
             _model.GameOver -= M_GameOver;
@@ -90,8 +94,9 @@ namespace simcityView
             _vm.SaveGameEvent += Vm_SaveGame;
             _vm.LoadGameEvent += Vm_LoadGame;
             _vm.NewGameEvent += Vm_NewGame;
+            _vm.ShowHelpEvent += Vm_ShowHelp;
 
-            
+
             _view.DataContext = _vm;
             _view.CamInit();
             
@@ -99,7 +104,7 @@ namespace simcityView
             GC.Collect();
             
         }
-        
+       
         #endregion
         #region events
         #region Timer events
@@ -107,17 +112,25 @@ namespace simcityView
         {
             _model.AdvanceTime();
         }
+        void VehicleTimer_Tick(object? s, EventArgs e)
+        {
+            _model.MoveVehicles(this, e);
+        }
         #endregion
         #region Vm events
         void Vm_ChangeTimer(object? s, int status)
         {
             switch (status)
             {
-                case 0: _timer.Stop(); break;
+                case 0:
+                    _timer.Stop();
+                    _vehicleTimer.Stop();
+                    break;
                 default:
                     if (!_timer.IsEnabled)
                     {
                         _timer.Start();
+                        _vehicleTimer.Start();
                     }
                     _timer.Interval = TimeSpan.FromMilliseconds(status);
                     
@@ -132,7 +145,7 @@ namespace simcityView
         {
             try
             {
-                SaveFileDialog saveFileDialog = new SaveFileDialog(); // dialógablak
+                SaveFileDialog saveFileDialog = new SaveFileDialog();
                 saveFileDialog.Title = "SimCity tábla betöltése";
                 saveFileDialog.Filter = "SimCity tábla|*.sc";
                 if (saveFileDialog.ShowDialog() == true)
@@ -140,10 +153,12 @@ namespace simcityView
                     try
                     {
                         await _model.SaveGameAsync(saveFileDialog.FileName);
+                        _vm.ShowHelpEvent += Vm_ShowHelp;
+
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show("Valami félrement mentés közben!", "SimCity", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show("Valami félrement mentés közben!\n" + ex.Message, "SimCity", MessageBoxButton.OK, MessageBoxImage.Error);
                     }
                 }
             }
@@ -162,16 +177,27 @@ namespace simcityView
                 openFileDialog.Filter = "SimCity tábla|*.sc";
                 if (openFileDialog.ShowDialog() == true)
                 {
+                    
                     await _model.LoadGameAsync(openFileDialog.FileName);
+                    _vm.ShowHelpEvent += Vm_ShowHelp;
 
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("A fájl betöltése sikertelen!", "SimCity", MessageBoxButton.OK, MessageBoxImage.Error);
+                
+                MessageBox.Show("A fájl betöltése sikertelen!\n" + ex.Message, "SimCity", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
-
+        private void Vm_ShowHelp(object? s, EventArgs e)
+        {
+            MessageBox.Show(
+                "Irányítások:\n" +
+                "W A S D - Mozgás a kamerával\n" +
+                "Q E - Zoomolás a kamerával\n" +
+                "Ha ég valami, akkor kattintással kiolthatod!"
+                , "SimCity", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
         #endregion
         #region View events
         private void View_FocusChanged(object? s, EventArgs e)
@@ -190,6 +216,7 @@ namespace simcityView
         void M_GameLoaded(object? sender, SimCityModel newModel)
         {
             _timer.Stop();
+            _vehicleTimer.Stop();
 
             _model.GameOver -= M_GameOver;
             _vm.ChangeTime -= Vm_ChangeTimer;

@@ -3,8 +3,8 @@ using Newtonsoft.Json.Converters;
 
 namespace simcityModel.Model
 {
-    [JsonConverter(typeof(StringEnumConverter))]
-    public enum FieldType { IndustrialZone, OfficeZone, ResidentalZone, GeneralField }
+    //[JsonConverter(typeof(StringEnumConverter))]
+    public enum FieldType { IndustrialZone = 3, OfficeZone = 2, ResidentalZone = 1, GeneralField = 0 }
 
     public class FieldStat
     {
@@ -47,10 +47,6 @@ namespace simcityModel.Model
     {
         #region Private fields
 
-        public const int RESIDENTAL_CAPACITY = 20;
-        public const int INDUSTRIAL_CAPACITY = 40;
-        public const int OFFICE_CAPACITY = 40;
-
         private int _x;
         private int _y;
         private FieldType _type;
@@ -61,11 +57,20 @@ namespace simcityModel.Model
 
         #endregion
 
+        #region Public fields
+
+        public static readonly int RESIDENTAL_CAPACITY = 20;
+        public static readonly int INDUSTRIAL_CAPACITY = 40;
+        public static readonly int OFFICE_CAPACITY = 40;
+
+        #endregion
+
         #region Events
 
         public event EventHandler<(int x, int y)>? NumberOfPeopleChanged;
         public event EventHandler<(int x, int y)>? PeopleHappinessChanged;
         public event EventHandler<(int x, int y)>? FieldChanged;
+        public event EventHandler<(int x, int y)>? BuildingBurntDown;
 
         #endregion
 
@@ -77,7 +82,7 @@ namespace simcityModel.Model
         public FieldType Type
         {
             get { return _type; }
-            set { _type = value; OnFieldChanged(); }
+            set { _type = value; OnFieldChanged(this, EventArgs.Empty); }
         }
 
         public List<FieldStat> FieldStats { get => _stats; set => _stats = value; }
@@ -89,12 +94,19 @@ namespace simcityModel.Model
             set
             {
                 _building = value;
-                if (_building != null && _building.GetType() == typeof(PeopleBuilding))
+                if (_building != null)
                 {
-                    ((PeopleBuilding)_building).NumberOfPeopleChanged += new EventHandler(OnNumberOfPeopleChanged);
+                    _building.GotOnFire += new EventHandler(OnFieldChanged);
+                    _building.FireWentOut += new EventHandler(OnFieldChanged);
+                    _building.BurntDown += new EventHandler(OnBuildingBurntDown);
+
+                    if (_building.GetType() == typeof(PeopleBuilding))
+                    {
+                        ((PeopleBuilding)_building).NumberOfPeopleChanged += new EventHandler(OnNumberOfPeopleChanged);
+                    }
                 }
 
-                OnFieldChanged();
+                OnFieldChanged(this, EventArgs.Empty);
             }
         }
 
@@ -114,7 +126,16 @@ namespace simcityModel.Model
 
         public int NumberOfPeople { get => CalculateNumberOfPeople(); }
 
-        public int FieldHappiness { get => _fieldHappiness; set => _fieldHappiness = value; }
+        public int FieldHappiness
+        {
+            get => _fieldHappiness;
+            set
+            {
+                _fieldHappiness = value;
+                if (_fieldHappiness < 0) _fieldHappiness = 0;
+                else if (_fieldHappiness > 100) _fieldHappiness = 100;
+            }
+        }
 
         public int FieldSafety { get => _fieldSafety; set => _fieldSafety = value; }
 
@@ -230,9 +251,14 @@ namespace simcityModel.Model
             NumberOfPeopleChanged?.Invoke(this, (X, Y));
         }
 
-        private void OnFieldChanged()
+        private void OnFieldChanged(object? sender, EventArgs e)
         {
             FieldChanged?.Invoke(this, (X, Y));
+        }
+
+        private void OnBuildingBurntDown(object? sender, EventArgs e)
+        {
+            BuildingBurntDown?.Invoke(this, (X, Y));
         }
 
         #endregion
